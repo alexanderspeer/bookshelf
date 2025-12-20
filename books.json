@@ -1,0 +1,961 @@
+{
+  "generated_at": "2025-12-20T19:37:12Z",
+  "count": 191,
+  "books": [
+    {
+      "title": "Atlas Shrugged",
+      "author": "Ayn Rand",
+      "date_read": "Jan 12, 2024"
+    },
+    {
+      "title": "The Fountainhead",
+      "author": "Ayn Rand",
+      "date_read": "Jan 12, 2024"
+    },
+    {
+      "title": "The Iliad",
+      "author": "Homer",
+      "date_read": "not set"
+    },
+    {
+      "title": "Achilles in Vietnam: Combat Trauma and the Undoing of Character",
+      "author": "Jonathan Shay",
+      "date_read": "Dec 02, 2021"
+    },
+    {
+      "title": "Conspirata (Cicero, #2)",
+      "author": "Robert Harris",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Picture of Dorian Gray",
+      "author": "Oscar Wilde",
+      "date_read": "Jun 25, 2023"
+    },
+    {
+      "title": "The Talented Mr. Ripley (Ripley, #1)",
+      "author": "Patricia Highsmith",
+      "date_read": "Oct 15, 2023"
+    },
+    {
+      "title": "Invisible Cities",
+      "author": "Italo Calvino",
+      "date_read": "Aug 26, 2024"
+    },
+    {
+      "title": "The Song of Achilles",
+      "author": "Madeline Miller",
+      "date_read": "not set"
+    },
+    {
+      "title": "Player Piano",
+      "author": "Kurt Vonnegut Jr.",
+      "date_read": "Feb 15, 2024"
+    },
+    {
+      "title": "Slaughterhouse-Five",
+      "author": "Kurt Vonnegut Jr.",
+      "date_read": "Mar 25, 2024"
+    },
+    {
+      "title": "Waiting for the Barbarians",
+      "author": "J.M. Coetzee",
+      "date_read": "Feb 18, 2024"
+    },
+    {
+      "title": "Ender’s Game (Ender's Saga, #1)",
+      "author": "Orson Scott Card",
+      "date_read": "Dec 24, 2023"
+    },
+    {
+      "title": "Children of the Mind (Ender's Saga, #4)",
+      "author": "Orson Scott Card",
+      "date_read": "Apr 29, 2024"
+    },
+    {
+      "title": "Speaker for the Dead (Ender's Saga, #2)",
+      "author": "Orson Scott Card",
+      "date_read": "Mar 16, 2024"
+    },
+    {
+      "title": "Ender in Exile (Ender's Saga, #5)",
+      "author": "Orson Scott Card",
+      "date_read": "May 08, 2024"
+    },
+    {
+      "title": "Xenocide (Ender's Saga, #3)",
+      "author": "Orson Scott Card",
+      "date_read": "Apr 02, 2024"
+    },
+    {
+      "title": "1984",
+      "author": "George Orwell",
+      "date_read": "Jan 17, 2024"
+    },
+    {
+      "title": "Old Man's War (Old Man's War, #1)",
+      "author": "John Scalzi",
+      "date_read": "May 05, 2025"
+    },
+    {
+      "title": "By the Sea",
+      "author": "Abdulrazak Gurnah",
+      "date_read": "Nov 27, 2023"
+    },
+    {
+      "title": "The Stranger",
+      "author": "Albert Camus",
+      "date_read": "Jan 20, 2024"
+    },
+    {
+      "title": "Of Mice and Men",
+      "author": "John Steinbeck",
+      "date_read": "Dec 28, 2023"
+    },
+    {
+      "title": "The Lais of Marie de France",
+      "author": "Marie de France",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Groundwork of the Metaphysics of Morals",
+      "author": "Immanuel Kant",
+      "date_read": "Jan 28, 2024"
+    },
+    {
+      "title": "The Symposium",
+      "author": "Plato",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "What Is It Like to Be a Bat?",
+      "author": "Thomas Nagel",
+      "date_read": "not set"
+    },
+    {
+      "title": "A Thousand Ships",
+      "author": "Natalie Haynes",
+      "date_read": "Dec 07, 2021"
+    },
+    {
+      "title": "進撃の巨人 34 [Shingeki no Kyojin 34]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "The Chalice of the Gods (Percy Jackson and the Olympians: The Senior Year Adventures, #1)",
+      "author": "Rick Riordan",
+      "date_read": "Oct 15, 2023"
+    },
+    {
+      "title": "3 Shades of Blue: Miles Davis, John Coltrane, Bill Evans, and the Lost Empire of Cool",
+      "author": "James Kaplan",
+      "date_read": "Jul 27, 2024"
+    },
+    {
+      "title": "Manhwa Collection: Solo Leveling Manhwa Vol 8",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "City of God",
+      "author": "Augustine of Hippo",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Trial and Death of Socrates (Euthyphro, Apology, Crito, Phaedo)",
+      "author": "Plato",
+      "date_read": "Jan 13, 2022"
+    },
+    {
+      "title": "The First and Second Discourses",
+      "author": "Jean-Jacques Rousseau",
+      "date_read": "Dec 05, 2023"
+    },
+    {
+      "title": "Meditations",
+      "author": "Marcus Aurelius",
+      "date_read": "May 17, 2023"
+    },
+    {
+      "title": "If Not, Winter: Fragments of Sappho",
+      "author": "Sappho",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Justinian",
+      "author": "H.N. Turteltaub",
+      "date_read": "Jun 16, 2022"
+    },
+    {
+      "title": "Poems, Protest, and a Dream: Selected Writings (Penguin Classics)",
+      "author": "Juana Inés de la Cruz",
+      "date_read": "Nov 09, 2023"
+    },
+    {
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Anthem",
+      "author": "Ayn Rand",
+      "date_read": "Jul 06, 2022"
+    },
+    {
+      "title": "The Aenied",
+      "author": "Virgil",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Boy Who Followed Ripley (Ripley, #4)",
+      "author": "Patricia Highsmith",
+      "date_read": "Jul 24, 2024"
+    },
+    {
+      "title": "Slavery and Freedom on the Middle Ground: Maryland During the Nineteenth Century",
+      "author": "Barbara J. Fields",
+      "date_read": "Apr 23, 2024"
+    },
+    {
+      "title": "Ripley's Game (Ripley, #3)",
+      "author": "Patricia Highsmith",
+      "date_read": "Jul 17, 2024"
+    },
+    {
+      "title": "The Broken Spears: The Aztec Account of the Conquest of Mexico",
+      "author": "Miguel León-Portilla",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Consolation of Philosophy",
+      "author": "Boethius",
+      "date_read": "not set"
+    },
+    {
+      "title": "A Caribbean Mystery (Miss Marple, #9)",
+      "author": "Agatha Christie",
+      "date_read": "not set"
+    },
+    {
+      "title": "Cliffs Notes on Greek Classics",
+      "author": "Mary Ellen Snodgrass",
+      "date_read": "not set"
+    },
+    {
+      "title": "Ripley Underground (Ripley, #2)",
+      "author": "Patricia Highsmith",
+      "date_read": "Jul 13, 2024"
+    },
+    {
+      "title": "Imperium (Cicero, #1)",
+      "author": "Robert Harris",
+      "date_read": "not set"
+    },
+    {
+      "title": "Fahrenheit 451",
+      "author": "Ray Bradbury",
+      "date_read": "not set"
+    },
+    {
+      "title": "An Inquiry into the Nature and Causes of the Wealth of Nations",
+      "author": "Adam Smith",
+      "date_read": "Jan 23, 2024"
+    },
+    {
+      "title": "The Republic",
+      "author": "Plato",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Girl With the Dragon Tattoo (Millennium, #1)",
+      "author": "Stieg Larsson",
+      "date_read": "not set"
+    },
+    {
+      "title": "Agamemnon (Oresteia, #1)",
+      "author": "Aeschylus",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "The Plague",
+      "author": "Albert Camus",
+      "date_read": "Mar 23, 2024"
+    },
+    {
+      "title": "The Communist Manifesto",
+      "author": "Karl Marx",
+      "date_read": "Mar 23, 2024"
+    },
+    {
+      "title": "The Metamorphosis",
+      "author": "Franz Kafka",
+      "date_read": "not set"
+    },
+    {
+      "title": "On Liberty",
+      "author": "John Stuart Mill",
+      "date_read": "Mar 14, 2024"
+    },
+    {
+      "title": "For the New Intellectual: The Philosophy of Ayn Rand",
+      "author": "Ayn Rand",
+      "date_read": "May 28, 2023"
+    },
+    {
+      "title": "Pride and Prejudice",
+      "author": "Jane Austen",
+      "date_read": "Oct 13, 2021"
+    },
+    {
+      "title": "Persepolis: The Story of a Childhood (Persepolis, #1)",
+      "author": "Marjane Satrapi",
+      "date_read": "not set"
+    },
+    {
+      "title": "Crime and Punishment",
+      "author": "Fyodor Dostoevsky",
+      "date_read": "not set"
+    },
+    {
+      "title": "Dune (Dune #1)",
+      "author": "Frank Herbert",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Girl Who Played with Fire (Millennium #2)",
+      "author": "Stieg Larsson",
+      "date_read": "Aug 30, 2021"
+    },
+    {
+      "title": "The Girl Who Kicked the Hornet’s Nest (Millennium, #3)",
+      "author": "Stieg Larsson",
+      "date_read": "Dec 20, 2021"
+    },
+    {
+      "title": "Common Sense, The Rights of Man and Other Essential Writings",
+      "author": "Thomas Paine",
+      "date_read": "Feb 03, 2024"
+    },
+    {
+      "title": "The Seventh Day",
+      "author": "Yu Hua",
+      "date_read": "not set"
+    },
+    {
+      "title": "Dictator (Cicero, #3)",
+      "author": "Robert Harris",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Tower of Nero (The Trials of Apollo, #5)",
+      "author": "Rick Riordan",
+      "date_read": "not set"
+    },
+    {
+      "title": "Dissertations on the Eumenides of Eschylus",
+      "author": "Carl Otfried Muller",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "The Nocturnal Brain: Nightmares, Neuroscience, and the Secret World of Sleep",
+      "author": "Guy Leschziner",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Girl Who Lived Twice (Millennium, #6)",
+      "author": "David Lagercrantz",
+      "date_read": "Jan 06, 2022"
+    },
+    {
+      "title": "Conscious: A Brief Guide to the Fundamental Mystery of the Mind",
+      "author": "Annaka Harris",
+      "date_read": "not set"
+    },
+    {
+      "title": "Lore",
+      "author": "Alexandra Bracken",
+      "date_read": "not set"
+    },
+    {
+      "title": "Piranesi",
+      "author": "Susanna Clarke",
+      "date_read": "not set"
+    },
+    {
+      "title": "Ariadne",
+      "author": "Jennifer Saint",
+      "date_read": "Mar 04, 2024"
+    },
+    {
+      "title": "Lives of the Stoics: The Art of Living from Zeno to Marcus Aurelius",
+      "author": "Ryan Holiday",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Translator of Desires: Poems",
+      "author": "Ibn ʿArabi",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "My Body: Was es heißt, eine Frau zu sein",
+      "author": "Emily Ratajkowski",
+      "date_read": "Aug 02, 2023"
+    },
+    {
+      "title": "The Sun and the Star (The Nico di Angelo Adventures #1)",
+      "author": "Rick Riordan",
+      "date_read": "Aug 16, 2023"
+    },
+    {
+      "title": "Summa Theologica",
+      "author": "Thomas Aquinas",
+      "date_read": "Oct 16, 2023"
+    },
+    {
+      "title": "Soul Mountain",
+      "author": "Gao Xingjian",
+      "date_read": "Mar 07, 2024"
+    },
+    {
+      "title": "Democracy in America",
+      "author": "Alexis de Tocqueville",
+      "date_read": "Feb 20, 2024"
+    },
+    {
+      "title": "The Essential Kabbalah: The Heart of Jewish Mysticism",
+      "author": "Daniel C. Matt",
+      "date_read": "Oct 25, 2023"
+    },
+    {
+      "title": "David Walker's Appeal: To the Coloured Citizens of the World...",
+      "author": "David Walker",
+      "date_read": "Mar 25, 2024"
+    },
+    {
+      "title": "Hildegard of Bingen: Scivias",
+      "author": "Hildegard of Bingen",
+      "date_read": "Oct 25, 2023"
+    },
+    {
+      "title": "Utilitarianism and Other Essays",
+      "author": "Jeremy Bentham",
+      "date_read": "Feb 02, 2024"
+    },
+    {
+      "title": "Hind Swaraj or Indian Home Rule",
+      "author": "Mahatma Gandhi",
+      "date_read": "Apr 10, 2024"
+    },
+    {
+      "title": "The Posthumous Memoirs of Brás Cubas",
+      "author": "Machado de Assis",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Qur'an",
+      "author": "Anonymous",
+      "date_read": "not set"
+    },
+    {
+      "title": "Letters to Milena",
+      "author": "Franz Kafka",
+      "date_read": "Apr 18, 2024"
+    },
+    {
+      "title": "To the Lighthouse",
+      "author": "Virginia Woolf",
+      "date_read": "Apr 25, 2023"
+    },
+    {
+      "title": "Confessions",
+      "author": "Augustine of Hippo",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Memoirs of a Geisha",
+      "author": "Arthur Golden",
+      "date_read": "not set"
+    },
+    {
+      "title": "Cat’s Cradle",
+      "author": "Kurt Vonnegut Jr.",
+      "date_read": "Jun 12, 2024"
+    },
+    {
+      "title": "The Golden Ass",
+      "author": "Apuleius",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Crisis of the Republic",
+      "author": "Hannah Arendt",
+      "date_read": "Apr 15, 2024"
+    },
+    {
+      "title": "A Vindication of the Rights of Woman",
+      "author": "Mary Wollstonecraft",
+      "date_read": "Feb 10, 2024"
+    },
+    {
+      "title": "Inferno",
+      "author": "Dante Alighieri",
+      "date_read": "Nov 23, 2021"
+    },
+    {
+      "title": "The Nicomachean Ethics",
+      "author": "Aristotle",
+      "date_read": "Sep 27, 2023"
+    },
+    {
+      "title": "Two Treatises of Government",
+      "author": "John Locke",
+      "date_read": "Nov 29, 2023"
+    },
+    {
+      "title": "Song of Solomon",
+      "author": "Toni Morrison",
+      "date_read": "not set"
+    },
+    {
+      "title": "On the Jewish Question",
+      "author": "Karl Marx",
+      "date_read": "Mar 18, 2024"
+    },
+    {
+      "title": "Ibn Tufayl's Hayy Ibn Yaqzan",
+      "author": "Ibn Tufail",
+      "date_read": "Oct 25, 2023"
+    },
+    {
+      "title": "On the Harmony of Religions and Philosophy",
+      "author": "Ibn Rushd",
+      "date_read": "Oct 16, 2023"
+    },
+    {
+      "title": "Annihilation of Caste",
+      "author": "B.R. Ambedkar",
+      "date_read": "Apr 10, 2024"
+    },
+    {
+      "title": "Life-Study of Job, Proverbs, Ecclesiastes, and Song of Songs",
+      "author": "Witness Lee",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Epiphenomenal Qualia",
+      "author": "Frank Jackson",
+      "date_read": "not set"
+    },
+    {
+      "title": "Das Kapital - Capital",
+      "author": "Karl Marx",
+      "date_read": "Mar 23, 2024"
+    },
+    {
+      "title": "The Girl in the Spider's Web (Millennium, #4)",
+      "author": "David Lagercrantz",
+      "date_read": "Jan 02, 2022"
+    },
+    {
+      "title": "The Royal Commentaries of the Incas and General History of Peru, Abridged",
+      "author": "Inca Garcilaso de la Vega",
+      "date_read": "Nov 09, 2023"
+    },
+    {
+      "title": "Æschylus - The Libation Bearers: from The Oresteia Trilogy...",
+      "author": "Æschylus",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "Human Acts",
+      "author": "Kang Han",
+      "date_read": "not set"
+    },
+    {
+      "title": "Circe",
+      "author": "Madeline Miller",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Girl Who Takes an Eye for an Eye (Millennium, #5)",
+      "author": "David Lagercrantz",
+      "date_read": "not set"
+    },
+    {
+      "title": "Venus in Two Acts",
+      "author": "Saidiya Hartman",
+      "date_read": "Apr 23, 2024"
+    },
+    {
+      "title": "Clytemnestra",
+      "author": "Costanza Casati",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Mark of Athena: The Graphic Novel (The Heroes of Olympus: The Graphic Novels, #3)",
+      "author": "Robert Venditti",
+      "date_read": "Mar 13, 2024"
+    },
+    {
+      "title": "Coding with AI For Dummies (For Dummies: Learning Made Easy)",
+      "author": "Chris Minnick",
+      "date_read": "Aug 26, 2024"
+    },
+    {
+      "title": "Father Arseny, 1893-1973: Priest, Prisoner, Spiritual Father...",
+      "author": "Vera Bouteneff",
+      "date_read": "Nov 09, 2023"
+    },
+    {
+      "title": "The Four Agreements: A Practical Guide to Personal Freedom",
+      "author": "Miguel Ruiz",
+      "date_read": "Feb 05, 2024"
+    },
+    {
+      "title": "The Combahee River Collective Statement: Black Feminist Organizing...",
+      "author": "Combahee River Collective",
+      "date_read": "Apr 23, 2024"
+    },
+    {
+      "title": "Think Python",
+      "author": "Allen B. Downey",
+      "date_read": "Jun 12, 2024"
+    },
+    {
+      "title": "Leviathan",
+      "author": "Thomas Hobbes",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Wretched of the Earth",
+      "author": "Frantz Fanon",
+      "date_read": "Apr 10, 2024"
+    },
+    {
+      "title": "Purple Hibiscus",
+      "author": "Chimamanda Ngozi Adichie",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Prince",
+      "author": "Niccolò Machiavelli",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Ambassadors",
+      "author": "Henry James",
+      "date_read": "Nov 30, 2023"
+    },
+    {
+      "title": "Politics",
+      "author": "Aristotle",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Guide of the Perplexed, Vol. 1",
+      "author": "Maimonides",
+      "date_read": "Oct 16, 2023"
+    },
+    {
+      "title": "Citizen: An American Lyric",
+      "author": "Claudia Rankine",
+      "date_read": "not set"
+    },
+    {
+      "title": "Father Comes Home From the Wars (Parts 1, 2 & 3)",
+      "author": "Suzan-Lori Parks",
+      "date_read": "Jan 2023"
+    },
+    {
+      "title": "The Silence of the Girls (Women of Troy, #1)",
+      "author": "Pat Barker",
+      "date_read": "not set"
+    },
+    {
+      "title": "Build-It-Yourself Birdhouses: 25+ DIY Birdhouses and Bird Feeders",
+      "author": "Chris Peterson",
+      "date_read": "May 05, 2024"
+    },
+    {
+      "title": "The Myth of the Social Contract: Refuting Common Arguments for Government Authority",
+      "author": "Andrew Kern",
+      "date_read": "Nov 14, 2023"
+    },
+    {
+      "title": "Don Quixote",
+      "author": "Miguel de Cervantes Saavedra",
+      "date_read": "Feb 23, 2023"
+    },
+    {
+      "title": "The Taming of the Shrew",
+      "author": "William Shakespeare",
+      "date_read": "not set"
+    },
+    {
+      "title": "Preface to the Letter of St. Paul to the Romans",
+      "author": "Martin Luther",
+      "date_read": "Nov 14, 2023"
+    },
+    {
+      "title": "Girl with a Pearl Earring: Dutch Paintings from the Mauritshuis",
+      "author": "Lea van der Vinde",
+      "date_read": "Jun 26, 2023"
+    },
+    {
+      "title": "Educated",
+      "author": "Tara Westover",
+      "date_read": "not set"
+    },
+    {
+      "title": "Friendly admonitions to the inhabitants of Great-Britain...",
+      "author": "Britannicus",
+      "date_read": "Nov 14, 2023"
+    },
+    {
+      "title": "The Logical Syntax of Language (Open Court Classics)",
+      "author": "Rudolf Carnap",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Handmaid’s Tale (The Handmaid's Tale, #1)",
+      "author": "Margaret Atwood",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "The Book of the Body Politic",
+      "author": "Christine de Pizan",
+      "date_read": "Nov 2023"
+    },
+    {
+      "title": "Plato's Republic",
+      "author": "Simon Blackburn",
+      "date_read": "not set"
+    },
+    {
+      "title": "Meditations on First Philosophy",
+      "author": "René Descartes",
+      "date_read": "not set"
+    },
+    {
+      "title": "Philosophy and Scientific Realism",
+      "author": "J.J.C. Smart",
+      "date_read": "not set"
+    },
+    {
+      "title": "Attack on Titan, Vol. 1",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 3",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 2",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 4",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 5",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 6",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 11",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 13",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan, Vol. 16",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 17 [Shingeki no Kyojin 17]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 18 [Shingeki no Kyojin 18]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 19 [Shingeki no Kyojin 19]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 20 [Shingeki no Kyojin 20]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Letter in Spanish of Christopher Columbus... 1493",
+      "author": "Christopher Columbus",
+      "date_read": "not set"
+    },
+    {
+      "title": "The Burning Maze (The Trials of Apollo, #3)",
+      "author": "Rick Riordan",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "The Tyrant’s Tomb (The Trials of Apollo, #4)",
+      "author": "Rick Riordan",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #7",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 21 [Shingeki no Kyojin 21]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 22 [Shingeki no Kyojin 22]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 23 [Shingeki no Kyojin 23]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 24 [Shingeki no Kyojin 24]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 25 [Shingeki no Kyojin 25]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 26 [Shingeki no Kyojin 26]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #12",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #8",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #9",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #10",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Attack on Titan #14",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 27 [Shingeki no Kyojin 27]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "나 혼자만 레벨업 1 [Na Honjaman Level Up 1]",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "進撃의巨人 28 [Shingeki no Kyojin 28]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 29 [Shingeki no Kyojin 29]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 31 [Shingeki no Kyojin 31]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Solo Leveling, vol. 2",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "進撃の巨人 32 [Shingeki no Kyojin 32]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "進撃の巨人 33 [Shingeki no Kyojin 33]",
+      "author": "Hajime Isayama",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Daughters of Sparta",
+      "author": "Claire Heywood",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Solo Leveling, vol. 3 (Solo Leveling, Manhwa #3)",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "나 혼자만 레벨업 4 [Na Honjaman Level Up 4]",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "Lore Olympus: Volume One (Lore Olympus, #1)",
+      "author": "Rachel Smythe",
+      "date_read": "Jan 2022"
+    },
+    {
+      "title": "Solo Leveling, vol. 5 (Solo Leveling, Manhwa #5)",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "Manhwa Collection: Solo Leveling Manhwa Vol 6",
+      "author": "Dubu",
+      "date_read": "not set"
+    },
+    {
+      "title": "Manhwa Collection: Solo Leveling Manhwa Vol 7",
+      "author": "Dubu",
+      "date_read": "not set"
+    }
+  ]
+}

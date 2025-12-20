@@ -1,0 +1,13 @@
+images/
+.DS_Store
+notes.txt
+__pycache__
+fonts
+out
+node_modules
+cockroachdb_url.txt
+cockroach-keys
+*.zip
+.vscode
+*.crt
+1-1000GR.json
