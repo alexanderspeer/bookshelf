@@ -2,6 +2,7 @@ from database.db import get_db
 from datetime import datetime
 import os
 import shutil
+from services.cover_service import fetch_and_save_cover
 
 class BookService:
     def __init__(self):
@@ -37,6 +38,10 @@ class BookService:
         )
         
         book_id = self.db.execute_update(query, params)
+        
+        # Note: spine_image_path is for actual spine photos (edge of book), not covers
+        # Real spine images must be uploaded by users or generated as fakes
+        # Covers are full front images and look bad when used as spines
         
         # Set initial reading state
         self.set_reading_state(book_id, initial_state)

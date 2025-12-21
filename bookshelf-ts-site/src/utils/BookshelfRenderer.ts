@@ -21,10 +21,20 @@ export interface BookshelfRendererParams {
   shelfFgColor?: string,
 }
 
+interface BookPosition {
+  book: foundBook | book;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export class BookshelfRenderer {
   books: (foundBook | book)[] = [];
   // can be manually overriden
   inProgressRenderCallback: ((b64ShelfString: string) => void) | null = null;
+  // Track book positions for interactivity
+  bookPositions: BookPosition[] = [];
 
   public get borderWidthInches() { return this._borderWidthInches; }
   set borderWidthInches(borderWidthInches: number) {
@@ -59,8 +69,8 @@ export class BookshelfRenderer {
 
   // the number of shelves is dynamic. A new shelf should be added after each row is completed.
   // TODO: Allow for max number of vertical shelves, then go horizontal.
-  private shelfBgColor = "#afb2b6";
-  private shelfFgColor = "#454856";
+  private shelfBgColor = "#8B6F47"; // Warm brown tone
+  private shelfFgColor = "#5C4033"; // Darker brown for borders
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
@@ -181,14 +191,29 @@ export class BookshelfRenderer {
         await this.addNewShelfRow();
       }
   
+      // Store book position for interactivity
+      const bookX = this.leftCurrent;
+      const bookY = this.bottomCurrent - dimensions.height;
+      this.bookPositions.push({
+        book: book,
+        x: bookX,
+        y: bookY,
+        width: dimensions.width,
+        height: dimensions.height
+      });
+
       // because canvas places the image from the top-left corner, we need to add the calculated height to the bottom
-      this.ctx.drawImage(spine, this.leftCurrent, this.bottomCurrent - dimensions.height, dimensions.width, dimensions.height);
+      this.ctx.drawImage(spine, bookX, bookY, dimensions.width, dimensions.height);
       this.leftCurrent += dimensions.width;
 
       if (this.inProgressRenderCallback != null) {
         this.inProgressRenderCallback(this.canvas.toDataURL("image/jpeg"));
       }
     }
+  }
+  
+  public getBookPositions(): BookPosition[] {
+    return this.bookPositions;
   }
 
   private getAuthorLastName(author: string): string {
@@ -245,20 +270,46 @@ export class BookshelfRenderer {
     const spineCtx = spineCanvas.getContext("2d") as CanvasRenderingContext2D;
     
     // select random background color and fill
-    // could be completely random, but probably better to select from a list of approved colors for good contrast
-    // TODO: allow user to create a personal color pallet for their fake spine generation
+    // Using muted, natural book colors with variety (browns, blues, reds, greens, etc.)
+    // All colors are light enough for black text to be readable
     const COLORS = [
-        {bg: "#f1faee", fg: "#000000"},
-        {bg: "#a8dadc", fg: "#000000"},
-        {bg: "#ff758f", fg: "#000000"},
-        {bg: "#ffddd2", fg: "#000000"},
-        {bg: "#ddb892", fg: "#000000"},
-        {bg: "#dde5b6", fg: "#000000"},
+        // Browns & Tans
+        {bg: "#E8DCC4", fg: "#000000"}, // Soft beige/cream
+        {bg: "#D4C5B9", fg: "#000000"}, // Light taupe
+        {bg: "#C9B8A8", fg: "#000000"}, // Warm grey-brown
+        {bg: "#C8B6A6", fg: "#000000"}, // Sandy brown
+        {bg: "#B8A898", fg: "#000000"}, // Dusty brown
+        
+        // Blues
+        {bg: "#A8B8C8", fg: "#000000"}, // Muted slate blue
+        {bg: "#B5C4D8", fg: "#000000"}, // Soft powder blue
+        {bg: "#9EAEC0", fg: "#000000"}, // Dusty blue-grey
+        {bg: "#C5D3E0", fg: "#000000"}, // Pale sky blue
+        {bg: "#8B9DAF", fg: "#000000"}, // Weathered blue
+        
+        // Reds & Burgundies
+        {bg: "#C89B9B", fg: "#000000"}, // Dusty rose
+        {bg: "#B89090", fg: "#000000"}, // Muted terracotta
+        {bg: "#D4A8A8", fg: "#000000"}, // Soft mauve
+        {bg: "#C08080", fg: "#000000"}, // Faded burgundy
+        {bg: "#B8A0A0", fg: "#000000"}, // Warm grey-rose
+        
+        // Greens
+        {bg: "#A8B8A0", fg: "#000000"}, // Sage green
+        {bg: "#9BAA92", fg: "#000000"}, // Muted olive
+        {bg: "#B5C4B0", fg: "#000000"}, // Soft mint
+        {bg: "#8FA088", fg: "#000000"}, // Dark sage
+        {bg: "#A0AFA0", fg: "#000000"}, // Weathered green
+        
+        // Greys & Neutrals
+        {bg: "#BFB5A8", fg: "#000000"}, // Stone grey
+        {bg: "#C0C0B8", fg: "#000000"}, // Warm grey
+        {bg: "#B0B0A8", fg: "#000000"}, // Silver-beige
+        {bg: "#D0D0C8", fg: "#000000"}, // Light ash
     ];
-    spineCtx.fillStyle = this.getRandomHexColor(); 
-    // this line gets a random color from the provided list
-    // const selectedColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-    // spineCtx.fillStyle = selectedColor.bg;
+    // Select random color from the muted palette
+    const selectedColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    spineCtx.fillStyle = selectedColor.bg;
     spineCtx.fillRect(0, 0, heightInPx, widthInPx);
 
     // LAST NAME

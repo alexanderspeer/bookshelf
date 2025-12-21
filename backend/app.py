@@ -138,11 +138,7 @@ def upload_spine(book_id):
     
     return jsonify({'filename': filename})
 
-@app.route('/api/spine_images/<path:filename>')
-def serve_spine_image(filename):
-    """Serve spine images"""
-    spine_path = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
-    return send_from_directory(spine_path, filename)
+# Spine image serving moved to end of file
 
 # =============================================================================
 # RANKING ENDPOINTS
@@ -378,6 +374,19 @@ def get_book_chain(book_id):
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'ok'})
+
+# =============================================================================
+# STATIC FILE SERVING
+# =============================================================================
+
+@app.route('/spine_images/<path:filename>')
+def serve_spine_image(filename):
+    """Serve spine images with CORS headers"""
+    spine_images_path = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
+    response = send_from_directory(spine_images_path, filename)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+    return response
 
 if __name__ == '__main__':
     host = os.getenv('HOST', 'localhost')
