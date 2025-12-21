@@ -193,31 +193,51 @@ class RankingService:
     
     def _generate_comparisons(self, new_book_id, candidates):
         """Generate comparison questions using binary search strategy"""
-        # For binary insertion, we need log2(n) comparisons
         import math
-        num_comparisons = min(math.ceil(math.log2(len(candidates) + 1)), 7)
         
-        # Use binary search positions
+        if not candidates:
+            return []
+        
+        # For true binary search, we need ceil(log2(n+1)) comparisons
+        # This allows us to find the exact position among n+1 possible spots
+        num_comparisons = min(math.ceil(math.log2(len(candidates) + 1)), 10)
+        
+        # Generate binary search path through the candidate list
+        # We'll create comparisons that simulate binary search insertion
         comparisons = []
+        
+        # Start with full range
         left = 0
         right = len(candidates) - 1
         
-        for _ in range(num_comparisons):
+        # Binary search simulation: at each step, compare with middle element
+        for i in range(num_comparisons):
             if left > right:
+                # We've narrowed down the position
                 break
             
+            # Find middle point
             mid = (left + right) // 2
+            
+            # Add this comparison
             comparisons.append({
                 'candidate_book_id': candidates[mid]['id'],
                 'candidate_title': candidates[mid]['title'],
                 'candidate_author': candidates[mid]['author'],
-                'candidate_position': candidates[mid]['rank_position']
+                'candidate_position': candidates[mid]['rank_position'],
+                'search_left': left,
+                'search_right': right,
+                'search_mid': mid
             })
             
-            # Alternate sides for next comparison
-            if len(comparisons) % 2 == 0:
+            # For the next iteration, we'll split the range
+            # The frontend will determine which half based on the comparison result
+            # Here we just alternate to show different parts of the range
+            if i % 2 == 0:
+                # Next time, explore the left half (in case new book is better)
                 right = mid - 1
             else:
+                # Explore right half (in case new book is worse)
                 left = mid + 1
         
         return comparisons

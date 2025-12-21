@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Book } from '../types/types';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
+import { RankingWizard } from '../components/RankingWizard';
 
 export const Shelves: React.FC = () => {
   const [wantToRead, setWantToRead] = useState<Book[]>([]);
@@ -9,6 +10,7 @@ export const Shelves: React.FC = () => {
   const [read, setRead] = useState<Book[]>([]);
   const [activeTab, setActiveTab] = useState<'want' | 'reading' | 'read'>('reading');
   const [loading, setLoading] = useState(true);
+  const [bookToRank, setBookToRank] = useState<Book | null>(null);
 
   useEffect(() => {
     fetchShelves();
@@ -48,6 +50,20 @@ export const Shelves: React.FC = () => {
     }
   };
 
+  const handleFinishBook = (book: Book) => {
+    // Open the ranking wizard instead of directly moving to read
+    setBookToRank(book);
+  };
+
+  const handleRankingComplete = () => {
+    setBookToRank(null);
+    fetchShelves();
+  };
+
+  const handleRankingCancel = () => {
+    setBookToRank(null);
+  };
+
   const renderShelf = (books: Book[], state: string) => (
     <div className="shelf-content">
       <div className="shelf-stats">
@@ -69,7 +85,7 @@ export const Shelves: React.FC = () => {
                   {book.why_reading && (
                     <p className="why-reading"><em>{book.why_reading}</em></p>
                   )}
-                  <button onClick={() => moveToShelf(book.id!, 'read')}>
+                  <button onClick={() => handleFinishBook(book)}>
                     Finish Book
                   </button>
                 </div>
@@ -127,6 +143,14 @@ export const Shelves: React.FC = () => {
       {activeTab === 'want' && renderShelf(wantToRead, 'want_to_read')}
       {activeTab === 'reading' && renderShelf(currentlyReading, 'currently_reading')}
       {activeTab === 'read' && renderShelf(read, 'read')}
+
+      {bookToRank && (
+        <RankingWizard
+          book={bookToRank}
+          onComplete={handleRankingComplete}
+          onCancel={handleRankingCancel}
+        />
+      )}
     </div>
   );
 };
