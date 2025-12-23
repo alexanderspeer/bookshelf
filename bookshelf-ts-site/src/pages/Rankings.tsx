@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Book, RankingWizard } from '../types/types';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
 
 export const Rankings: React.FC = () => {
   const [rankedBooks, setRankedBooks] = useState<Book[]>([]);
+  const [visibleRankedBooks, setVisibleRankedBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+  const cascadeTimers = useRef<NodeJS.Timeout[]>([]);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardData, setWizardData] = useState<RankingWizard | null>(null);
   const [wizardStep, setWizardStep] = useState(0);
@@ -17,16 +19,37 @@ export const Rankings: React.FC = () => {
 
   const fetchRankings = async () => {
     setLoading(true);
+    setVisibleRankedBooks([]);
+    
+    // Clear existing timers
+    cascadeTimers.current.forEach(timer => clearTimeout(timer));
+    cascadeTimers.current = [];
+    
     try {
       const books = await apiService.getRankings();
       setRankedBooks(books);
+      setLoading(false);
+      
+      // Cascade in books one at a time
+      books.forEach((book: Book, index: number) => {
+        const timer = setTimeout(() => {
+          setVisibleRankedBooks(prev => [...prev, book]);
+        }, index * 100); // 100ms delay for more noticeable effect
+        cascadeTimers.current.push(timer);
+      });
     } catch (error) {
       toast.error('Failed to load rankings');
       console.error(error);
-    } finally {
       setLoading(false);
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cascadeTimers.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   const startWizard = async (bookId: number, stars: number) => {
     try {
@@ -100,13 +123,13 @@ export const Rankings: React.FC = () => {
       <h1>My Book Rankings</h1>
       <p className="subtitle">Your personal ranked list of all read books</p>
 
-      {rankedBooks.length === 0 ? (
+      {rankedBooks.length === 0 && !loading ? (
         <div className="empty-state">
           <p>No ranked books yet. Finish a book to start ranking!</p>
         </div>
       ) : (
         <div className="ranked-list">
-          {rankedBooks.map((book, index) => (
+          {visibleRankedBooks.map((book, index) => (
             <div key={book.id} className="ranked-item">
               <div className="rank-number">#{book.rank_position || index + 1}</div>
               <div className="book-info">

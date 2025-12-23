@@ -103,43 +103,77 @@ class BookService:
         return True
     
     def search_books(self, query=None, author=None, tag=None, state=None, limit=50, offset=0):
-        """Search books with filters"""
+        """Search books with filters - optimized to fetch tags in single query"""
+        # Build base query without DISTINCT for better performance
         base_query = """
-            SELECT DISTINCT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
+            SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
             FROM books b
             LEFT JOIN reading_states rs ON b.id = rs.book_id
             LEFT JOIN rankings r ON b.id = r.book_id
-            LEFT JOIN book_tags bt ON b.id = bt.book_id
-            LEFT JOIN tags t ON bt.tag_id = t.id
-            WHERE 1=1
         """
         
         params = []
+        where_clauses = []
+        
+        # Add tag filter via subquery if needed (more efficient than JOIN with DISTINCT)
+        if tag:
+            where_clauses.append("b.id IN (SELECT bt.book_id FROM book_tags bt JOIN tags t ON bt.tag_id = t.id WHERE t.name = ?)")
+            params.append(tag)
         
         if query:
-            base_query += " AND (b.title LIKE ? OR b.author LIKE ? OR b.notes LIKE ?)"
+            where_clauses.append("(b.title LIKE ? OR b.author LIKE ? OR b.notes LIKE ?)")
             search_term = f"%{query}%"
             params.extend([search_term, search_term, search_term])
         
         if author:
-            base_query += " AND b.author LIKE ?"
+            where_clauses.append("b.author LIKE ?")
             params.append(f"%{author}%")
         
-        if tag:
-            base_query += " AND t.name = ?"
-            params.append(tag)
-        
         if state:
-            base_query += " AND rs.state = ?"
+            where_clauses.append("rs.state = ?")
             params.append(state)
+        
+        # Add WHERE clause if filters exist
+        if where_clauses:
+            base_query += " WHERE " + " AND ".join(where_clauses)
         
         base_query += " ORDER BY b.date_added DESC LIMIT ? OFFSET ?"
         params.extend([limit, offset])
         
-        return self.db.execute_query(base_query, params)
+        books = self.db.execute_query(base_query, params)
+        
+        # Fetch tags for all books in one query (avoid N+1 problem)
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            # Group tags by book_id
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            # Add tags to each book
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
     
     def get_books_by_state(self, state, limit=50, offset=0):
-        """Get books by reading state"""
+        """Get books by reading state - optimized with tag fetching"""
         query = """
             SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
             FROM books b
@@ -149,7 +183,37 @@ class BookService:
             ORDER BY rs.updated_at DESC
             LIMIT ? OFFSET ?
         """
-        return self.db.execute_query(query, (state, limit, offset))
+        books = self.db.execute_query(query, (state, limit, offset))
+        
+        # Fetch tags for all books in one query (avoid N+1 problem)
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            # Group tags by book_id
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            # Add tags to each book
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
     
     def set_reading_state(self, book_id, state, date_started=None, date_finished=None):
         """Set or update reading state"""

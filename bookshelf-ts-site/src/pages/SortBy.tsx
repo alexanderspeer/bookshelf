@@ -242,7 +242,10 @@ export function SortBy({widgetCallback, booklist} : sortByProps) {
   const generateShelf = async (params: BookshelfRendererParams) => { 
     const bookshelfRenderer = new BookshelfRenderer(params);
 
-    bookshelfRenderer.inProgressRenderCallback = (b64ShelfImage) => {
+    bookshelfRenderer.inProgressRenderCallback = () => {
+      // Get canvas and convert to base64 for img display
+      const canvas = bookshelfRenderer.getCanvas();
+      const b64ShelfImage = canvas.toDataURL("image/jpeg");
       widgetCallback(<img alt="shelf_in_progress_render" src={b64ShelfImage} className="display_shelf" />);
     }
 

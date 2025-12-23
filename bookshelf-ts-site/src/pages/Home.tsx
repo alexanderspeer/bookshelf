@@ -32,6 +32,9 @@ export const Home: React.FC = () => {
   const [showEditBookModal, setShowEditBookModal] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const hoverCanvasRef = React.useRef<HTMLCanvasElement>(null); // Separate overlay for hover
+  const renderingRef = React.useRef<boolean>(false);
+  const currentRenderIdRef = React.useRef<number>(0); // Track render ID to cancel old renders
 
   useEffect(() => {
     fetchBooks();
@@ -40,9 +43,17 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (currentlyReading.length > 0 || wantToRead.length > 0 || rankedBooks.length > 0) {
-      generateBookshelf();
-    }
+    // Debounce only search query (not shelf/tag filters for instant response)
+    const isSearchChange = searchQuery !== '';
+    const debounceMs = isSearchChange ? 150 : 0; // Only debounce search
+    
+    const timeoutId = setTimeout(() => {
+      if (currentlyReading.length > 0 || wantToRead.length > 0 || rankedBooks.length > 0) {
+        generateBookshelf();
+      }
+    }, debounceMs);
+
+    return () => clearTimeout(timeoutId);
   }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter]);
 
   const fetchBooks = async () => {
@@ -154,7 +165,17 @@ export const Home: React.FC = () => {
   };
 
   const generateBookshelf = async () => {
+    // Increment render ID to cancel any in-progress renders
+    currentRenderIdRef.current += 1;
+    const thisRenderId = currentRenderIdRef.current;
+    
+    // Increment render ID to cancel previous render
+    
     setRendering(true);
+    renderingRef.current = true;
+    setHoveredBook(null); // Clear hover during render
+    setBookPositions([]); // Clear positions to prevent wrong hover detection
+    
     try {
       let topShelfBooks: Book[];
       let allBooks: Book[];
@@ -198,6 +219,7 @@ export const Home: React.FC = () => {
       
       if (allBooks.length === 0) {
         setRendering(false);
+        renderingRef.current = false;
         setShelfImage(null);
         return;
       }
@@ -235,27 +257,84 @@ export const Home: React.FC = () => {
         shelfHeightInches: 18,  // Taller to fit more shelves
         borderWidthInches: 1,
         bookScaleFactor: 0.6,  // Zoom out to 60% to see more books
-        shelfLabels: labels
+        shelfLabels: labels,
+        cascadeDelayMs: 15  // 15ms delay between each book for fast cascade (adjust: 0-200ms)
       });
 
+      // Fast progressive rendering - draw directly from renderer's canvas!
+      let bookCounter = 0;
+      renderer.inProgressRenderCallback = () => {
+        // Ignore callbacks from cancelled renders
+        if (thisRenderId !== currentRenderIdRef.current) {
+          return;
+        }
+        
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        // Update positions every 5 books for responsive hover (optimized to avoid lag)
+        bookCounter++;
+        if (bookCounter % 5 === 0) {
+          setBookPositions([...renderer.getBookPositions()]);
+        }
+        
+        // Draw directly from renderer's internal canvas - FAST!
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const rendererCanvas = renderer.getCanvas();
+        
+        canvas.width = rendererCanvas.width;
+        canvas.height = rendererCanvas.height;
+        ctx.drawImage(rendererCanvas, 0, 0);
+      };
+
       const finalImage = await renderer.render();
+      
+      // Check if this render is still valid (not cancelled by new filter)
+      if (thisRenderId !== currentRenderIdRef.current) {
+        return; // This render was cancelled, don't apply results
+      }
+      
       const positions = renderer.getBookPositions();
+      
+      // Draw final image directly from renderer canvas
+      if (canvasRef.current && thisRenderId === currentRenderIdRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          const rendererCanvas = renderer.getCanvas();
+          canvas.width = rendererCanvas.width;
+          canvas.height = rendererCanvas.height;
+          ctx.drawImage(rendererCanvas, 0, 0);
+        }
+      }
+      
+      // Set final state for full interactivity
       setShelfImage(finalImage);
       setBookPositions(positions);
+      
+      renderingRef.current = false;
+      setRendering(false);
     } catch (error) {
       toast.error('Failed to generate bookshelf');
       console.error(error);
-    } finally {
+      renderingRef.current = false;
       setRendering(false);
     }
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
+    if (!hoverCanvasRef.current || bookPositions.length === 0) return;
     
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
+    const canvas = hoverCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate scale factors (internal canvas size / displayed size)
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Transform mouse coords from display space to internal canvas space
     const x = (event.clientX - rect.left) * scaleX;
     const y = (event.clientY - rect.top) * scaleY;
 
@@ -273,23 +352,30 @@ export const Home: React.FC = () => {
   };
 
   const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
+    if (!hoverCanvasRef.current || bookPositions.length === 0) return;
     
-    const rect = canvasRef.current.getBoundingClientRect();
-    const scaleX = canvasRef.current.width / rect.width;
-    const scaleY = canvasRef.current.height / rect.height;
-    const x = (event.clientX - rect.left) * scaleX;
-    const y = (event.clientY - rect.top) * scaleY;
+    const canvas = hoverCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate scale factors (internal canvas size / displayed size)
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Transform mouse coords from display space to internal canvas space
+    const mouseDisplayX = event.clientX - rect.left;
+    const mouseDisplayY = event.clientY - rect.top;
+    const x = mouseDisplayX * scaleX;
+    const y = mouseDisplayY * scaleY;
 
+    // Find hovered book
     const hovered = bookPositions.find(pos => 
       x >= pos.x && x <= pos.x + pos.width &&
       y >= pos.y && y <= pos.y + pos.height
     );
 
+
     setHoveredBook(hovered || null);
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor = hovered ? 'pointer' : 'default';
-    }
+    canvas.style.cursor = hovered ? 'pointer' : 'default';
   };
 
   const handleFinishBook = (book: Book) => {
@@ -336,75 +422,121 @@ export const Home: React.FC = () => {
     setBookToRank(book);
   };
 
+  // Hover effect drawing function - defined early so it can be used in multiple effects
+  const drawHoverEffect = React.useCallback(() => {
+    if (!hoverCanvasRef.current || !canvasRef.current) return;
+
+    const hoverCanvas = hoverCanvasRef.current;
+    const baseCanvas = canvasRef.current;
+    const hoverCtx = hoverCanvas.getContext('2d');
+    if (!hoverCtx) return;
+
+    // Always clear the entire hover canvas first
+    hoverCtx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
+
+    // Only draw hover effect if we have a hovered book
+    if (!hoveredBook) return;
+
+    const LIFT_DISTANCE = 15;
+    
+    // Step 1: Create a clean extraction of just the book (with small padding to avoid edge artifacts)
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = hoveredBook.width + 10;
+    tempCanvas.height = hoveredBook.height + 10;
+    const tempCtx = tempCanvas.getContext('2d');
+    if (!tempCtx) return;
+    
+    // Extract book with 5px padding on all sides
+    tempCtx.drawImage(
+      baseCanvas,
+      hoveredBook.x - 5,
+      hoveredBook.y - 5,
+      hoveredBook.width + 10,
+      hoveredBook.height + 10,
+      0,
+      0,
+      hoveredBook.width + 10,
+      hoveredBook.height + 10
+    );
+    
+    // Step 2: Fill original position completely with shelf color (hide original book)
+    hoverCtx.fillStyle = '#8B6F47';
+    hoverCtx.fillRect(
+      hoveredBook.x,
+      hoveredBook.y,
+      hoveredBook.width,
+      hoveredBook.height
+    );
+    
+    // Step 3: Draw extracted book at lifted position (same size, just moved up)
+    hoverCtx.drawImage(
+      tempCanvas,
+      hoveredBook.x - 5,
+      hoveredBook.y - LIFT_DISTANCE - 5
+    );
+    
+    // Step 4: Gold border around lifted book (no padding on border)
+    hoverCtx.strokeStyle = '#FFD700';
+    hoverCtx.lineWidth = 3;
+    hoverCtx.strokeRect(
+      hoveredBook.x,
+      hoveredBook.y - LIFT_DISTANCE,
+      hoveredBook.width,
+      hoveredBook.height
+    );
+  }, [hoveredBook]);
+
+  // Trigger hover effect redraw when hoveredBook changes or canvas updates
   React.useEffect(() => {
-    if (shelfImage && canvasRef.current && bookPositions.length > 0) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    drawHoverEffect();
+  }, [drawHoverEffect, bookPositions]); // Redraw on position updates (which happen during cascade)
 
-      const img = new Image();
-      img.src = shelfImage;
-      img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        const LIFT_DISTANCE = 15;
-        ctx.drawImage(img, 0, 0);
-
-        if (hoveredBook) {
-          const bookCanvas = document.createElement('canvas');
-          bookCanvas.width = hoveredBook.width + 10;
-          bookCanvas.height = hoveredBook.height + 10;
-          const bookCtx = bookCanvas.getContext('2d');
-          
-          if (bookCtx) {
-            bookCtx.drawImage(
-              img,
-              hoveredBook.x - 5,
-              hoveredBook.y - 5,
-              hoveredBook.width + 10,
-              hoveredBook.height + 10,
-              0,
-              0,
-              hoveredBook.width + 10,
-              hoveredBook.height + 10
-            );
-
-            ctx.fillStyle = '#8B6F47';
-            ctx.fillRect(
-              hoveredBook.x,
-              hoveredBook.y,
-              hoveredBook.width,
-              hoveredBook.height
-            );
-
-            ctx.save();
-            ctx.drawImage(
-              bookCanvas,
-              0,
-              0,
-              hoveredBook.width + 10,
-              hoveredBook.height + 10,
-              hoveredBook.x - 5,
-              hoveredBook.y - LIFT_DISTANCE - 5,
-              hoveredBook.width + 10,
-              hoveredBook.height + 10
-            );
-            
-            ctx.strokeStyle = '#FFD700';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(
-              hoveredBook.x,
-              hoveredBook.y - LIFT_DISTANCE,
-              hoveredBook.width,
-              hoveredBook.height
-            );
-            ctx.restore();
-          }
-        }
-      };
+  // Ensure hover canvas matches base canvas size (both internal AND displayed dimensions)
+  React.useEffect(() => {
+    if (!hoverCanvasRef.current || !canvasRef.current) return;
+    
+    const hoverCanvas = hoverCanvasRef.current;
+    const baseCanvas = canvasRef.current;
+    
+    // Sync internal canvas dimensions
+    // NOTE: Setting canvas.width or canvas.height clears the canvas!
+    // The hover effect useEffect will redraw after this if needed
+    if (hoverCanvas.width !== baseCanvas.width || hoverCanvas.height !== baseCanvas.height) {
+      hoverCanvas.width = baseCanvas.width;
+      hoverCanvas.height = baseCanvas.height;
     }
-  }, [shelfImage, hoveredBook, bookPositions]);
+    
+    // CRITICAL FIX: Sync displayed dimensions AND position via CSS to ensure perfect alignment
+    // Get the positions of both canvases relative to the viewport
+    const baseRect = baseCanvas.getBoundingClientRect();
+    const parentRect = hoverCanvas.parentElement?.getBoundingClientRect();
+    
+    if (parentRect) {
+      // Calculate offset of base canvas from parent container
+      const offsetLeft = baseRect.left - parentRect.left;
+      const offsetTop = baseRect.top - parentRect.top;
+      
+      // Position hover canvas exactly where base canvas is
+      hoverCanvas.style.left = `${offsetLeft}px`;
+      hoverCanvas.style.top = `${offsetTop}px`;
+    }
+    
+    // Match displayed dimensions
+    hoverCanvas.style.width = `${baseRect.width}px`;
+    hoverCanvas.style.height = `${baseRect.height}px`;
+    
+    // Keep hover canvas clear when not hovering (no debug rectangles needed anymore)
+    const ctx = hoverCanvas.getContext('2d');
+    if (ctx && !hoveredBook) {
+      ctx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
+    }
+    
+    // If we're hovering, schedule hover redraw to happen after this effect
+    // This ensures hover effect persists after canvas resize/clearing
+    if (hoveredBook && ctx) {
+      requestAnimationFrame(() => drawHoverEffect());
+    }
+  }, [shelfImage, rendering, bookPositions, hoveredBook, drawHoverEffect]);
 
   return (
     <div className="home-container">
@@ -563,20 +695,27 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {rendering && !shelfImage && (
-          <div className="loading-state">
-            <p>Rendering your bookshelf...</p>
-          </div>
-        )}
-
-        {shelfImage && (
-          <div className="bookshelf-display">
+        {/* Two-canvas approach: base + hover overlay for smooth cascade with hover */}
+        {(rendering || shelfImage) && (
+          <div className="bookshelf-display" style={{ position: 'relative' }}>
             <canvas 
               ref={canvasRef}
+              className="bookshelf-canvas"
+              style={{ display: 'block' }}
+            />
+            <canvas 
+              ref={hoverCanvasRef}
               onClick={handleCanvasClick}
               onMouseMove={handleCanvasMouseMove}
               onMouseLeave={() => setHoveredBook(null)}
               className="bookshelf-canvas"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                pointerEvents: 'auto',
+                display: 'block'
+              }}
             />
           </div>
         )}

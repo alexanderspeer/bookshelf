@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Book } from '../types/types';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
@@ -6,19 +6,27 @@ import { AddBookModal } from '../components/AddBookModal';
 
 export const Library: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
+  const [visibleBooks, setVisibleBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterState, setFilterState] = useState<string>('');
   const [filterTag, setFilterTag] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [pagination, setPagination] = useState({ limit: 500, offset: 0, total: 0 });
+  const [pagination, setPagination] = useState({ limit: 50, offset: 0, total: 0 });
+  
+  // Debounce timer ref
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const cascadeTimers = useRef<NodeJS.Timeout[]>([]);
 
-  useEffect(() => {
-    fetchBooks();
-  }, [filterState, filterTag, pagination.offset]);
-
-  const fetchBooks = async () => {
+  // Fetch books with debouncing for search
+  const fetchBooks = useCallback(async () => {
     setLoading(true);
+    setVisibleBooks([]); // Clear visible books when fetching new ones
+    
+    // Clear any existing cascade timers
+    cascadeTimers.current.forEach(timer => clearTimeout(timer));
+    cascadeTimers.current = [];
+    
     try {
       const response = await apiService.listBooks({
         q: searchQuery,
@@ -29,15 +37,57 @@ export const Library: React.FC = () => {
       });
       setBooks(response.books);
       setPagination(prev => ({ ...prev, total: response.total }));
+      setLoading(false);
+      
+      // Cascade books in one at a time
+      response.books.forEach((book: Book, index: number) => {
+        const timer = setTimeout(() => {
+          setVisibleBooks(prev => [...prev, book]);
+        }, index * 100); // 100ms delay between each book for more noticeable effect
+        cascadeTimers.current.push(timer);
+      });
     } catch (error) {
       toast.error('Failed to load books');
       console.error(error);
-    } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, filterState, filterTag, pagination.limit, pagination.offset]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      cascadeTimers.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
+
+  // Effect for filter changes (no debounce needed)
+  useEffect(() => {
+    fetchBooks();
+  }, [filterState, filterTag, pagination.offset]);
+
+  // Debounced search effect - triggers 500ms after user stops typing
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    debounceTimer.current = setTimeout(() => {
+      setPagination(prev => ({ ...prev, offset: 0 }));
+      fetchBooks();
+    }, 500);
+    
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchQuery]);
 
   const handleSearch = () => {
+    // Clear debounce and search immediately
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
     setPagination(prev => ({ ...prev, offset: 0 }));
     fetchBooks();
   };
@@ -99,10 +149,16 @@ export const Library: React.FC = () => {
       ) : (
         <>
           <div className="books-grid">
-            {books.map(book => (
+            {visibleBooks.map(book => (
               <div key={book.id} className="book-card">
                 {book.cover_image_url && (
-                  <img src={book.cover_image_url} alt={book.title} className="book-cover" />
+                  <img 
+                    src={book.cover_image_url} 
+                    alt={book.title} 
+                    className="book-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 )}
                 <div className="book-card-content">
                   <h3>{book.title}</h3>
@@ -120,7 +176,7 @@ export const Library: React.FC = () => {
             ))}
           </div>
 
-          {books.length === 0 && (
+          {books.length === 0 && !loading && (
             <div className="empty-state">
               <p>No books found. Add your first book to get started!</p>
             </div>

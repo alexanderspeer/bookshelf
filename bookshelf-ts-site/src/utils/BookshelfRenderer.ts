@@ -21,6 +21,7 @@ export interface BookshelfRendererParams {
   shelfFgColor?: string,
   bookScaleFactor?: number,
   shelfLabels?: string[],
+  cascadeDelayMs?: number, // Delay between rendering each book (default: 0)
 }
 
 interface BookPosition {
@@ -33,8 +34,8 @@ interface BookPosition {
 
 export class BookshelfRenderer {
   books: (foundBook | book)[] = [];
-  // can be manually overriden
-  inProgressRenderCallback: ((b64ShelfString: string) => void) | null = null;
+  // can be manually overriden - no params needed, access canvas directly via getCanvas()
+  inProgressRenderCallback: (() => void) | null = null;
   // Track book positions for interactivity
   bookPositions: BookPosition[] = [];
 
@@ -75,6 +76,7 @@ export class BookshelfRenderer {
   private shelfFgColor = "#5C4033"; // Darker brown for borders
   private bookScaleFactor = 1.0; // Scale factor for book sizes
   private shelfLabels: string[] = []; // Labels for each shelf
+  private cascadeDelayMs = 0; // Delay between rendering each book
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
@@ -108,7 +110,12 @@ export class BookshelfRenderer {
   }
 
   public async render(): Promise<string> {
-    this.currentShelfIndex = 0; // Reset shelf counter for new render
+    // Reset all state for new render
+    this.currentShelfIndex = 0;
+    this.bookPositions = [];
+    this.canvas.height = 0; // Reset canvas
+    this.recalculateStartingPositions(); // Reset positions
+    
     await this.addNewShelfRow();
     await this.loadSpines();
     return this.canvas.toDataURL("image/jpeg"); // to save space
@@ -196,7 +203,7 @@ export class BookshelfRenderer {
     this.currentShelfIndex++;
   
     if (this.inProgressRenderCallback != null) {
-      this.inProgressRenderCallback(this.canvas.toDataURL("image/jpeg"));
+      this.inProgressRenderCallback();
     }
   }
 
@@ -224,6 +231,7 @@ export class BookshelfRenderer {
       // Store book position for interactivity
       const bookX = this.leftCurrent;
       const bookY = this.bottomCurrent - dimensions.height;
+      
       this.bookPositions.push({
         book: book,
         x: bookX,
@@ -237,13 +245,23 @@ export class BookshelfRenderer {
       this.leftCurrent += dimensions.width;
 
       if (this.inProgressRenderCallback != null) {
-        this.inProgressRenderCallback(this.canvas.toDataURL("image/jpeg"));
+        // Call callback without expensive base64 conversion - access canvas directly!
+        this.inProgressRenderCallback();
+        
+        // Add delay between books if cascadeDelayMs is set
+        if (this.cascadeDelayMs > 0) {
+          await new Promise(resolve => setTimeout(resolve, this.cascadeDelayMs));
+        }
       }
     }
   }
   
   public getBookPositions(): BookPosition[] {
     return this.bookPositions;
+  }
+
+  public getCanvas(): HTMLCanvasElement {
+    return this.canvas;
   }
 
   private getAuthorLastName(author: string): string {

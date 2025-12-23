@@ -32,10 +32,11 @@ export const VisualizeShelf: React.FC = () => {
     try {
       let booksData;
       if (selectedShelf === 'all') {
-        const response = await apiService.listBooks({ limit: 1000 });
+        // Reduced from 1000 to 500 for better performance
+        const response = await apiService.listBooks({ limit: 500 });
         booksData = response.books;
       } else {
-        const response = await apiService.getShelf(selectedShelf, 1000, 0);
+        const response = await apiService.getShelf(selectedShelf, 500, 0);
         booksData = response.books;
       }
       

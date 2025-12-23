@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_caching import Cache
 from dotenv import load_dotenv
 import os
 
@@ -16,6 +17,14 @@ from services.continuation_service import get_continuation_service
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
+
+# Configure caching
+cache_config = {
+    'CACHE_TYPE': 'SimpleCache',  # In-memory cache
+    'CACHE_DEFAULT_TIMEOUT': 300  # 5 minutes default
+}
+app.config.from_mapping(cache_config)
+cache = Cache(app)
 
 # Services
 book_service = get_book_service()
@@ -48,6 +57,7 @@ def create_book():
     initial_state = data.pop('initial_state', 'want_to_read')
     
     book = book_service.create_book(data, initial_state)
+    cache.clear()  # Clear cache when books change
     return jsonify(book), 201
 
 @app.route('/api/books/<int:book_id>', methods=['GET'])
@@ -69,15 +79,23 @@ def update_book(book_id):
     """Update a book"""
     data = request.json
     book = book_service.update_book(book_id, data)
+    cache.clear()  # Clear cache when books change
     return jsonify(book)
 
 @app.route('/api/books/<int:book_id>', methods=['DELETE'])
 def delete_book(book_id):
     """Delete a book"""
     book_service.delete_book(book_id)
+    cache.clear()  # Clear cache when books change
     return jsonify({'success': True})
 
+def make_cache_key(*args, **kwargs):
+    """Create cache key from request args"""
+    args_str = str(sorted(request.args.items()))
+    return f"{request.path}:{args_str}"
+
 @app.route('/api/books', methods=['GET'])
+@cache.cached(timeout=60, key_prefix=make_cache_key)  # Cache for 1 minute
 def list_books():
     """List books with filters"""
     query = request.args.get('q')
@@ -98,6 +116,7 @@ def list_books():
     })
 
 @app.route('/api/books/shelf/<state>', methods=['GET'])
+@cache.cached(timeout=60, key_prefix=make_cache_key)  # Cache for 1 minute
 def get_shelf(state):
     """Get books by reading state"""
     limit = int(request.args.get('limit', 50))
@@ -125,6 +144,7 @@ def set_reading_state(book_id):
         return jsonify({'error': 'State required'}), 400
     
     book_service.set_reading_state(book_id, state, date_started, date_finished)
+    cache.clear()  # Clear cache when reading states change
     return jsonify({'success': True})
 
 @app.route('/api/books/<int:book_id>/spine', methods=['POST'])
