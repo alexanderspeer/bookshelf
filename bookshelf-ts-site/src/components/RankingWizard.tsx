@@ -35,6 +35,7 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
   const [finalPosition, setFinalPosition] = useState<number>(1);
   const [totalRanked, setTotalRanked] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
+  const [bookNotes, setBookNotes] = useState<string>('');
 
   const startComparisons = async () => {
     try {
@@ -118,6 +119,11 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
         date_finished: new Date().toISOString()
       });
 
+      // Update book with notes if provided
+      if (bookNotes.trim()) {
+        await apiService.updateBook(book.id!, { notes: bookNotes });
+      }
+
       // Then finalize the ranking
       await apiService.finalizeRanking(book.id!, position, stars, results);
       
@@ -157,6 +163,17 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
         <div className="star-label">
           {stars} {stars === 1 ? 'star' : 'stars'}
         </div>
+      </div>
+
+      <div className="notes-section">
+        <label className="notes-label">Your thoughts on this book (optional):</label>
+        <textarea
+          className="notes-textarea"
+          placeholder="What did you think? Any memorable moments or reflections..."
+          value={bookNotes}
+          onChange={(e) => setBookNotes(e.target.value)}
+          rows={4}
+        />
       </div>
 
       <p className="helper-text">

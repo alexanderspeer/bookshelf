@@ -97,6 +97,39 @@
   color: #34495e;
 }
 
+.notes-section {
+  margin: 2rem 0;
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.notes-label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 0.8rem;
+}
+
+.notes-textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
 .helper-text {
   color: #7f8c8d;
   font-size: 0.95rem;

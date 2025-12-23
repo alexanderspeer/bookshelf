@@ -19,6 +19,8 @@ export interface BookshelfRendererParams {
   borderWidthInches?: number,
   shelfBgColor?: string,
   shelfFgColor?: string,
+  bookScaleFactor?: number,
+  shelfLabels?: string[],
 }
 
 interface BookPosition {
@@ -71,6 +73,8 @@ export class BookshelfRenderer {
   // TODO: Allow for max number of vertical shelves, then go horizontal.
   private shelfBgColor = "#8B6F47"; // Warm brown tone
   private shelfFgColor = "#5C4033"; // Darker brown for borders
+  private bookScaleFactor = 1.0; // Scale factor for book sizes
+  private shelfLabels: string[] = []; // Labels for each shelf
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
@@ -78,6 +82,8 @@ export class BookshelfRenderer {
   private leftCurrent = 0;
   private bottomStart = 0;
   private bottomCurrent = 0;
+  private currentShelfIndex = 0;
+  private fakeSpineCache: Map<string, FakeSpineData> = new Map();
 
   constructor(params: BookshelfRendererParams) {
     Object.assign(this, params);
@@ -102,6 +108,7 @@ export class BookshelfRenderer {
   }
 
   public async render(): Promise<string> {
+    this.currentShelfIndex = 0; // Reset shelf counter for new render
     await this.addNewShelfRow();
     await this.loadSpines();
     return this.canvas.toDataURL("image/jpeg"); // to save space
@@ -118,9 +125,10 @@ export class BookshelfRenderer {
       return this.convertInchesToPx(floatValue);
     }).sort((a: number, b: number) => a - b);
     // smallest value should be spine width, largest should be height
+    // Apply scale factor to make books smaller/larger
     return {
-      width: pxValues[0],
-      height: pxValues[2],
+      width: pxValues[0] * this.bookScaleFactor,
+      height: pxValues[2] * this.bookScaleFactor,
     }
   }
 
@@ -164,6 +172,28 @@ export class BookshelfRenderer {
     }
     // bottom border
     this.ctx.fillRect(0, bottomBorderStart, this.shelfWidth, this.borderWidth);
+  
+    // Add shelf label if available
+    if (this.shelfLabels && this.shelfLabels[this.currentShelfIndex]) {
+      const label = this.shelfLabels[this.currentShelfIndex];
+      const labelY = initialHeight + this.borderWidth + 20; // Position label near top of shelf
+      
+      this.ctx.save();
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.strokeStyle = '#5C4033';
+      this.ctx.lineWidth = 2;
+      this.ctx.font = 'bold 16px Arial';
+      this.ctx.textAlign = 'left';
+      this.ctx.textBaseline = 'top';
+      
+      // Draw text with outline for visibility
+      const labelX = this.borderWidth + 10;
+      this.ctx.strokeText(label, labelX, labelY);
+      this.ctx.fillText(label, labelX, labelY);
+      this.ctx.restore();
+    }
+    
+    this.currentShelfIndex++;
   
     if (this.inProgressRenderCallback != null) {
       this.inProgressRenderCallback(this.canvas.toDataURL("image/jpeg"));
@@ -225,6 +255,30 @@ export class BookshelfRenderer {
     return (Math.random() * (maximum - minimum)) + minimum;
   }
 
+  private getBookCacheKey(book: book): string {
+    // Create a unique key for each book based on title and author
+    return `${book.title}||${book.author}`;
+  }
+
+  private seededRandom(seed: number): number {
+    // Simple seeded random number generator (mulberry32)
+    let t = seed + 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+
+  private stringToSeed(str: string): number {
+    // Convert string to a numeric seed
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  }
+
   private calculateStringFontSizeInRange(stringValue: string,
                                  font: string,
                                  startingFontSize: number,
@@ -253,23 +307,37 @@ export class BookshelfRenderer {
   }
 
   private generateFakeSpine(incompleteBook: book): FakeSpineData {
+    // Check cache first
+    const cacheKey = this.getBookCacheKey(incompleteBook);
+    if (this.fakeSpineCache.has(cacheKey)) {
+      return this.fakeSpineCache.get(cacheKey)!;
+    }
+
+    // Generate seed from book title and author for consistent results
+    const seed = this.stringToSeed(cacheKey);
+    
     // create a new canvas
     const spineCanvas = document.createElement("canvas");
 
-    // Come up with a random height and width in a certain inch range, then convert to px
+    // Come up with dimensions using seeded random for consistency
     const MINIMUM_HEIGHT_INCHES = 6.5;
     const MAXIMUM_HEIGHT_INCHES = this.shelfHeightInches - 1; // 1 inch shorter than shelf height
     const MINIMUM_WIDTH_INCHES = .75;
     const MAXIMUM_WIDTH_INCHES = 2;
-    const widthInPx = Math.floor(this.convertInchesToPx(this.getRandomFloatInIntRange(MINIMUM_WIDTH_INCHES, MAXIMUM_WIDTH_INCHES)));
-    const heightInPx = Math.floor(this.convertInchesToPx(this.getRandomFloatInIntRange(MINIMUM_HEIGHT_INCHES, MAXIMUM_HEIGHT_INCHES)));
+
+    // Use seeded random for consistent dimensions
+    const heightRandom = this.seededRandom(seed);
+    const widthRandom = this.seededRandom(seed + 1);
+    
+    const widthInPx = Math.floor(this.convertInchesToPx(MINIMUM_WIDTH_INCHES + widthRandom * (MAXIMUM_WIDTH_INCHES - MINIMUM_WIDTH_INCHES)));
+    const heightInPx = Math.floor(this.convertInchesToPx(MINIMUM_HEIGHT_INCHES + heightRandom * (MAXIMUM_HEIGHT_INCHES - MINIMUM_HEIGHT_INCHES)));
     
     // inverse height and width so the book is laying on its side (easier for writing text)
     spineCanvas.height = widthInPx;
     spineCanvas.width = heightInPx;
     const spineCtx = spineCanvas.getContext("2d") as CanvasRenderingContext2D;
     
-    // select random background color and fill
+    // select background color using seeded random for consistency
     // Using muted, natural book colors with variety (browns, blues, reds, greens, etc.)
     // All colors are light enough for black text to be readable
     const COLORS = [
@@ -307,8 +375,9 @@ export class BookshelfRenderer {
         {bg: "#B0B0A8", fg: "#000000"}, // Silver-beige
         {bg: "#D0D0C8", fg: "#000000"}, // Light ash
     ];
-    // Select random color from the muted palette
-    const selectedColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+    // Select color using seeded random for consistency
+    const colorRandom = this.seededRandom(seed + 2);
+    const selectedColor = COLORS[Math.floor(colorRandom * COLORS.length)];
     spineCtx.fillStyle = selectedColor.bg;
     spineCtx.fillRect(0, 0, heightInPx, widthInPx);
 
@@ -358,11 +427,16 @@ export class BookshelfRenderer {
     const b64 = spineCanvas.toDataURL("image/png");
 
     // return object with dataurl string, heightInPx and widthInPx 
-    return {
+    const fakeSpineData = {
       dataURL: b64,
       heightInPx: heightInPx,
       widthInPx: widthInPx,
-    }
+    };
+
+    // Cache the generated spine data (cacheKey already declared at top of function)
+    this.fakeSpineCache.set(cacheKey, fakeSpineData);
+
+    return fakeSpineData;
   }
 
   private getRandomHexColor(): string {

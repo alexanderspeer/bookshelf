@@ -9,6 +9,7 @@ class GoalService:
     
     def set_goal(self, year, target_count, period='year'):
         """Set or update reading goal"""
+        print(f"🎯 SET_GOAL called: year={year}, target_count={target_count}, period={period}")
         query = """
             INSERT INTO reading_goals (year, target_count, period)
             VALUES (?, ?, ?)
@@ -16,23 +17,34 @@ class GoalService:
                 target_count = excluded.target_count,
                 period = excluded.period
         """
-        self.db.execute_update(query, (year, target_count, period))
-        return self.get_goal(year)
+        print(f"📝 Executing update query...")
+        result = self.db.execute_update(query, (year, target_count, period))
+        print(f"✅ Update executed, lastrowid={result}")
+        
+        print(f"📖 Fetching goal back...")
+        goal = self.get_goal(year)
+        print(f"📦 Returning goal: {goal}")
+        return goal
     
     def get_goal(self, year):
         """Get reading goal for a year"""
+        print(f"🔍 GET_GOAL called: year={year}")
         query = "SELECT * FROM reading_goals WHERE year = ?"
         results = self.db.execute_query(query, (year,))
+        print(f"📊 Query results: {results}")
         
         if not results:
+            print(f"❌ No goal found for year {year}")
             return None
         
         goal = results[0]
+        print(f"✅ Found goal: {dict(goal)}")
         
         # Calculate progress
         progress = self.get_goal_progress(year, goal['period'])
         goal.update(progress)
         
+        print(f"📦 Returning goal with progress: {dict(goal)}")
         return goal
     
     def get_goal_progress(self, year, period='year'):
@@ -84,7 +96,9 @@ class GoalService:
     
     def get_current_goal(self):
         """Get goal for current year"""
-        return self.get_goal(datetime.now().year)
+        current_year = datetime.now().year
+        print(f"📅 GET_CURRENT_GOAL called: current_year={current_year}")
+        return self.get_goal(current_year)
     
     def delete_goal(self, year):
         """Delete reading goal"""

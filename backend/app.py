@@ -292,7 +292,10 @@ def get_goals():
 def get_current_goal():
     """Get current year's goal"""
     goal = goal_service.get_current_goal()
-    return jsonify(goal) if goal else jsonify({'error': 'No goal set'}), 404
+    if goal:
+        return jsonify(goal)
+    else:
+        return jsonify({'error': 'No goal set'}), 404
 
 @app.route('/api/goals', methods=['POST'])
 def set_goal():

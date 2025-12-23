@@ -1,3 +1,84 @@
+/* Tags Section in AddBookModal */
+.tags-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag-button {
+  padding: 0.5rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tag-button.selected {
+  border-color: rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+}
+
+.new-tag-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.new-tag-input input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.new-tag-input button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #3498db;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.new-tag-input button:last-child {
+  background: #95a5a6;
+}
+
+.new-tag-input button:hover {
+  opacity: 0.9;
+}
+
+.add-tag-button {
+  padding: 0.5rem 1rem;
+  border: 2px dashed #bdc3c7;
+  border-radius: 20px;
+  background: transparent;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-tag-button:hover {
+  border-color: #3498db;
+  color: #3498db;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
