@@ -49,7 +49,7 @@ class BookService:
         return self.get_book(book_id)
     
     def get_book(self, book_id):
-        """Get a single book by ID"""
+        """Get a single book by ID with tags"""
         query = """
             SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
             FROM books b
@@ -58,7 +58,22 @@ class BookService:
             WHERE b.id = ?
         """
         results = self.db.execute_query(query, (book_id,))
-        return results[0] if results else None
+        if not results:
+            return None
+        
+        book = results[0]
+        
+        # Fetch tags for this book
+        tags_query = """
+            SELECT t.id, t.name, t.color
+            FROM book_tags bt
+            JOIN tags t ON bt.tag_id = t.id
+            WHERE bt.book_id = ?
+        """
+        tags_results = self.db.execute_query(tags_query, (book_id,))
+        book['tags'] = tags_results if tags_results else []
+        
+        return book
     
     def update_book(self, book_id, book_data):
         """Update book information"""

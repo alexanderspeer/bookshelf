@@ -58,6 +58,7 @@ export const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [shelfFilter, setShelfFilter] = useState<string>('all');
   const [tagFilter, setTagFilter] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<string>('none');
   const [loading, setLoading] = useState(false);
   const [shelfImage, setShelfImage] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
@@ -117,7 +118,7 @@ export const Home: React.FC = () => {
 
     return () => clearTimeout(timeoutId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter, currentTheme]);
+  }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter, sortOrder, currentTheme]);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -227,6 +228,26 @@ export const Home: React.FC = () => {
     return filtered;
   };
 
+  const sortBooks = (books: Book[], order: string): Book[] => {
+    const sorted = [...books];
+    
+    if (order === 'title_asc') {
+      sorted.sort((a, b) => {
+        const titleA = (a.title || '').toLowerCase();
+        const titleB = (b.title || '').toLowerCase();
+        return titleA.localeCompare(titleB);
+      });
+    } else if (order === 'author_asc') {
+      sorted.sort((a, b) => {
+        const authorA = (a.author || '').toLowerCase();
+        const authorB = (b.author || '').toLowerCase();
+        return authorA.localeCompare(authorB);
+      });
+    }
+    
+    return sorted;
+  };
+
   const generateBookshelf = async () => {
     // Increment render ID to cancel any in-progress renders
     currentRenderIdRef.current += 1;
@@ -289,6 +310,31 @@ export const Home: React.FC = () => {
         
         topShelfBooks = [];
         allBooks = filtered;
+      }
+      
+      // Apply sorting if specified
+      if (sortOrder !== 'none') {
+        // Separate bookend from other books
+        const bookendIndex = allBooks.findIndex(b => b.title === '__BOOKEND__' && b.author === '__BOOKEND__');
+        let booksToSort: Book[];
+        let bookend: Book | null = null;
+        
+        if (bookendIndex !== -1) {
+          bookend = allBooks[bookendIndex];
+          // Split into before and after bookend
+          const beforeBookend = allBooks.slice(0, bookendIndex);
+          const afterBookend = allBooks.slice(bookendIndex + 1);
+          
+          // Sort both sections
+          const sortedBefore = sortBooks(beforeBookend, sortOrder);
+          const sortedAfter = sortBooks(afterBookend, sortOrder);
+          
+          // Recombine with bookend
+          allBooks = [...sortedBefore, bookend, ...sortedAfter];
+        } else {
+          // No bookend, sort all books
+          allBooks = sortBooks(allBooks, sortOrder);
+        }
       }
       
       if (allBooks.length === 0) {
@@ -717,7 +763,7 @@ export const Home: React.FC = () => {
         
         {/* Add Book Section */}
         <div className="sidebar-section">
-          <h2>Add a Book</h2>
+          <h2></h2>
           <button 
             className="primary-button"
             onClick={() => setShowAddBookModal(true)}
@@ -728,7 +774,7 @@ export const Home: React.FC = () => {
 
         {/* Reading Goal Section */}
         <div className="sidebar-section">
-          <h2>Reading Goal</h2>
+          <h2></h2>
           {currentGoal ? (
             isGoalCompleted(currentGoal) ? (
               <div className="goal-completed-container">
@@ -804,7 +850,7 @@ export const Home: React.FC = () => {
 
         {/* Stats Section */}
         <div className="sidebar-section">
-          <h2>Your Stats</h2>
+          <h2></h2>
           <div className="stats-column">
             <div className="stat-item">
               <span className="stat-number">{wantToRead.length}</span>
@@ -823,7 +869,7 @@ export const Home: React.FC = () => {
 
         {/* Import Section */}
         <div className="sidebar-section">
-          <h2>Import Books</h2>
+          <h2></h2>
           <button 
             className="secondary-button"
             onClick={() => setShowImportModal(true)}
@@ -863,6 +909,15 @@ export const Home: React.FC = () => {
               {allTags.map(tag => (
                 <option key={tag.id} value={tag.id}>{tag.name}</option>
               ))}
+            </select>
+            <select
+              className="filter-select"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="none">No Sort</option>
+              <option value="title_asc">Title (A-Z)</option>
+              <option value="author_asc">Author (A-Z)</option>
             </select>
             <button 
               className="theme-button"

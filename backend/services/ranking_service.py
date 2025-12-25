@@ -72,14 +72,44 @@ class RankingService:
         return self.get_ranked_books()
     
     def get_ranked_books(self):
-        """Get all ranked books in order"""
+        """Get all ranked books in order with tags"""
         query = """
             SELECT b.*, r.rank_position, r.initial_stars
             FROM books b
             JOIN rankings r ON b.id = r.book_id
             ORDER BY r.rank_position ASC
         """
-        return self.db.execute_query(query)
+        books = self.db.execute_query(query)
+        
+        # Fetch tags for all books in one query (avoid N+1 problem)
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            # Group tags by book_id
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            # Add tags to each book
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
     
     def get_book_rank(self, book_id):
         """Get rank information for a specific book"""
