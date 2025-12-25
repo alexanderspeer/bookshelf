@@ -33,6 +33,21 @@ export interface Tag {
   book_count?: number;
 }
 
+export interface BookColorOverride {
+  bookId: number;
+  color: string;
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  shelfBgColor: string;
+  shelfFgColor: string;
+  bookColors: BookColorOverride[];
+  bookColorPalette?: string[]; // Palette of colors to rotate through for books
+  isDefault?: boolean;
+}
+
 export interface Ranking {
   id: number;
   book_id: number;

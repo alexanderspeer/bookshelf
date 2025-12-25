@@ -212,7 +212,13 @@ export class BookshelfRenderer {
       const spine = new Image();
       spine.crossOrigin = "anonymous";
       let dimensions;
-      if ('fileName' in book && book.fileName != null) {
+      
+      // Check if this is a bookend marker
+      if (book.title === '__BOOKEND__' && book.author === '__BOOKEND__') {
+        const bookendData = this.generateBookend();
+        spine.src = bookendData.dataURL;
+        dimensions = { height: bookendData.heightInPx, width: bookendData.widthInPx };
+      } else if ('fileName' in book && book.fileName != null) {
         spine.src = IMG_URL_PREFIX + book.fileName;
         dimensions = this.convertBookDimensionsToPx(book);
       } else { // we're generating a fake spine
@@ -324,15 +330,68 @@ export class BookshelfRenderer {
     return validMeasuredText;
   }
 
-  private generateFakeSpine(incompleteBook: book): FakeSpineData {
+  private generateBookend(): FakeSpineData {
     // Check cache first
-    const cacheKey = this.getBookCacheKey(incompleteBook);
+    const cacheKey = '__BOOKEND__';
+    if (this.fakeSpineCache.has(cacheKey)) {
+      return this.fakeSpineCache.get(cacheKey)!;
+    }
+
+    // create a new canvas
+    const spineCanvas = document.createElement("canvas");
+
+    // Make bookend taller (90% of shelf height) and thicker than regular books
+    const heightInPx = Math.floor(this.convertInchesToPx(this.shelfHeightInches * 0.9));
+    const widthInPx = Math.floor(this.convertInchesToPx(1.5)); // 1.5 inches wide
+    
+    spineCanvas.width = widthInPx;
+    spineCanvas.height = heightInPx;
+    const spineCtx = spineCanvas.getContext("2d") as CanvasRenderingContext2D;
+    
+    // Use the same brown color as the shelf border (shelfFgColor = "#5C4033")
+    spineCtx.fillStyle = this.shelfFgColor;
+    spineCtx.fillRect(0, 0, widthInPx, heightInPx);
+
+    // Add some wood grain texture by drawing darker vertical lines
+    spineCtx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+    spineCtx.lineWidth = 1;
+    for (let i = 0; i < widthInPx; i += 3) {
+      spineCtx.beginPath();
+      spineCtx.moveTo(i, 0);
+      spineCtx.lineTo(i, heightInPx);
+      spineCtx.stroke();
+    }
+
+    // Add a subtle border to make it look more book-like
+    spineCtx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+    spineCtx.lineWidth = 2;
+    spineCtx.strokeRect(1, 1, widthInPx - 2, heightInPx - 2);
+
+    // convert to dataUrl
+    const b64 = spineCanvas.toDataURL("image/png");
+
+    // return object with dataurl string, heightInPx and widthInPx 
+    const bookendData = {
+      dataURL: b64,
+      heightInPx: heightInPx,
+      widthInPx: widthInPx,
+    };
+
+    // Cache the generated bookend
+    this.fakeSpineCache.set(cacheKey, bookendData);
+
+    return bookendData;
+  }
+
+  private generateFakeSpine(incompleteBook: book): FakeSpineData {
+    // Check cache first - include domColor in cache key for color customization
+    const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default');
     if (this.fakeSpineCache.has(cacheKey)) {
       return this.fakeSpineCache.get(cacheKey)!;
     }
 
     // Generate seed from book title and author for consistent results
-    const seed = this.stringToSeed(cacheKey);
+    const seed = this.stringToSeed(this.getBookCacheKey(incompleteBook));
     
     // create a new canvas
     const spineCanvas = document.createElement("canvas");
@@ -355,48 +414,57 @@ export class BookshelfRenderer {
     spineCanvas.width = heightInPx;
     const spineCtx = spineCanvas.getContext("2d") as CanvasRenderingContext2D;
     
-    // select background color using seeded random for consistency
-    // Using muted, natural book colors with variety (browns, blues, reds, greens, etc.)
-    // All colors are light enough for black text to be readable
-    const COLORS = [
-        // Browns & Tans
-        {bg: "#E8DCC4", fg: "#000000"}, // Soft beige/cream
-        {bg: "#D4C5B9", fg: "#000000"}, // Light taupe
-        {bg: "#C9B8A8", fg: "#000000"}, // Warm grey-brown
-        {bg: "#C8B6A6", fg: "#000000"}, // Sandy brown
-        {bg: "#B8A898", fg: "#000000"}, // Dusty brown
-        
-        // Blues
-        {bg: "#A8B8C8", fg: "#000000"}, // Muted slate blue
-        {bg: "#B5C4D8", fg: "#000000"}, // Soft powder blue
-        {bg: "#9EAEC0", fg: "#000000"}, // Dusty blue-grey
-        {bg: "#C5D3E0", fg: "#000000"}, // Pale sky blue
-        {bg: "#8B9DAF", fg: "#000000"}, // Weathered blue
-        
-        // Reds & Burgundies
-        {bg: "#C89B9B", fg: "#000000"}, // Dusty rose
-        {bg: "#B89090", fg: "#000000"}, // Muted terracotta
-        {bg: "#D4A8A8", fg: "#000000"}, // Soft mauve
-        {bg: "#C08080", fg: "#000000"}, // Faded burgundy
-        {bg: "#B8A0A0", fg: "#000000"}, // Warm grey-rose
-        
-        // Greens
-        {bg: "#A8B8A0", fg: "#000000"}, // Sage green
-        {bg: "#9BAA92", fg: "#000000"}, // Muted olive
-        {bg: "#B5C4B0", fg: "#000000"}, // Soft mint
-        {bg: "#8FA088", fg: "#000000"}, // Dark sage
-        {bg: "#A0AFA0", fg: "#000000"}, // Weathered green
-        
-        // Greys & Neutrals
-        {bg: "#BFB5A8", fg: "#000000"}, // Stone grey
-        {bg: "#C0C0B8", fg: "#000000"}, // Warm grey
-        {bg: "#B0B0A8", fg: "#000000"}, // Silver-beige
-        {bg: "#D0D0C8", fg: "#000000"}, // Light ash
-    ];
-    // Select color using seeded random for consistency
-    const colorRandom = this.seededRandom(seed + 2);
-    const selectedColor = COLORS[Math.floor(colorRandom * COLORS.length)];
-    spineCtx.fillStyle = selectedColor.bg;
+    // Use custom domColor if provided, otherwise select from preset colors
+    let backgroundColor: string;
+    if (incompleteBook.domColor && incompleteBook.domColor !== '#888888') {
+      // Use the custom color
+      backgroundColor = incompleteBook.domColor;
+    } else {
+      // select background color using seeded random for consistency
+      // Using muted, natural book colors with variety (browns, blues, reds, greens, etc.)
+      // All colors are light enough for black text to be readable
+      const COLORS = [
+          // Browns & Tans
+          {bg: "#E8DCC4", fg: "#000000"}, // Soft beige/cream
+          {bg: "#D4C5B9", fg: "#000000"}, // Light taupe
+          {bg: "#C9B8A8", fg: "#000000"}, // Warm grey-brown
+          {bg: "#C8B6A6", fg: "#000000"}, // Sandy brown
+          {bg: "#B8A898", fg: "#000000"}, // Dusty brown
+          
+          // Blues
+          {bg: "#A8B8C8", fg: "#000000"}, // Muted slate blue
+          {bg: "#B5C4D8", fg: "#000000"}, // Soft powder blue
+          {bg: "#9EAEC0", fg: "#000000"}, // Dusty blue-grey
+          {bg: "#C5D3E0", fg: "#000000"}, // Pale sky blue
+          {bg: "#8B9DAF", fg: "#000000"}, // Weathered blue
+          
+          // Reds & Burgundies
+          {bg: "#C89B9B", fg: "#000000"}, // Dusty rose
+          {bg: "#B89090", fg: "#000000"}, // Muted terracotta
+          {bg: "#D4A8A8", fg: "#000000"}, // Soft mauve
+          {bg: "#C08080", fg: "#000000"}, // Faded burgundy
+          {bg: "#B8A0A0", fg: "#000000"}, // Warm grey-rose
+          
+          // Greens
+          {bg: "#A8B8A0", fg: "#000000"}, // Sage green
+          {bg: "#9BAA92", fg: "#000000"}, // Muted olive
+          {bg: "#B5C4B0", fg: "#000000"}, // Soft mint
+          {bg: "#8FA088", fg: "#000000"}, // Dark sage
+          {bg: "#A0AFA0", fg: "#000000"}, // Weathered green
+          
+          // Greys & Neutrals
+          {bg: "#BFB5A8", fg: "#000000"}, // Stone grey
+          {bg: "#C0C0B8", fg: "#000000"}, // Warm grey
+          {bg: "#B0B0A8", fg: "#000000"}, // Silver-beige
+          {bg: "#D0D0C8", fg: "#000000"}, // Light ash
+      ];
+      // Select color using seeded random for consistency
+      const colorRandom = this.seededRandom(seed + 2);
+      const selectedColor = COLORS[Math.floor(colorRandom * COLORS.length)];
+      backgroundColor = selectedColor.bg;
+    }
+    
+    spineCtx.fillStyle = backgroundColor;
     spineCtx.fillRect(0, 0, heightInPx, widthInPx);
 
     // LAST NAME

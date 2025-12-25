@@ -11,7 +11,9 @@ export interface book {
   genre ?: string,
   user_read_at? : string,
   average_rating ?: string,
-  user_rating ?: string
+  user_rating ?: string,
+  domColor ?: string,
+  dimensions ?: string
 }
 export interface foundBook extends book {
   upload_id : string,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Book, Goal, Tag } from '../types/types';
+import { Book, Goal, Tag, Theme, BookColorOverride } from '../types/types';
 import apiService from '../services/api';
 import { BookshelfRenderer } from '../utils/BookshelfRenderer';
 import { toast } from 'react-toastify';
@@ -8,10 +8,49 @@ import { AddBookModal } from '../components/AddBookModal';
 import { GoalModal } from '../components/GoalModal';
 import { EditBookModal } from '../components/EditBookModal';
 import { GoodreadsImport } from './GoodreadsImport';
+import { ThemeManager } from '../components/ThemeManager';
 import '../styles/home.css';
 
+const DEFAULT_THEME: Theme = {
+  id: 'default',
+  name: 'Default Theme',
+  shelfBgColor: '#8B6F47',
+  shelfFgColor: '#5C4033',
+  bookColors: [],
+  isDefault: true,
+};
+
+// Initialize theme from localStorage before component renders
+const getInitialTheme = (): Theme => {
+  try {
+    const currentThemeStr = localStorage.getItem('bookshelf_current_theme');
+    if (currentThemeStr) {
+      const theme = JSON.parse(currentThemeStr);
+      console.log('📚 Loaded theme from localStorage:', theme);
+      return theme;
+    }
+  } catch (e) {
+    console.error('Failed to parse saved theme', e);
+  }
+  return DEFAULT_THEME;
+};
+
+// Initialize saved themes from localStorage before component renders
+const getInitialSavedThemes = (): Theme[] => {
+  try {
+    const savedThemesStr = localStorage.getItem('bookshelf_themes');
+    if (savedThemesStr) {
+      const themes = JSON.parse(savedThemesStr);
+      console.log('📚 Loaded custom themes from localStorage:', themes);
+      return [DEFAULT_THEME, ...themes];
+    }
+  } catch (e) {
+    console.error('Failed to parse saved themes', e);
+  }
+  return [DEFAULT_THEME];
+};
+
 export const Home: React.FC = () => {
-  const [books, setBooks] = useState<Book[]>([]);
   const [currentlyReading, setCurrentlyReading] = useState<Book[]>([]);
   const [wantToRead, setWantToRead] = useState<Book[]>([]);
   const [rankedBooks, setRankedBooks] = useState<Book[]>([]);
@@ -30,11 +69,34 @@ export const Home: React.FC = () => {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditBookModal, setShowEditBookModal] = useState(false);
+  const [showThemeManager, setShowThemeManager] = useState(false);
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(getInitialTheme());
+  const [savedThemes, setSavedThemes] = useState<Theme[]>(getInitialSavedThemes());
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const hoverCanvasRef = React.useRef<HTMLCanvasElement>(null); // Separate overlay for hover
   const renderingRef = React.useRef<boolean>(false);
   const currentRenderIdRef = React.useRef<number>(0); // Track render ID to cancel old renders
+  const hasInitialized = React.useRef<boolean>(false); // Track if we've initialized
+
+  // Save themes to localStorage whenever they change (but not on initial mount)
+  useEffect(() => {
+    // Skip the first run (initial mount)
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      return;
+    }
+    
+    const themesToSave = savedThemes.filter(t => !t.isDefault);
+    console.log('💾 Saving themes to localStorage:', themesToSave);
+    localStorage.setItem('bookshelf_themes', JSON.stringify(themesToSave));
+  }, [savedThemes]);
+
+  // Save current theme to localStorage whenever it changes
+  useEffect(() => {
+    console.log('💾 Saving theme to localStorage:', currentTheme);
+    localStorage.setItem('bookshelf_current_theme', JSON.stringify(currentTheme));
+  }, [currentTheme]);
 
   useEffect(() => {
     fetchBooks();
@@ -54,7 +116,8 @@ export const Home: React.FC = () => {
     }, debounceMs);
 
     return () => clearTimeout(timeoutId);
-  }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter, currentTheme]);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -187,7 +250,18 @@ export const Home: React.FC = () => {
         const filteredRanked = applySearchAndTagFilters(rankedBooks);
         
         topShelfBooks = [...filteredCurrentlyReading, ...filteredWantToRead];
-        allBooks = [...topShelfBooks, ...filteredRanked];
+        
+        // Insert bookend separator if we have both top shelf books and ranked books
+        if (topShelfBooks.length > 0 && filteredRanked.length > 0) {
+          const bookend: Book = {
+            title: '__BOOKEND__',
+            author: '__BOOKEND__',
+            dimensions: '1.5x1x9', // Will be overridden by bookend generator
+          } as Book;
+          allBooks = [...topShelfBooks, bookend, ...filteredRanked];
+        } else {
+          allBooks = [...topShelfBooks, ...filteredRanked];
+        }
       } else {
         // Specific shelf filter active - use the appropriate shelf
         let filtered: Book[];
@@ -224,15 +298,19 @@ export const Home: React.FC = () => {
         return;
       }
 
-      const rendererBooks = allBooks.map(book => ({
-        ...book,
-        fileName: book.spine_image_path || null,
-        dimensions: book.dimensions || '6x1x9',
-        domColor: book.dom_color || '#888888',
-        book_id: String(book.id || ''),
-        title: book.title,
-        author: book.author
-      } as any));
+      const rendererBooks = allBooks.map(book => {
+        // Get custom color override if exists, otherwise use book's dom_color
+        const customColor = getBookColor(book.id);
+        return {
+          ...book,
+          fileName: book.spine_image_path || null,
+          dimensions: book.dimensions || '6x1x9',
+          domColor: customColor || book.dom_color || '#888888',
+          book_id: String(book.id || ''),
+          title: book.title,
+          author: book.author
+        } as any;
+      });
 
       // Calculate which shelf labels to show based on book count and filter
       const topShelfCount = topShelfBooks.length;
@@ -258,7 +336,9 @@ export const Home: React.FC = () => {
         borderWidthInches: 1,
         bookScaleFactor: 0.6,  // Zoom out to 60% to see more books
         shelfLabels: labels,
-        cascadeDelayMs: 15  // 15ms delay between each book for fast cascade (adjust: 0-200ms)
+        cascadeDelayMs: 15,  // 15ms delay between each book for fast cascade (adjust: 0-200ms)
+        shelfBgColor: currentTheme.shelfBgColor,
+        shelfFgColor: currentTheme.shelfFgColor,
       });
 
       // Fast progressive rendering - draw directly from renderer's canvas!
@@ -373,9 +453,14 @@ export const Home: React.FC = () => {
       y >= pos.y && y <= pos.y + pos.height
     );
 
-
-    setHoveredBook(hovered || null);
-    canvas.style.cursor = hovered ? 'pointer' : 'default';
+    // Ignore bookends for hover effect
+    if (hovered && hovered.book.title === '__BOOKEND__' && hovered.book.author === '__BOOKEND__') {
+      setHoveredBook(null);
+      canvas.style.cursor = 'default';
+    } else {
+      setHoveredBook(hovered || null);
+      canvas.style.cursor = hovered ? 'pointer' : 'default';
+    }
   };
 
   const handleFinishBook = (book: Book) => {
@@ -420,6 +505,93 @@ export const Home: React.FC = () => {
     setShowEditBookModal(false);
     setSelectedBook(null);
     setBookToRank(book);
+  };
+
+  // Theme management functions
+  const handleApplyTheme = (theme: Theme) => {
+    setCurrentTheme(theme);
+    toast.success(`Applied theme: ${theme.name}`);
+  };
+
+  const handleSaveTheme = (theme: Theme) => {
+    setSavedThemes(prev => [...prev, theme]);
+    toast.success(`Theme "${theme.name}" saved!`);
+  };
+
+  const handleDeleteTheme = (themeId: string) => {
+    setSavedThemes(prev => prev.filter(t => t.id !== themeId));
+    if (currentTheme.id === themeId) {
+      setCurrentTheme(DEFAULT_THEME);
+    }
+    toast.success('Theme deleted');
+  };
+
+  const handleUpdateShelfColors = (bgColor: string, fgColor: string) => {
+    setCurrentTheme(prev => ({
+      ...prev,
+      shelfBgColor: bgColor,
+      shelfFgColor: fgColor,
+    }));
+    toast.success('Shelf colors updated!');
+  };
+
+  const handleBookColorChange = (bookId: number, color: string) => {
+    setCurrentTheme(prev => {
+      const existingColorIndex = prev.bookColors.findIndex(bc => bc.bookId === bookId);
+      let newBookColors: BookColorOverride[];
+      
+      if (existingColorIndex >= 0) {
+        // Update existing color
+        newBookColors = [...prev.bookColors];
+        newBookColors[existingColorIndex] = { bookId, color };
+      } else {
+        // Add new color override
+        newBookColors = [...prev.bookColors, { bookId, color }];
+      }
+      
+      return {
+        ...prev,
+        bookColors: newBookColors,
+      };
+    });
+    
+    toast.success('Book color updated!');
+  };
+
+  const getBookColor = (bookId: number | undefined): string | undefined => {
+    if (!bookId) return undefined;
+    const override = currentTheme.bookColors.find(bc => bc.bookId === bookId);
+    return override?.color;
+  };
+
+  const handleApplyBulkBookColors = (colorScheme: string) => {
+    // Color schemes mapping
+    const schemes: Record<string, string[]> = {
+      pastels: ['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E0BBE4', '#FFD8E4', '#C9E4DE', '#E4C9E4', '#C9D8E4'],
+      vibrant: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94', '#C7CEEA', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'],
+      blues: ['#A8DADC', '#457B9D', '#1D3557', '#F1FAEE', '#2A9D8F', '#264653', '#3A86FF', '#8AC4D0', '#5A7D9A', '#ADEFD1'],
+      reds: ['#C1666B', '#D4A5A5', '#9A031E', '#FFB3B3', '#D6536D', '#EFB0A1', '#FF6B6B', '#C84B31', '#FF9AA2', '#D96C6C'],
+      earth: ['#8B7355', '#A0826D', '#C9B8A8', '#E8DCC4', '#B8A898', '#D4C5B9', '#A89F91', '#C2A878', '#D2B48C', '#E6D5B8'],
+      purples: ['#B794F4', '#9F7AEA', '#805AD5', '#6B46C1', '#D6BCFA', '#E9D8FD', '#A78BFA', '#C084FC', '#DDD6FE', '#8B5CF6'],
+      greens: ['#2F4F4F', '#556B2F', '#6B8E23', '#8FBC8F', '#90EE90', '#98FB98', '#66CDAA', '#48D1CC', '#7FFFD4', '#40E0D0'],
+      monochrome: ['#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA', '#ADB5BD', '#6C757D', '#495057', '#343A40', '#212529', '#FFFFFF'],
+    };
+
+    const colors = schemes[colorScheme] || [];
+    const allBooks = [...currentlyReading, ...wantToRead, ...rankedBooks];
+    
+    // Apply colors in rotation to all books
+    const newBookColors = allBooks.map((book, index) => ({
+      bookId: book.id!,
+      color: colors[index % colors.length]
+    })).filter(bc => bc.bookId !== undefined);
+
+    setCurrentTheme(prev => ({
+      ...prev,
+      bookColors: newBookColors,
+    }));
+
+    toast.success(`Applied ${colorScheme} color scheme to all books!`);
   };
 
   // Hover effect drawing function - defined early so it can be used in multiple effects
@@ -692,6 +864,13 @@ export const Home: React.FC = () => {
                 <option key={tag.id} value={tag.id}>{tag.name}</option>
               ))}
             </select>
+            <button 
+              className="theme-button"
+              onClick={() => setShowThemeManager(true)}
+              title="Customize bookshelf theme"
+            >
+              ⋮
+            </button>
           </div>
         </div>
 
@@ -752,6 +931,69 @@ export const Home: React.FC = () => {
               )}
               {selectedBook.notes && <p><strong>Notes:</strong> {selectedBook.notes}</p>}
             </div>
+
+            {/* Book Color Customization */}
+            <div className="book-color-section">
+              <h4>📚 Customize Book Spine Color</h4>
+              <div className="book-color-picker-full">
+                {/* Preset Colors */}
+                <div className="book-preset-colors">
+                  {[
+                    '#E8DCC4', '#D4C5B9', '#C9B8A8', '#C8B6A6', '#B8A898', // Browns
+                    '#A8B8C8', '#B5C4D8', '#9EAEC0', '#C5D3E0', '#8B9DAF', // Blues
+                    '#C89B9B', '#B89090', '#D4A8A8', '#C08080', '#B8A0A0', // Reds
+                    '#A8B8A0', '#9BAA92', '#B5C4B0', '#8FA088', '#A0AFA0', // Greens
+                    '#E6B8D0', '#D8A8C8', '#C898B8', '#B888A8', '#A87898', // Purples/Pinks
+                    '#F0D8A8', '#E8C898', '#D8B888', '#C8A878', '#B89868', // Golds/Yellows
+                  ].map(color => (
+                    <button
+                      key={color}
+                      className="book-color-swatch"
+                      style={{ backgroundColor: color }}
+                      onClick={() => {
+                        if (selectedBook.id) {
+                          handleBookColorChange(selectedBook.id, color);
+                        }
+                      }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                {/* Custom Color Picker */}
+                <div className="book-color-custom">
+                  <label>Custom Color:</label>
+                  <input
+                    type="color"
+                    value={getBookColor(selectedBook.id) || selectedBook.dom_color || '#888888'}
+                    onChange={(e) => {
+                      if (selectedBook.id) {
+                        handleBookColorChange(selectedBook.id, e.target.value);
+                      }
+                    }}
+                  />
+                  <span className="current-color-label">
+                    {getBookColor(selectedBook.id) || selectedBook.dom_color || '#888888'}
+                  </span>
+                  {getBookColor(selectedBook.id) && (
+                    <button
+                      className="reset-color-button"
+                      onClick={() => {
+                        if (selectedBook.id) {
+                          setCurrentTheme(prev => ({
+                            ...prev,
+                            bookColors: prev.bookColors.filter(bc => bc.bookId !== selectedBook.id),
+                          }));
+                          toast.success('Book color reset to default');
+                        }
+                      }}
+                    >
+                      Reset to Default
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {selectedBook.reading_state === 'currently_reading' && (
               <button 
                 className="finish-book-button"
@@ -826,6 +1068,21 @@ export const Home: React.FC = () => {
             fetchBooks();
           }}
           onRerank={handleRerankBook}
+        />
+      )}
+
+      {/* Theme Manager */}
+      {showThemeManager && (
+        <ThemeManager
+          currentTheme={currentTheme}
+          savedThemes={savedThemes}
+          allBooks={[...currentlyReading, ...wantToRead, ...rankedBooks]}
+          onApplyTheme={handleApplyTheme}
+          onSaveTheme={handleSaveTheme}
+          onDeleteTheme={handleDeleteTheme}
+          onUpdateShelfColors={handleUpdateShelfColors}
+          onApplyBulkBookColors={handleApplyBulkBookColors}
+          onClose={() => setShowThemeManager(false)}
         />
       )}
     </div>
