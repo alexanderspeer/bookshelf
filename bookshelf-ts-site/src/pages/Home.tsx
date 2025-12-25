@@ -26,7 +26,7 @@ const getInitialTheme = (): Theme => {
     const currentThemeStr = localStorage.getItem('bookshelf_current_theme');
     if (currentThemeStr) {
       const theme = JSON.parse(currentThemeStr);
-      console.log('📚 Loaded theme from localStorage:', theme);
+      console.log('Loaded theme from localStorage:', theme);
       return theme;
     }
   } catch (e) {
@@ -41,7 +41,7 @@ const getInitialSavedThemes = (): Theme[] => {
     const savedThemesStr = localStorage.getItem('bookshelf_themes');
     if (savedThemesStr) {
       const themes = JSON.parse(savedThemesStr);
-      console.log('📚 Loaded custom themes from localStorage:', themes);
+        console.log('Loaded custom themes from localStorage:', themes);
       return [DEFAULT_THEME, ...themes];
     }
   } catch (e) {
@@ -88,13 +88,13 @@ export const Home: React.FC = () => {
     }
     
     const themesToSave = savedThemes.filter(t => !t.isDefault);
-    console.log('💾 Saving themes to localStorage:', themesToSave);
+    console.log('Saving themes to localStorage:', themesToSave);
     localStorage.setItem('bookshelf_themes', JSON.stringify(themesToSave));
   }, [savedThemes]);
 
   // Save current theme to localStorage whenever it changes
   useEffect(() => {
-    console.log('💾 Saving theme to localStorage:', currentTheme);
+    console.log('Saving theme to localStorage:', currentTheme);
     localStorage.setItem('bookshelf_current_theme', JSON.stringify(currentTheme));
   }, [currentTheme]);
 
@@ -169,29 +169,29 @@ export const Home: React.FC = () => {
   const fetchCurrentGoal = async (goalData?: any) => {
     // If goal data is passed directly (from setGoal response), use it
     if (goalData) {
-      console.log('✅ Using provided goal data:', JSON.stringify(goalData, null, 2));
+      console.log('Using provided goal data:', JSON.stringify(goalData, null, 2));
       setCurrentGoal(goalData);
       return;
     }
     
     // Otherwise fetch from API
     try {
-      console.log('🔍 Fetching current goal from API...');
+      console.log('Fetching current goal from API...');
       const goal = await apiService.getCurrentGoal();
-      console.log('📥 API Response - goal:', JSON.stringify(goal, null, 2));
-      console.log('📥 Goal type:', typeof goal);
-      console.log('📥 Goal is null?', goal === null);
-      console.log('📥 Goal is undefined?', goal === undefined);
+      console.log('API Response - goal:', JSON.stringify(goal, null, 2));
+      console.log('Goal type:', typeof goal);
+      console.log('Goal is null?', goal === null);
+      console.log('Goal is undefined?', goal === undefined);
       
       if (goal) {
-        console.log('✅ Setting goal to state');
+        console.log('Setting goal to state');
         setCurrentGoal(goal);
       } else {
-        console.log('❌ No goal found, setting null');
+        console.log('No goal found, setting null');
         setCurrentGoal(null);
       }
     } catch (error) {
-      console.error('❌ Error fetching current goal:', error);
+      console.error('Error fetching current goal:', error);
       setCurrentGoal(null);
     }
   };
@@ -733,7 +733,7 @@ export const Home: React.FC = () => {
             isGoalCompleted(currentGoal) ? (
               <div className="goal-completed-container">
                 <div className="goal-completed">
-                  <div className="goal-completed-icon">🎉</div>
+                  <div className="goal-completed-icon"></div>
                   <h3>Goal Completed!</h3>
                   <p className="goal-completed-text">
                     You've read <strong>{currentGoal.completed}</strong> books this {currentGoal.period}!
@@ -749,7 +749,7 @@ export const Home: React.FC = () => {
             ) : isGoalExpired(currentGoal) ? (
               <div className="goal-expired-container">
                 <div className="goal-expired">
-                  <div className="goal-expired-icon">📅</div>
+                  <div className="goal-expired-icon"></div>
                   <h3>Goal Expired</h3>
                   <p className="goal-expired-text">
                     Your {currentGoal.period === 'year' ? 'annual' : currentGoal.period === 'month' ? 'monthly' : 'weekly'} goal from {currentGoal.year} has ended.
@@ -934,7 +934,7 @@ export const Home: React.FC = () => {
 
             {/* Book Color Customization */}
             <div className="book-color-section">
-              <h4>📚 Customize Book Spine Color</h4>
+              <h4>Customize Book Spine Color</h4>
               <div className="book-color-picker-full">
                 {/* Preset Colors */}
                 <div className="book-preset-colors">
@@ -1008,13 +1008,13 @@ export const Home: React.FC = () => {
                 className="edit-book-button"
                 onClick={() => handleEditBook(selectedBook)}
               >
-                ✏️ Edit Book
+                Edit Book
               </button>
               <button 
                 className="delete-book-button"
                 onClick={() => handleDeleteBook(selectedBook.id!)}
               >
-                🗑️ Delete Book
+                Delete Book
               </button>
             </div>
           </div>

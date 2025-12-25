@@ -21,19 +21,19 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSuccess
     setSubmitting(true);
     
     try {
-      console.log('📤 Setting goal with data:', JSON.stringify(formData, null, 2));
+      console.log('Setting goal with data:', JSON.stringify(formData, null, 2));
       const goalResponse = await apiService.setGoal(formData.year, formData.target_count, formData.period);
-      console.log('✅ Goal set successfully!');
-      console.log('📥 Response from setGoal:', JSON.stringify(goalResponse, null, 2));
-      console.log('📥 Response type:', typeof goalResponse);
+      console.log('Goal set successfully!');
+      console.log('Response from setGoal:', JSON.stringify(goalResponse, null, 2));
+      console.log('Response type:', typeof goalResponse);
       toast.success('Goal set successfully!');
       // Pass the goal response directly to onSuccess
       onSuccess(goalResponse);
-      console.log('✅ onSuccess called with response, closing modal');
+      console.log('onSuccess called with response, closing modal');
       onClose();
     } catch (error) {
       toast.error('Failed to set goal');
-      console.error('❌ Error setting goal:', error);
+      console.error('Error setting goal:', error);
     } finally {
       setSubmitting(false);
     }

@@ -191,7 +191,7 @@ class ApiService {
 
   async getCurrentGoal() {
     const url = `${this.baseUrl}/goals/current`;
-    console.log('🌐 Calling API:', url);
+    console.log('Calling API:', url);
     try {
       const response = await fetch(url, {
         headers: {
@@ -199,12 +199,12 @@ class ApiService {
         },
       });
       
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response ok:', response.ok);
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
       
       // If no goal exists (404), return null instead of throwing
       if (response.status === 404) {
-        console.log('⚠️ 404 - No goal found');
+        console.log('404 - No goal found');
         return null;
       }
       
@@ -213,10 +213,10 @@ class ApiService {
       }
       
       const data = await response.json();
-      console.log('✅ Goal data from API:', JSON.stringify(data, null, 2));
+      console.log('Goal data from API:', JSON.stringify(data, null, 2));
       return data;
     } catch (error) {
-      console.error('❌ Get current goal failed:', error);
+      console.error('Get current goal failed:', error);
       throw error;
     }
   }

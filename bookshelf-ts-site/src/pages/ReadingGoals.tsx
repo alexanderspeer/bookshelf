@@ -118,7 +118,7 @@ export const ReadingGoals: React.FC = () => {
 
           {currentGoal.completed && currentGoal.completed >= currentGoal.target_count && (
             <div className="goal-met">
-              🎉 Congratulations! You've met your goal!
+              Congratulations! You've met your goal!
             </div>
           )}
         </div>

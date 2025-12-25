@@ -119,7 +119,7 @@ export function ResponsiveHeader({ links, headerClick }: HeaderResponsiveProps) 
     <Header height={HEADER_HEIGHT} mb={120} className={classes.root}>
       <Container className={classes.header}>
         <div className="bs_title_container">
-        <span onClick={open_landing} className="pointer_no_select" id="bs_site_title">📚 My Bookshelf</span>
+        <span onClick={open_landing} className="pointer_no_select" id="bs_site_title">My Bookshelf</span>
         <Switch
           checked={colorScheme === "light"}
           onChange={toggleColorScheme}

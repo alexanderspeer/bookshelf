@@ -38,7 +38,7 @@ const PRESET_COLORS = [
 const PREMADE_THEMES: Theme[] = [
   {
     id: 'vintage-library',
-    name: '📚 Vintage Library',
+    name: 'Vintage Library',
     shelfBgColor: '#8B6F47', // Medium brown
     shelfFgColor: '#5C4033',  // Dark brown
     bookColors: [],
@@ -48,7 +48,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'modern-dark',
-    name: '🌙 Modern Dark',
+    name: 'Modern Dark',
     shelfBgColor: '#2D3748', // Dark gray
     shelfFgColor: '#1A202C',  // Very dark gray
     bookColors: [],
@@ -58,7 +58,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'ocean-breeze',
-    name: '🌊 Ocean Breeze',
+    name: 'Ocean Breeze',
     shelfBgColor: '#2C5282', // Medium-dark blue
     shelfFgColor: '#2B6CB0',  // Medium blue
     bookColors: [],
@@ -68,7 +68,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'forest-green',
-    name: '🌲 Forest Green',
+    name: 'Forest Green',
     shelfBgColor: '#38A169', // Medium green
     shelfFgColor: '#2F855A',  // Medium-dark green
     bookColors: [],
@@ -78,7 +78,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'sunset-warmth',
-    name: '🌅 Sunset Warmth',
+    name: 'Sunset Warmth',
     shelfBgColor: '#DD6B20', // Bright orange
     shelfFgColor: '#C05621',  // Dark orange
     bookColors: [],
@@ -88,7 +88,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'lavender-dreams',
-    name: '💜 Lavender Dreams',
+    name: 'Lavender Dreams',
     shelfBgColor: '#805AD5', // Medium purple
     shelfFgColor: '#6B46C1',  // Dark purple
     bookColors: [],
@@ -98,7 +98,7 @@ const PREMADE_THEMES: Theme[] = [
   },
   {
     id: 'minimalist-gray',
-    name: '⚪ Minimalist Gray',
+    name: 'Minimalist Gray',
     shelfBgColor: '#718096', // Medium gray
     shelfFgColor: '#4A5568',  // Dark gray
     bookColors: [],
@@ -405,7 +405,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
             
             <div className="bulk-color-schemes">
               <div className="color-scheme-item">
-                <h4>🎨 Pastel Dreams</h4>
+                <h4>Pastel Dreams</h4>
                 <div className="scheme-preview">
                   {['#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E0BBE4'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -420,7 +420,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>🔥 Vibrant & Bold</h4>
+                <h4>Vibrant & Bold</h4>
                 <div className="scheme-preview">
                   {['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94', '#C7CEEA'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -435,7 +435,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>🌊 Ocean Blues</h4>
+                <h4>Ocean Blues</h4>
                 <div className="scheme-preview">
                   {['#A8DADC', '#457B9D', '#1D3557', '#F1FAEE', '#E63946', '#2A9D8F'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -450,7 +450,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>❤️ Warm Reds</h4>
+                <h4>Warm Reds</h4>
                 <div className="scheme-preview">
                   {['#C1666B', '#D4A5A5', '#9A031E', '#FFB3B3', '#D6536D', '#EFB0A1'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -465,7 +465,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>🌿 Earth Tones</h4>
+                <h4>Earth Tones</h4>
                 <div className="scheme-preview">
                   {['#8B7355', '#A0826D', '#C9B8A8', '#E8DCC4', '#B8A898', '#D4C5B9'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -480,7 +480,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>💜 Purple Haze</h4>
+                <h4>Purple Haze</h4>
                 <div className="scheme-preview">
                   {['#B794F4', '#9F7AEA', '#805AD5', '#6B46C1', '#D6BCFA', '#E9D8FD'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -495,7 +495,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>🌲 Forest Greens</h4>
+                <h4>Forest Greens</h4>
                 <div className="scheme-preview">
                   {['#2F4F4F', '#556B2F', '#6B8E23', '#8FBC8F', '#90EE90', '#98FB98'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
@@ -510,7 +510,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
               </div>
 
               <div className="color-scheme-item">
-                <h4>⚪ Monochrome</h4>
+                <h4>Monochrome</h4>
                 <div className="scheme-preview">
                   {['#F8F9FA', '#E9ECEF', '#DEE2E6', '#CED4DA', '#ADB5BD', '#6C757D'].map(c => (
                     <div key={c} className="scheme-swatch" style={{ backgroundColor: c }} />
