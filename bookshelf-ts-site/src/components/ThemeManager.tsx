@@ -33,6 +33,32 @@ const PRESET_COLORS = [
   '#D6BCFA', '#B794F4', '#E9D8FD', '#FED7D7', '#FBB6CE',
 ];
 
+const AVAILABLE_FONTS = [
+  { name: 'Serif (Classic)', value: 'serif' },
+  { name: 'Sans-Serif (Modern)', value: 'sans-serif' },
+  { name: 'Monospace (Typewriter)', value: 'monospace' },
+  { name: 'Cursive (Elegant)', value: 'cursive' },
+  { name: 'Fantasy (Decorative)', value: 'fantasy' },
+  { name: 'Georgia (Traditional)', value: 'Georgia, serif' },
+  { name: 'Times New Roman (Formal)', value: '"Times New Roman", Times, serif' },
+  { name: 'Palatino (Literary)', value: '"Palatino Linotype", Palatino, serif' },
+  { name: 'Garamond (Classic)', value: 'Garamond, serif' },
+  { name: 'Bookman (Sturdy)', value: '"Bookman Old Style", serif' },
+  { name: 'Arial (Clean)', value: 'Arial, sans-serif' },
+  { name: 'Helvetica (Swiss)', value: 'Helvetica, Arial, sans-serif' },
+  { name: 'Verdana (Readable)', value: 'Verdana, sans-serif' },
+  { name: 'Tahoma (Compact)', value: 'Tahoma, Geneva, sans-serif' },
+  { name: 'Trebuchet MS (Modern)', value: '"Trebuchet MS", sans-serif' },
+  { name: 'Century Gothic (Geometric)', value: '"Century Gothic", sans-serif' },
+  { name: 'Courier New (Fixed)', value: '"Courier New", Courier, monospace' },
+  { name: 'Lucida Console (Tech)', value: '"Lucida Console", Monaco, monospace' },
+  { name: 'Comic Sans MS (Playful)', value: '"Comic Sans MS", cursive' },
+  { name: 'Brush Script (Handwritten)', value: '"Brush Script MT", cursive' },
+  { name: 'Papyrus (Ancient)', value: 'Papyrus, fantasy' },
+  { name: 'Impact (Bold)', value: 'Impact, fantasy' },
+  { name: 'Copperplate (Engraved)', value: 'Copperplate, fantasy' },
+];
+
 // Pre-made complete themes with coordinated book color palettes
 // Book colors are chosen to contrast with shelf colors (not too similar)
 const PREMADE_THEMES: Theme[] = [
@@ -44,6 +70,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Lighter creams/beiges and some accent colors (avoiding medium browns)
     bookColorPalette: ['#F5E6D3', '#E8DCC4', '#D4A5A5', '#C5D3E0', '#A8B8A0', '#E0BBE4'],
+    spineFont: 'Garamond, serif',
     isDefault: false,
   },
   {
@@ -54,6 +81,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Light colors and vibrant accents (avoiding dark grays)
     bookColorPalette: ['#E2E8F0', '#CBD5E0', '#A0AEC0', '#63B3ED', '#F6AD55', '#FC8181'],
+    spineFont: 'Helvetica, Arial, sans-serif',
     isDefault: false,
   },
   {
@@ -64,6 +92,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Light blues, teals, and warm contrasts (avoiding medium blues)
     bookColorPalette: ['#E0F2F7', '#B3E5FC', '#80DEEA', '#FBD38D', '#FFD7BE', '#FFE0E0'],
+    spineFont: 'Verdana, sans-serif',
     isDefault: false,
   },
   {
@@ -74,6 +103,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Light greens, yellows, and earth tones (avoiding medium greens)
     bookColorPalette: ['#E6F7E6', '#C6F6D5', '#F0E68C', '#E8DCC4', '#D4A5A5', '#C7CEEA'],
+    spineFont: '"Palatino Linotype", Palatino, serif',
     isDefault: false,
   },
   {
@@ -84,6 +114,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Yellows, corals, pinks (avoiding oranges)
     bookColorPalette: ['#FFFACD', '#FFE4B5', '#FFB6C1', '#F08080', '#E6E6FA', '#FFE4E1'],
+    spineFont: '"Brush Script MT", cursive',
     isDefault: false,
   },
   {
@@ -94,6 +125,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Light purples, pinks, blues (avoiding medium purples)
     bookColorPalette: ['#F3E5F5', '#E1BEE7', '#FFE0F0', '#E0F2F7', '#FFF9C4', '#FFE0B2'],
+    spineFont: 'Georgia, serif',
     isDefault: false,
   },
   {
@@ -104,6 +136,7 @@ const PREMADE_THEMES: Theme[] = [
     bookColors: [],
     // Books: Very light grays/whites and subtle pastels (avoiding medium grays)
     bookColorPalette: ['#FFFFFF', '#F7FAFC', '#E2E8F0', '#E8F4F8', '#FFF5E1', '#FFE4E4'],
+    spineFont: '"Century Gothic", sans-serif',
     isDefault: false,
   },
 ];
@@ -125,7 +158,8 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
   const [customBgColor, setCustomBgColor] = useState(currentTheme.shelfBgColor);
   const [customFgColor, setCustomFgColor] = useState(currentTheme.shelfFgColor);
   const [selectedBookColors, setSelectedBookColors] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'colors' | 'bookColors' | 'premade' | 'themes'>('colors');
+  const [selectedFont, setSelectedFont] = useState(currentTheme.spineFont || 'serif');
+  const [activeTab, setActiveTab] = useState<'colors' | 'bookColors' | 'fonts' | 'premade' | 'themes'>('colors');
 
   const handleApplyColors = () => {
     onUpdateShelfColors(selectedBgColor, selectedFgColor);
@@ -143,6 +177,16 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
         shelfBgColor: selectedBgColor,
         shelfFgColor: selectedFgColor,
         bookColors: newBookColors,
+        spineFont: selectedFont,
+      };
+      onApplyTheme(tempTheme);
+    } else {
+      // Just update font if no book colors
+      const tempTheme: Theme = {
+        ...currentTheme,
+        shelfBgColor: selectedBgColor,
+        shelfFgColor: selectedFgColor,
+        spineFont: selectedFont,
       };
       onApplyTheme(tempTheme);
     }
@@ -187,6 +231,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
       shelfFgColor: selectedFgColor,
       bookColors: bookColorsToSave,
       bookColorPalette: bookColorPaletteToSave,
+      spineFont: selectedFont,
       isDefault: false,
     };
 
@@ -215,6 +260,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
     
     setSelectedBgColor(theme.shelfBgColor);
     setSelectedFgColor(theme.shelfFgColor);
+    setSelectedFont(theme.spineFont || 'serif');
   };
 
   return (
@@ -235,6 +281,12 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
             onClick={() => setActiveTab('bookColors')}
           >
             Book Colors
+          </button>
+          <button
+            className={activeTab === 'fonts' ? 'active' : ''}
+            onClick={() => setActiveTab('fonts')}
+          >
+            Fonts
           </button>
           <button
             className={activeTab === 'premade' ? 'active' : ''}
@@ -346,6 +398,33 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            <div className="color-section">
+              <h3>Book Spine Font</h3>
+              <p className="color-hint">Choose the font style for book spine text</p>
+              <div className="font-picker-section">
+                <select 
+                  className="font-selector"
+                  value={selectedFont}
+                  onChange={(e) => setSelectedFont(e.target.value)}
+                  style={{ fontFamily: selectedFont }}
+                >
+                  {AVAILABLE_FONTS.map(font => (
+                    <option 
+                      key={font.value} 
+                      value={font.value}
+                      style={{ fontFamily: font.value }}
+                    >
+                      {font.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="font-preview" style={{ fontFamily: selectedFont }}>
+                  <p>Preview: The Quick Brown Fox</p>
+                  <p style={{ fontSize: '0.9em' }}>Sample Book Title by Author Name</p>
+                </div>
               </div>
             </div>
 
@@ -527,6 +606,44 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
           </div>
         )}
 
+        {activeTab === 'fonts' && (
+          <div className="theme-content">
+            <h3>Choose Book Spine Font</h3>
+            <p className="tab-description">Select a font style for your book spines</p>
+            
+            <div className="font-picker-section">
+              <select 
+                className="font-selector-large"
+                value={selectedFont}
+                onChange={(e) => setSelectedFont(e.target.value)}
+                style={{ fontFamily: selectedFont }}
+              >
+                {AVAILABLE_FONTS.map(font => (
+                  <option 
+                    key={font.value} 
+                    value={font.value}
+                    style={{ fontFamily: font.value }}
+                  >
+                    {font.name}
+                  </option>
+                ))}
+              </select>
+              <div className="font-preview-large" style={{ fontFamily: selectedFont }}>
+                <h3>Preview</h3>
+                <p style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>The Quick Brown Fox Jumps Over The Lazy Dog</p>
+                <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Sample Book Title</p>
+                <p style={{ fontSize: '1rem', color: '#666' }}>by Author Name</p>
+              </div>
+            </div>
+
+            <div className="theme-actions">
+              <button className="apply-button" onClick={handleApplyColors}>
+                Apply Font to Shelf
+              </button>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'premade' && (
           <div className="theme-content">
             <h3>Pre-Made Complete Themes</h3>
@@ -566,6 +683,14 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                               ></span>
                             ))}
                           </div>
+                        </div>
+                      )}
+                      {theme.spineFont && (
+                        <div className="font-info-row">
+                          <label>Spine Font:</label>
+                          <span className="font-name" style={{ fontFamily: theme.spineFont }}>
+                            {AVAILABLE_FONTS.find(f => f.value === theme.spineFont)?.name || theme.spineFont}
+                          </span>
                         </div>
                       )}
                     </div>

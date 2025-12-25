@@ -13,14 +13,16 @@ export interface book {
   average_rating ?: string,
   user_rating ?: string,
   domColor ?: string,
-  dimensions ?: string
+  dimensions ?: string,
+  spineFont ?: string
 }
 export interface foundBook extends book {
   upload_id : string,
   dimensions : string,
   domColor ?: string,
   fileName : string,
-  submitter : string
+  submitter : string,
+  spineFont ?: string
 }
 export interface bookContainer {
   book : book

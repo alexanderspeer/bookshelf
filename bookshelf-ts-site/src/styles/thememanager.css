@@ -258,6 +258,97 @@
   font-size: 0.9rem;
 }
 
+/* Font Picker Styles */
+.font-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.font-selector {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.font-selector:hover {
+  border-color: #cbd5e0;
+}
+
+.font-selector:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.font-selector option {
+  padding: 0.5rem;
+}
+
+.font-preview {
+  padding: 1.5rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.font-preview p {
+  margin: 0.5rem 0;
+  color: #2d3748;
+}
+
+.font-preview p:first-child {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.font-selector-large {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1.1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.font-selector-large:hover {
+  border-color: #cbd5e0;
+}
+
+.font-selector-large:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.font-preview-large {
+  padding: 2rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.font-preview-large h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+}
+
+.font-preview-large p {
+  margin: 0.5rem 0;
+  color: #2d3748;
+}
+
 .preview-section {
   margin: 2rem 0;
   padding: 1.5rem;
@@ -538,7 +629,8 @@
 }
 
 .shelf-colors-row label,
-.book-colors-row label {
+.book-colors-row label,
+.font-info-row label {
   font-size: 0.9rem;
   color: #4a5568;
   font-weight: 600;
@@ -557,5 +649,21 @@
   border-radius: 4px;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.font-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.font-name {
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: #f7fafc;
+  border-radius: 4px;
 }
 

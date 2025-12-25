@@ -22,6 +22,7 @@ export interface BookshelfRendererParams {
   bookScaleFactor?: number,
   shelfLabels?: string[],
   cascadeDelayMs?: number, // Delay between rendering each book (default: 0)
+  spineFont?: string, // Font family for book spine text
 }
 
 interface BookPosition {
@@ -75,6 +76,7 @@ export class BookshelfRenderer {
   private shelfBgColor = "#8B6F47"; // Warm brown tone
   private shelfFgColor = "#5C4033"; // Darker brown for borders
   private bookScaleFactor = 1.0; // Scale factor for book sizes
+  private spineFont = "serif"; // Font family for book spine text
   private shelfLabels: string[] = []; // Labels for each shelf
   private cascadeDelayMs = 0; // Delay between rendering each book
   private canvas: HTMLCanvasElement;
@@ -471,9 +473,8 @@ export class BookshelfRenderer {
     // extract authors last name from the book
     const lastName = this.getAuthorLastName(incompleteBook.author);
 
-    // TODO: select random font from list of available fonts
-    // TODO: allow user customization of the list of fonts
-    const font = "serif";
+    // Use individual book font if specified, otherwise use theme font or default to serif
+    const font = incompleteBook.spineFont || this.spineFont;
 
     // keep calculating the font until its between 20-25% of the spine
     const MIN_NAME_WIDTH = 0;

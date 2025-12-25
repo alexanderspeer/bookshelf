@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Book, Goal, Tag, Theme, BookColorOverride } from '../types/types';
+import { Book, Goal, Tag, Theme, BookColorOverride, BookFontOverride } from '../types/types';
 import apiService from '../services/api';
 import { BookshelfRenderer } from '../utils/BookshelfRenderer';
 import { toast } from 'react-toastify';
@@ -17,6 +17,8 @@ const DEFAULT_THEME: Theme = {
   shelfBgColor: '#8B6F47',
   shelfFgColor: '#5C4033',
   bookColors: [],
+  bookFonts: [],
+  spineFont: 'serif',
   isDefault: true,
 };
 
@@ -345,13 +347,15 @@ export const Home: React.FC = () => {
       }
 
       const rendererBooks = allBooks.map(book => {
-        // Get custom color override if exists, otherwise use book's dom_color
+        // Get custom color and font overrides if exist
         const customColor = getBookColor(book.id);
+        const customFont = getBookFont(book.id);
         return {
           ...book,
           fileName: book.spine_image_path || null,
           dimensions: book.dimensions || '6x1x9',
           domColor: customColor || book.dom_color || '#888888',
+          spineFont: customFont, // Individual book font override
           book_id: String(book.id || ''),
           title: book.title,
           author: book.author
@@ -385,6 +389,7 @@ export const Home: React.FC = () => {
         cascadeDelayMs: 15,  // 15ms delay between each book for fast cascade (adjust: 0-200ms)
         shelfBgColor: currentTheme.shelfBgColor,
         shelfFgColor: currentTheme.shelfFgColor,
+        spineFont: currentTheme.spineFont || 'serif',
       });
 
       // Fast progressive rendering - draw directly from renderer's canvas!
@@ -608,6 +613,36 @@ export const Home: React.FC = () => {
     if (!bookId) return undefined;
     const override = currentTheme.bookColors.find(bc => bc.bookId === bookId);
     return override?.color;
+  };
+
+  const getBookFont = (bookId: number | undefined): string | undefined => {
+    if (!bookId) return undefined;
+    const override = currentTheme.bookFonts?.find(bf => bf.bookId === bookId);
+    return override?.font;
+  };
+
+  const handleBookFontChange = (bookId: number, font: string) => {
+    setCurrentTheme(prev => {
+      const existingFontIndex = (prev.bookFonts || []).findIndex(bf => bf.bookId === bookId);
+      let newBookFonts: BookFontOverride[];
+      
+      if (existingFontIndex >= 0) {
+        // Update existing font
+        newBookFonts = [...(prev.bookFonts || [])];
+        newBookFonts[existingFontIndex] = { bookId, font };
+      } else {
+        // Add new font override
+        newBookFonts = [...(prev.bookFonts || []), { bookId, font }];
+      }
+      
+      return {
+        ...prev,
+        bookFonts: newBookFonts,
+      };
+    });
+    
+    // Trigger re-render
+    generateBookshelf();
   };
 
   const handleApplyBulkBookColors = (colorScheme: string) => {
@@ -1046,6 +1081,64 @@ export const Home: React.FC = () => {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Book Font Customization */}
+            <div className="book-font-section">
+              <h4>Customize Book Spine Font</h4>
+              <div className="book-font-picker">
+                <select 
+                  className="book-font-selector"
+                  value={getBookFont(selectedBook.id) || currentTheme.spineFont || 'serif'}
+                  onChange={(e) => {
+                    if (selectedBook.id) {
+                      handleBookFontChange(selectedBook.id, e.target.value);
+                    }
+                  }}
+                  style={{ fontFamily: getBookFont(selectedBook.id) || currentTheme.spineFont || 'serif' }}
+                >
+                  <option value="serif">Serif (Classic)</option>
+                  <option value="sans-serif">Sans-Serif (Modern)</option>
+                  <option value="monospace">Monospace (Typewriter)</option>
+                  <option value="cursive">Cursive (Elegant)</option>
+                  <option value="fantasy">Fantasy (Decorative)</option>
+                  <option value="Georgia, serif">Georgia (Traditional)</option>
+                  <option value='"Times New Roman", Times, serif'>Times New Roman (Formal)</option>
+                  <option value='"Palatino Linotype", Palatino, serif'>Palatino (Literary)</option>
+                  <option value="Garamond, serif">Garamond (Classic)</option>
+                  <option value='"Bookman Old Style", serif'>Bookman (Sturdy)</option>
+                  <option value="Arial, sans-serif">Arial (Clean)</option>
+                  <option value="Helvetica, Arial, sans-serif">Helvetica (Swiss)</option>
+                  <option value="Verdana, sans-serif">Verdana (Readable)</option>
+                  <option value="Tahoma, Geneva, sans-serif">Tahoma (Compact)</option>
+                  <option value='"Trebuchet MS", sans-serif'>Trebuchet MS (Modern)</option>
+                  <option value='"Century Gothic", sans-serif'>Century Gothic (Geometric)</option>
+                  <option value='"Courier New", Courier, monospace'>Courier New (Fixed)</option>
+                  <option value='"Lucida Console", Monaco, monospace'>Lucida Console (Tech)</option>
+                  <option value='"Comic Sans MS", cursive'>Comic Sans MS (Playful)</option>
+                  <option value='"Brush Script MT", cursive'>Brush Script (Handwritten)</option>
+                  <option value="Papyrus, fantasy">Papyrus (Ancient)</option>
+                  <option value="Impact, fantasy">Impact (Bold)</option>
+                  <option value="Copperplate, fantasy">Copperplate (Engraved)</option>
+                </select>
+                {getBookFont(selectedBook.id) && (
+                  <button
+                    className="reset-font-button"
+                    onClick={() => {
+                      if (selectedBook.id) {
+                        setCurrentTheme(prev => ({
+                          ...prev,
+                          bookFonts: (prev.bookFonts || []).filter(bf => bf.bookId !== selectedBook.id),
+                        }));
+                        toast.success('Book font reset to theme default');
+                        generateBookshelf();
+                      }
+                    }}
+                  >
+                    Reset to Theme Default
+                  </button>
+                )}
               </div>
             </div>
 

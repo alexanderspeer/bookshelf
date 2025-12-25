@@ -38,13 +38,20 @@ export interface BookColorOverride {
   color: string;
 }
 
+export interface BookFontOverride {
+  bookId: number;
+  font: string;
+}
+
 export interface Theme {
   id: string;
   name: string;
   shelfBgColor: string;
   shelfFgColor: string;
   bookColors: BookColorOverride[];
+  bookFonts?: BookFontOverride[]; // Individual book font overrides
   bookColorPalette?: string[]; // Palette of colors to rotate through for books
+  spineFont?: string; // Default font family for book spine text
   isDefault?: boolean;
 }
 
