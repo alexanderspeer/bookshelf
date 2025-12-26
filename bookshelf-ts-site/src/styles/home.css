@@ -8,7 +8,13 @@
 .home-sidebar {
   width: 320px;
   min-width: 320px;
-  background: white;
+  background: repeating-linear-gradient(
+    0deg,
+    #3a3025,
+    #3a3025 2px,
+    #2d231a 2px,
+    #2d231a 4px
+  ) !important;
   border-right: 1px solid #e0e0e0;
   padding: 2rem;
   overflow-y: hidden;

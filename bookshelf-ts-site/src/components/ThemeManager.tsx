@@ -273,30 +273,35 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
           <button
             className={activeTab === 'colors' ? 'active' : ''}
             onClick={() => setActiveTab('colors')}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
           >
             Shelf Colors
           </button>
           <button
             className={activeTab === 'bookColors' ? 'active' : ''}
             onClick={() => setActiveTab('bookColors')}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
           >
             Book Colors
           </button>
           <button
             className={activeTab === 'fonts' ? 'active' : ''}
             onClick={() => setActiveTab('fonts')}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
           >
             Fonts
           </button>
           <button
             className={activeTab === 'premade' ? 'active' : ''}
             onClick={() => setActiveTab('premade')}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
           >
             Pre-Made Themes
           </button>
           <button
             className={activeTab === 'themes' ? 'active' : ''}
             onClick={() => setActiveTab('themes')}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
           >
             My Themes
           </button>
