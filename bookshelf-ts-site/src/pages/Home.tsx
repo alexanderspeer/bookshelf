@@ -52,6 +52,9 @@ const getInitialSavedThemes = (): Theme[] => {
   return [DEFAULT_THEME];
 };
 
+// DEBUG MODE - set to true to show book position outlines
+const DEBUG_HOVER = false;
+
 export const Home: React.FC = () => {
   const [currentlyReading, setCurrentlyReading] = useState<Book[]>([]);
   const [wantToRead, setWantToRead] = useState<Book[]>([]);
@@ -483,20 +486,25 @@ export const Home: React.FC = () => {
   };
 
   const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!hoverCanvasRef.current || bookPositions.length === 0) return;
+    if (!hoverCanvasRef.current || !canvasRef.current || bookPositions.length === 0) return;
     
-    const canvas = hoverCanvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    const hoverCanvas = hoverCanvasRef.current;
+    const baseCanvas = canvasRef.current;
     
-    // Calculate scale factors (internal canvas size / displayed size)
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // Get positions of both canvases
+    const baseRect = baseCanvas.getBoundingClientRect();
     
-    // Transform mouse coords from display space to internal canvas space
-    const mouseDisplayX = event.clientX - rect.left;
-    const mouseDisplayY = event.clientY - rect.top;
-    const x = mouseDisplayX * scaleX;
-    const y = mouseDisplayY * scaleY;
+    // Calculate scale factors using BASE canvas (where books are actually positioned)
+    const scaleX = baseCanvas.width / baseRect.width;
+    const scaleY = baseCanvas.height / baseRect.height;
+    
+    // Transform mouse coords to base canvas coordinate system
+    const mouseOnBaseDisplayX = event.clientX - baseRect.left;
+    const mouseOnBaseDisplayY = event.clientY - baseRect.top;
+    
+    // Scale to internal canvas coordinates
+    const x = mouseOnBaseDisplayX * scaleX;
+    const y = mouseOnBaseDisplayY * scaleY;
 
     // Find hovered book
     const hovered = bookPositions.find(pos => 
@@ -507,10 +515,10 @@ export const Home: React.FC = () => {
     // Ignore bookends for hover effect
     if (hovered && hovered.book.title === '__BOOKEND__' && hovered.book.author === '__BOOKEND__') {
       setHoveredBook(null);
-      canvas.style.cursor = 'default';
+      hoverCanvas.style.cursor = 'default';
     } else {
       setHoveredBook(hovered || null);
-      canvas.style.cursor = hovered ? 'pointer' : 'default';
+      hoverCanvas.style.cursor = hovered ? 'pointer' : 'default';
     }
   };
 
@@ -690,6 +698,20 @@ export const Home: React.FC = () => {
     // Only draw hover effect if we have a hovered book
     if (!hoveredBook) return;
 
+    // Calculate the offset between the two canvases to adjust drawing
+    const baseRect = baseCanvas.getBoundingClientRect();
+    const hoverRect = hoverCanvas.getBoundingClientRect();
+    const canvasOffsetX = baseRect.left - hoverRect.left;
+    const canvasOffsetY = baseRect.top - hoverRect.top;
+    
+    // Calculate scale factor to convert from canvas internal coords to displayed coords
+    const scaleX = baseRect.width / baseCanvas.width;
+    const scaleY = baseRect.height / baseCanvas.height;
+    
+    // Scale the offset back to internal canvas coordinates
+    const offsetInCanvasX = canvasOffsetX / scaleX;
+    const offsetInCanvasY = canvasOffsetY / scaleY;
+
     const LIFT_DISTANCE = 15;
     
     // Step 1: Create a clean extraction of just the book (with small padding to avoid edge artifacts)
@@ -712,39 +734,38 @@ export const Home: React.FC = () => {
       hoveredBook.height + 10
     );
     
+    // Adjust drawing position for canvas offset
+    const drawX = hoveredBook.x + offsetInCanvasX;
+    const drawY = hoveredBook.y + offsetInCanvasY;
+    
     // Step 2: Fill original position completely with shelf color (hide original book)
     hoverCtx.fillStyle = '#8B6F47';
-    hoverCtx.fillRect(
-      hoveredBook.x,
-      hoveredBook.y,
-      hoveredBook.width,
-      hoveredBook.height
-    );
+    hoverCtx.fillRect(drawX, drawY, hoveredBook.width, hoveredBook.height);
     
     // Step 3: Draw extracted book at lifted position (same size, just moved up)
     hoverCtx.drawImage(
       tempCanvas,
-      hoveredBook.x - 5,
-      hoveredBook.y - LIFT_DISTANCE - 5
+      drawX - 5,
+      drawY - LIFT_DISTANCE - 5
     );
     
     // Step 4: Gold border around lifted book (no padding on border)
     hoverCtx.strokeStyle = '#FFD700';
     hoverCtx.lineWidth = 3;
     hoverCtx.strokeRect(
-      hoveredBook.x,
-      hoveredBook.y - LIFT_DISTANCE,
+      drawX,
+      drawY - LIFT_DISTANCE,
       hoveredBook.width,
       hoveredBook.height
     );
-  }, [hoveredBook]);
+  }, [hoveredBook, bookPositions]);
 
   // Trigger hover effect redraw when hoveredBook changes or canvas updates
   React.useEffect(() => {
     drawHoverEffect();
   }, [drawHoverEffect, bookPositions]); // Redraw on position updates (which happen during cascade)
 
-  // Ensure hover canvas matches base canvas size (both internal AND displayed dimensions)
+  // Ensure hover canvas matches base canvas size and position EXACTLY
   React.useEffect(() => {
     if (!hoverCanvasRef.current || !canvasRef.current) return;
     
@@ -752,40 +773,34 @@ export const Home: React.FC = () => {
     const baseCanvas = canvasRef.current;
     
     // Sync internal canvas dimensions
-    // NOTE: Setting canvas.width or canvas.height clears the canvas!
-    // The hover effect useEffect will redraw after this if needed
     if (hoverCanvas.width !== baseCanvas.width || hoverCanvas.height !== baseCanvas.height) {
       hoverCanvas.width = baseCanvas.width;
       hoverCanvas.height = baseCanvas.height;
     }
     
-    // CRITICAL FIX: Sync displayed dimensions AND position via CSS to ensure perfect alignment
-    // Get the positions of both canvases relative to the viewport
+    // Get base canvas position and size
     const baseRect = baseCanvas.getBoundingClientRect();
     const parentRect = hoverCanvas.parentElement?.getBoundingClientRect();
     
     if (parentRect) {
-      // Calculate offset of base canvas from parent container
+      // Calculate where the base canvas is relative to the parent
       const offsetLeft = baseRect.left - parentRect.left;
       const offsetTop = baseRect.top - parentRect.top;
       
-      // Position hover canvas exactly where base canvas is
+      // Force hover canvas to exact same position and size as base canvas
       hoverCanvas.style.left = `${offsetLeft}px`;
       hoverCanvas.style.top = `${offsetTop}px`;
+      hoverCanvas.style.width = `${baseRect.width}px`;
+      hoverCanvas.style.height = `${baseRect.height}px`;
     }
     
-    // Match displayed dimensions
-    hoverCanvas.style.width = `${baseRect.width}px`;
-    hoverCanvas.style.height = `${baseRect.height}px`;
-    
-    // Keep hover canvas clear when not hovering (no debug rectangles needed anymore)
+    // Keep hover canvas clear when not hovering
     const ctx = hoverCanvas.getContext('2d');
     if (ctx && !hoveredBook) {
       ctx.clearRect(0, 0, hoverCanvas.width, hoverCanvas.height);
     }
     
-    // If we're hovering, schedule hover redraw to happen after this effect
-    // This ensures hover effect persists after canvas resize/clearing
+    // If we're hovering, schedule hover redraw
     if (hoveredBook && ctx) {
       requestAnimationFrame(() => drawHoverEffect());
     }
@@ -977,13 +992,12 @@ export const Home: React.FC = () => {
               onClick={handleCanvasClick}
               onMouseMove={handleCanvasMouseMove}
               onMouseLeave={() => setHoveredBook(null)}
-              className="bookshelf-canvas"
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 pointerEvents: 'auto',
-                display: 'block'
+                borderRadius: '8px'
               }}
             />
           </div>

@@ -1,0 +1,650 @@
+/* RPGUI Integration Styles */
+/* This file provides minimal overrides to integrate existing components with RPGUI */
+/* The main RPGUI styles are loaded from public/rpgui/dist/rpgui.css in index.html */
+
+/* Override default app background to allow RPGUI content to be visible */
+.app {
+  background: transparent !important;
+  min-height: 100vh;
+}
+
+/* Main container background */
+.home-container {
+  background: repeating-linear-gradient(
+    0deg,
+    #2a2420,
+    #2a2420 2px,
+    #1d1815 2px,
+    #1d1815 4px
+  ) !important;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Right-hand main content area */
+.home-main {
+  background: repeating-linear-gradient(
+    0deg,
+    #3a3025,
+    #3a3025 2px,
+    #2d231a 2px,
+    #2d231a 4px
+  ) !important;
+}
+
+/* Bookshelf display area */
+.bookshelf-display {
+  background: repeating-linear-gradient(
+    0deg,
+    #4a3f35,
+    #4a3f35 2px,
+    #3d332a 2px,
+    #3d332a 4px
+  ) !important;
+  border: 15px solid !important;
+  border-image: repeating-linear-gradient(45deg, #8B6F47, #8B6F47 10px, #5C4033 10px, #5C4033 20px) 15 !important;
+  border-radius: 0 !important;
+  padding: 1rem !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Apply RPGUI button class styling to our button components */
+button, 
+.primary-button,
+.secondary-button,
+.set-goal-button,
+.finish-book-button,
+.edit-book-button,
+.delete-book-button,
+.reset-color-button,
+.reset-font-button,
+.goal-menu-button,
+.add-tag-button {
+  /* Inherit RPGUI button styles */
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 0.8em !important;
+  min-width: 100px;
+  min-height: 50px;
+  padding: 10px 25px !important;
+  color: white !important;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
+  line-height: 1.5 !important;
+  border: none !important;
+  background-color: #8B6F47 !important;
+  background-image: none !important;
+  border: 3px solid #5C4033 !important;
+  box-shadow: 2px 2px 0px #3C2819 !important;
+}
+
+button:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.set-goal-button:hover,
+.finish-book-button:hover,
+.edit-book-button:hover,
+.delete-book-button:hover,
+.reset-color-button:hover,
+.reset-font-button:hover,
+.goal-menu-button:hover,
+.add-tag-button:hover {
+  background-color: #9B7F57 !important;
+  box-shadow: 3px 3px 0px #3C2819 !important;
+}
+
+button:active,
+.primary-button:active,
+.secondary-button:active,
+.set-goal-button:active,
+.finish-book-button:active,
+.edit-book-button:active,
+.delete-book-button:active,
+.reset-color-button:active,
+.reset-font-button:active,
+.goal-menu-button:active,
+.add-tag-button:active {
+  box-shadow: 1px 1px 0px #3C2819 !important;
+  transform: translate(1px, 1px);
+}
+
+button:disabled,
+.primary-button:disabled,
+.secondary-button:disabled {
+  -webkit-filter: grayscale(1);
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+/* Special styling for primary buttons (golden) */
+.primary-button {
+  background-color: #DAA520 !important;
+  border-color: #B8860B !important;
+}
+
+.primary-button:hover {
+  background-color: #EAB530 !important;
+}
+
+/* Small buttons */
+.theme-button,
+.goal-menu-button,
+.modal-close {
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 8px !important;
+  font-size: 1em !important;
+}
+
+/* Tag buttons */
+.tag-button {
+  min-width: 80px !important;
+  min-height: 35px !important;
+  margin: 5px !important;
+  font-size: 0.7em !important;
+  padding: 8px 15px !important;
+}
+
+.tag-button.selected {
+  background-color: #DAA520 !important;
+  border-color: #B8860B !important;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.85) !important;
+  font-family: 'Press Start 2P', cursive !important;
+}
+
+/* Modal content as RPGUI framed container */
+.modal-content,
+.import-modal-content {
+  border: 15px solid !important;
+  border-image: repeating-linear-gradient(45deg, #8B6F47, #8B6F47 10px, #5C4033 10px, #5C4033 20px) 15 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  background: repeating-linear-gradient(
+    0deg,
+    #4a3f35,
+    #4a3f35 2px,
+    #3d332a 2px,
+    #3d332a 4px
+  ) !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Sidebar as framed container */
+.home-sidebar {
+  border: 15px solid !important;
+  border-image: repeating-linear-gradient(45deg, #DAA520, #DAA520 10px, #B8860B 10px, #B8860B 20px) 15 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  background: repeating-linear-gradient(
+    0deg,
+    #5a4a25,
+    #5a4a25 2px,
+    #4d3d1a 2px,
+    #4d3d1a 4px
+  ) !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Sidebar sections */
+.sidebar-section {
+  margin-bottom: 25px;
+}
+
+/* Text styling */
+.rpgui-content h1,
+.rpgui-content h2,
+.rpgui-content h3,
+.rpgui-content h4,
+.rpgui-content p,
+.rpgui-content label,
+.rpgui-content span {
+  color: white !important;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
+  font-family: 'Press Start 2P', cursive !important;
+}
+
+.rpgui-content h1 {
+  font-size: 1.2em !important;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.rpgui-content h2 {
+  font-size: 1.1em !important;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.rpgui-content h3 {
+  font-size: 1.0em !important;
+  margin-bottom: 10px;
+}
+
+.rpgui-content h4 {
+  font-size: 0.9em !important;
+  margin-bottom: 8px;
+}
+
+.rpgui-content p,
+.rpgui-content label {
+  font-size: 0.8em !important;
+  line-height: 1.8 !important;
+}
+
+/* Input fields */
+.rpgui-content input[type="text"],
+.rpgui-content input[type="number"],
+.rpgui-content input[type="email"],
+.rpgui-content input[type="password"],
+.rpgui-content textarea,
+.search-input,
+.form-group input {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  color: white !important;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
+  font-size: 0.8em !important;
+  font-family: 'Press Start 2P', cursive !important;
+  line-height: 32px;
+  background: #4e4a4e !important;
+  width: 100%;
+  padding-left: 10px;
+  min-height: 40px;
+  border: 3px solid #8B6F47 !important;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.rpgui-content input:focus,
+.rpgui-content textarea:focus,
+.rpgui-content select:focus {
+  outline: none !important;
+  border-color: #DAA520 !important;
+  box-shadow: 0 0 5px #DAA520;
+}
+
+.rpgui-content textarea {
+  line-height: 22px !important;
+  padding-top: 7px;
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Select dropdowns */
+.rpgui-content select,
+.filter-select,
+.book-font-selector,
+.form-group select {
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
+  color: white !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 0.8em !important;
+  min-height: 40px;
+  border: 3px solid #8B6F47 !important;
+  background: #4e4a4e !important;
+  padding: 8px !important;
+}
+
+.rpgui-content select option {
+  background: #4e4a4e;
+  color: white;
+}
+
+/* HR elements */
+.rpgui-content hr {
+  display: block;
+  border: 0px;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    #8B6F47,
+    #8B6F47 10px,
+    #5C4033 10px,
+    #5C4033 20px
+  ) !important;
+  margin: 15px 0;
+}
+
+/* Progress bars (for reading goals) */
+.goal-progress-bar {
+  border: 4px solid #8B6F47 !important;
+  height: 25px !important;
+  background: #3d332a !important;
+  position: relative;
+  margin: 10px 0;
+}
+
+.goal-progress-fill {
+  background: repeating-linear-gradient(
+    90deg,
+    #4CAF50,
+    #4CAF50 5px,
+    #45A049 5px,
+    #45A049 10px
+  ) !important;
+  height: 100% !important;
+  transition: width 0.3s ease;
+}
+
+/* Stats display */
+.stat-item {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  border: 3px solid rgba(139, 111, 71, 0.6);
+  margin-bottom: 10px;
+}
+
+.stat-number {
+  color: #FFD700 !important;
+  font-size: 1.5em !important;
+  display: block;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.7em !important;
+  display: block;
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* Goal display */
+.goal-display,
+.goal-completed,
+.goal-expired {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 15px;
+  border: 3px solid rgba(139, 111, 71, 0.6);
+}
+
+.goal-numbers {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.goal-current {
+  color: #4CAF50 !important;
+}
+
+.goal-target {
+  color: #FFD700 !important;
+}
+
+.goal-separator {
+  color: white !important;
+  margin: 0 5px;
+}
+
+/* Search and filter controls */
+.bookshelf-controls {
+  border: 7px solid #8B6F47 !important;
+  padding: 15px !important;
+  background: repeating-linear-gradient(
+    0deg,
+    #3d332a,
+    #3d332a 2px,
+    #302619 2px,
+    #302619 4px
+  ) !important;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6) !important;
+}
+
+.search-filter-section {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Search results */
+.search-result-item {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 10px;
+  margin: 10px 0;
+  border: 3px solid rgba(139, 111, 71, 0.6);
+  transition: all 0.2s;
+}
+
+.search-result-item:hover {
+  background: rgba(218, 165, 32, 0.2);
+  border-color: #DAA520;
+  transform: translateX(5px);
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8em !important;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Color picker section */
+.book-color-section,
+.book-font-section {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border: 3px solid rgba(139, 111, 71, 0.6);
+  margin: 15px 0;
+}
+
+.book-preset-colors,
+.book-color-picker-full {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.book-color-swatch {
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  margin: 3px !important;
+  border: 3px solid rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s;
+}
+
+.book-color-swatch:hover {
+  border-color: #FFD700 !important;
+  transform: scale(1.1);
+}
+
+.book-color-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.current-color-label {
+  font-size: 0.7em !important;
+  color: #FFD700 !important;
+}
+
+.modal-book-cover {
+  max-width: 200px;
+  height: auto;
+  display: block;
+  margin: 15px auto;
+  border: 4px solid #8B6F47;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.modal-book-details {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border: 3px solid rgba(139, 111, 71, 0.6);
+  margin: 15px 0;
+}
+
+.modal-book-details p {
+  margin: 8px 0;
+  line-height: 1.8 !important;
+}
+
+/* Empty shelf message */
+.empty-shelf {
+  text-align: center;
+  padding: 40px;
+  border: 15px solid !important;
+  border-image: repeating-linear-gradient(45deg, #8B6F47, #8B6F47 10px, #5C4033 10px, #5C4033 20px) 15 !important;
+  background: repeating-linear-gradient(
+    0deg,
+    #4a3f35,
+    #4a3f35 2px,
+    #3d332a 2px,
+    #3d332a 4px
+  ) !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8) !important;
+  margin: 20px;
+}
+
+.empty-shelf p {
+  font-size: 1em !important;
+  color: #FFD700 !important;
+}
+
+/* Loading component */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #FFD700 !important;
+  font-size: 1em !important;
+}
+
+.loading::after {
+  content: '...';
+  animation: ellipsis 1.5s infinite;
+}
+
+@keyframes ellipsis {
+  0% { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Book actions */
+.book-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rpgui-content button {
+    font-size: 0.7em !important;
+    min-height: 45px;
+    padding: 8px 20px !important;
+  }
+  
+  .rpgui-content h1 {
+    font-size: 1.0em !important;
+  }
+  
+  .rpgui-content h2 {
+    font-size: 0.9em !important;
+  }
+  
+  .rpgui-content p,
+  .rpgui-content label {
+    font-size: 0.7em !important;
+  }
+  
+  .rpgui-content input,
+  .rpgui-content select,
+  .rpgui-content textarea {
+    font-size: 0.7em !important;
+  }
+}
+
+/* Scrollbar styling for webkit browsers */
+.rpgui-content ::-webkit-scrollbar {
+  width: 14px;
+}
+
+.rpgui-content ::-webkit-scrollbar-track {
+  background: #3d332a;
+  border: 2px solid #8B6F47;
+}
+
+.rpgui-content ::-webkit-scrollbar-thumb {
+  background: #8B6F47;
+  border: 2px solid #5C4033;
+}
+
+.rpgui-content ::-webkit-scrollbar-thumb:hover {
+  background: #9B7F57;
+}
+
+/* Ensure the bookshelf canvas is not affected */
+.bookshelf-canvas {
+  image-rendering: auto !important;
+}
+
+.bookshelf-display {
+  position: relative !important;
+}
+
+/* Toast notifications styling override */
+.Toastify__toast {
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 0.7em !important;
+  background: repeating-linear-gradient(
+    0deg,
+    #4a3f35,
+    #4a3f35 2px,
+    #3d332a 2px,
+    #3d332a 4px
+  ) !important;
+  border: 3px solid #8B6F47 !important;
+  color: white !important;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.Toastify__progress-bar {
+  background: linear-gradient(to right, #4CAF50, #FFD700) !important;
+}
+
+.Toastify__close-button {
+  color: white !important;
+  opacity: 0.8;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}

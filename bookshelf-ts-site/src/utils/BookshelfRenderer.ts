@@ -334,7 +334,8 @@ export class BookshelfRenderer {
 
   private generateBookend(): FakeSpineData {
     // Check cache first
-    const cacheKey = '__BOOKEND__';
+    const renderVersion = 'v4-simple'; // Match version with generateFakeSpine
+    const cacheKey = '__BOOKEND__' + '||' + renderVersion;
     if (this.fakeSpineCache.has(cacheKey)) {
       return this.fakeSpineCache.get(cacheKey)!;
     }
@@ -354,17 +355,8 @@ export class BookshelfRenderer {
     spineCtx.fillStyle = this.shelfFgColor;
     spineCtx.fillRect(0, 0, widthInPx, heightInPx);
 
-    // Add some wood grain texture by drawing darker vertical lines
-    spineCtx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-    spineCtx.lineWidth = 1;
-    for (let i = 0; i < widthInPx; i += 3) {
-      spineCtx.beginPath();
-      spineCtx.moveTo(i, 0);
-      spineCtx.lineTo(i, heightInPx);
-      spineCtx.stroke();
-    }
-
-    // Add a subtle border to make it look more book-like
+    // Keep bookend simple for now
+    // Add subtle border
     spineCtx.strokeStyle = "rgba(0, 0, 0, 0.3)";
     spineCtx.lineWidth = 2;
     spineCtx.strokeRect(1, 1, widthInPx - 2, heightInPx - 2);
@@ -386,8 +378,10 @@ export class BookshelfRenderer {
   }
 
   private generateFakeSpine(incompleteBook: book): FakeSpineData {
-    // Check cache first - include domColor in cache key for color customization
-    const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default');
+    // Check cache first - include domColor and version in cache key
+    // Version helps invalidate cache when rendering logic changes
+    const renderVersion = 'v6-final'; // Increment when changing rendering logic
+    const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default') + '||' + renderVersion;
     if (this.fakeSpineCache.has(cacheKey)) {
       return this.fakeSpineCache.get(cacheKey)!;
     }
@@ -466,6 +460,7 @@ export class BookshelfRenderer {
       backgroundColor = selectedColor.bg;
     }
     
+    // Draw main background - keep it simple for alignment
     spineCtx.fillStyle = backgroundColor;
     spineCtx.fillRect(0, 0, heightInPx, widthInPx);
 
@@ -479,14 +474,36 @@ export class BookshelfRenderer {
     // keep calculating the font until its between 20-25% of the spine
     const MIN_NAME_WIDTH = 0;
     const MAX_NAME_WIDTH = Math.floor(heightInPx * .25);
-    let validMeasuredNameText = this.calculateStringFontSizeInRange(lastName, font, 48, MIN_NAME_WIDTH, MAX_NAME_WIDTH, widthInPx - 6, spineCtx);
+    let validMeasuredNameText = this.calculateStringFontSizeInRange(lastName, font, 48, MIN_NAME_WIDTH, MAX_NAME_WIDTH, widthInPx - 8, spineCtx);
 
-    // place the last name on the spine
+    // Determine text color based on background brightness for better visibility
+    const getBrightness = (hexColor: string): number => {
+      const rgb = parseInt(hexColor.slice(1), 16);
+      const r = (rgb >> 16) & 0xff;
+      const g = (rgb >>  8) & 0xff;
+      const b = (rgb >>  0) & 0xff;
+      return (r * 299 + g * 587 + b * 114) / 1000;
+    };
+    
+    const brightness = getBrightness(backgroundColor);
+    const isDark = brightness < 128;
+    
+    // Use high contrast colors with strong outline
+    const textColor = isDark ? '#FFFFFF' : '#000000';
+    const outlineColor = isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+
+    // place the last name on the spine with RPG-style text outline
     const NAME_PADDING_RIGHT = 10;
     const nameXPosition = heightInPx - validMeasuredNameText.width - NAME_PADDING_RIGHT;
     const nameYPosition = widthInPx - Math.ceil((widthInPx - validMeasuredNameText.fontBoundingBoxAscent) / 2);
-    spineCtx.fillStyle = "#000000"; // TODO?
-    // spineCtx.fillStyle = COLORS.fg;
+    
+    // Draw text with outline for visibility
+    spineCtx.strokeStyle = outlineColor;
+    spineCtx.lineWidth = 2.5;
+    spineCtx.lineJoin = 'round';
+    spineCtx.strokeText(lastName, nameXPosition, nameYPosition);
+    
+    spineCtx.fillStyle = textColor;
     spineCtx.fillText(lastName, nameXPosition, nameYPosition);
 
     // TITLE
@@ -502,9 +519,17 @@ export class BookshelfRenderer {
     const MAX_TITLE_WIDTH = Math.floor(heightInPx * .7) - 10;
     let validMeasuredTitleText = this.calculateStringFontSizeInRange(title, font, 60, MIN_TITLE_WIDTH, MAX_TITLE_WIDTH, widthInPx - 6, spineCtx);
 
-    // place title on spine
+    // place title on spine with RPG-style text outline
     const titleXPosition = Math.floor((MAX_TITLE_WIDTH - validMeasuredTitleText.width) / 2) + 10;
-    const titleYPosition = widthInPx - Math.ceil((widthInPx - validMeasuredTitleText.fontBoundingBoxAscent) / 2);
+    const titleYPosition = widthInPx - Math.ceil((widthInPx - validMeasuredNameText.fontBoundingBoxAscent) / 2);
+    
+    // Draw text with outline for visibility
+    spineCtx.strokeStyle = outlineColor;
+    spineCtx.lineWidth = 2.5;
+    spineCtx.lineJoin = 'round';
+    spineCtx.strokeText(title, titleXPosition, titleYPosition);
+    
+    spineCtx.fillStyle = textColor;
     spineCtx.fillText(title, titleXPosition, titleYPosition);
 
     // rotate
