@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import apiService from '../services/api';
+import '../styles/goodreads-import.css';
 
 export const GoodreadsImport: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -100,15 +101,16 @@ export const GoodreadsImport: React.FC = () => {
 
   return (
     <div className="goodreads-import-container">
-      <h1>Import from Goodreads</h1>
-      
       <div className="import-instructions">
-        <h3>How to export your Goodreads library:</h3>
+        <h3>Export your Goodreads library as a CSV</h3>
         <ol>
-          <li>Go to <a href="https://www.goodreads.com/review/import" target="_blank" rel="noopener noreferrer">Goodreads Import/Export</a></li>
-          <li>Click "Export Library"</li>
-          <li>Download the CSV file</li>
-          <li>Upload it here</li>
+          <li>Go to Goodreads and log in.</li>
+          <li>Click <strong>My Books</strong> in the top navigation bar.</li>
+          <li>On the left side of the page, scroll to the <strong>Tools</strong> section.</li>
+          <li>Under Tools, click <strong>Import and Export</strong>.</li>
+          <li>At the top of the page, select <strong>Export Library</strong>.</li>
+          <li>Download the generated CSV file when it is ready.</li>
+          <li>Upload the CSV file here using the button below.</li>
         </ol>
         
         <div className="import-note">
@@ -118,7 +120,11 @@ export const GoodreadsImport: React.FC = () => {
 
       <div className="import-section">
         <div className="file-input-wrapper">
-          <label htmlFor="csv-upload" className="file-label">
+          <label 
+            htmlFor="csv-upload" 
+            className="file-label"
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+          >
             {csvFile ? csvFile.name : 'Choose CSV File'}
           </label>
           <input
@@ -134,6 +140,7 @@ export const GoodreadsImport: React.FC = () => {
           className="import-btn"
           onClick={importBooks}
           disabled={!csvFile || importing}
+          style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
         >
           {importing ? 'Importing...' : 'Import Books'}
         </button>

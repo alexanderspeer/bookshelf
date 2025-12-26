@@ -1249,8 +1249,19 @@ export const Home: React.FC = () => {
       {showImportModal && (
         <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
           <div className="modal-content import-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowImportModal(false)}>×</button>
-            <GoodreadsImport />
+            <div className="modal-header">
+              <h2>Import from Goodreads</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowImportModal(false)}
+                style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <GoodreadsImport />
+            </div>
           </div>
         </div>
       )}

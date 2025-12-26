@@ -1,0 +1,163 @@
+/* Goodreads Import Styles */
+.goodreads-import-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.import-instructions {
+  margin-bottom: 1.5rem;
+}
+
+.import-instructions h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.import-instructions ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+  color: #2c3e50;
+}
+
+.import-instructions li {
+  margin: 0.5rem 0;
+  color: #2c3e50;
+}
+
+.import-instructions a {
+  color: #3498db;
+  text-decoration: underline;
+}
+
+.import-note {
+  background: rgba(255, 243, 224, 0.3);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  color: #2c3e50;
+}
+
+.import-note strong {
+  color: #2c3e50;
+}
+
+.import-section {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.file-input-wrapper {
+  flex: 1;
+  max-width: 400px;
+  min-width: 200px;
+}
+
+.file-label {
+  display: block;
+  padding: 1rem;
+  background-color: #DAA520 !important;
+  border: 3px solid #B8860B !important;
+  border-radius: 4px;
+  text-align: center;
+  color: white !important;
+  text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
+  transition: all 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 2px 2px 0px #3C2819 !important;
+}
+
+.file-label:hover {
+  background-color: #EAB530 !important;
+  box-shadow: 3px 3px 0px #3C2819 !important;
+  transform: scale(1.01);
+  transform-origin: center;
+}
+
+.import-btn {
+  padding: 1rem 2rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.import-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.import-progress {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  height: 30px;
+  background: rgba(224, 224, 224, 0.3);
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4CAF50, #8BC34A);
+  transition: width 0.3s ease;
+}
+
+.import-progress p {
+  color: #2c3e50;
+  text-align: center;
+  margin: 0;
+}
+
+.import-warnings {
+  margin-top: 1.5rem;
+}
+
+.import-warnings h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.import-warnings ul {
+  margin-top: 1rem;
+  padding-left: 2rem;
+}
+
+.import-warnings li {
+  margin: 0.5rem 0;
+  color: #2c3e50;
+}
+
+/* Override RPGUI styles for import modal */
+.rpgui-content .goodreads-import-container h1,
+.rpgui-content .goodreads-import-container h2,
+.rpgui-content .goodreads-import-container h3,
+.rpgui-content .goodreads-import-container p,
+.rpgui-content .goodreads-import-container li,
+.rpgui-content .goodreads-import-container label,
+.rpgui-content .goodreads-import-container span {
+  color: #2c3e50 !important;
+  text-shadow: none !important;
+}
+
+.rpgui-content .file-label {
+  color: white !important;
+  text-shadow: none !important;
+}
+
+.rpgui-content .import-btn {
+  color: white !important;
+  text-shadow: none !important;
+}
+
