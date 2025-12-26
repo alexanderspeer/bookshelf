@@ -76,6 +76,9 @@ export const Home: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditBookModal, setShowEditBookModal] = useState(false);
   const [showThemeManager, setShowThemeManager] = useState(false);
+  const [showShelfModal, setShowShelfModal] = useState(false);
+  const [shelfModalBooks, setShelfModalBooks] = useState<Book[]>([]);
+  const [shelfModalTitle, setShelfModalTitle] = useState('');
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [currentTheme, setCurrentTheme] = useState<Theme>(getInitialTheme());
   const [savedThemes, setSavedThemes] = useState<Theme[]>(getInitialSavedThemes());
@@ -370,16 +373,10 @@ export const Home: React.FC = () => {
       let labels: string[];
       
       if (shelfFilter === 'all') {
-        labels = ['Currently Reading / Want to Read', 'Ranked Collection'];
+        labels = ['', ''];  // No labels
       } else {
-        // Single label for filtered view
-        const filterLabels: Record<string, string> = {
-          'currently_reading': 'Currently Reading',
-          'want_to_read': 'Want to Read',
-          'read': 'Read Books',
-          'recently_read': 'Recently Read (Last 30 Days)'
-        };
-        labels = [filterLabels[shelfFilter] || 'Filtered Books'];
+        // No labels for filtered view
+        labels = [''];
       }
       
       const renderer = new BookshelfRenderer({
@@ -515,10 +512,11 @@ export const Home: React.FC = () => {
     // Ignore bookends for hover effect
     if (hovered && hovered.book.title === '__BOOKEND__' && hovered.book.author === '__BOOKEND__') {
       setHoveredBook(null);
-      hoverCanvas.style.cursor = 'default';
+      hoverCanvas.style.cursor = '';
     } else {
       setHoveredBook(hovered || null);
-      hoverCanvas.style.cursor = hovered ? 'pointer' : 'default';
+      // Use RPGUI pointer cursor for hovering books
+      hoverCanvas.style.cursor = hovered ? "url('/rpgui/img/cursor/point.png') 10 0, auto" : '';
     }
   };
 
@@ -532,6 +530,12 @@ export const Home: React.FC = () => {
     fetchBooks();
     // Refresh goal to update progress and check if completed
     fetchCurrentGoal();
+  };
+
+  const handleShelfClick = (books: Book[], title: string) => {
+    setShelfModalBooks(books);
+    setShelfModalTitle(title);
+    setShowShelfModal(true);
   };
 
   const handleBookAdded = () => {
@@ -902,15 +906,30 @@ export const Home: React.FC = () => {
         <div className="sidebar-section">
           <h2></h2>
           <div className="stats-column">
-            <div className="stat-item">
+            <div 
+              className="stat-item stat-item-clickable"
+              onClick={() => handleShelfClick(wantToRead, 'Want to Read')}
+              title="Click to view all Want to Read books"
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            >
               <span className="stat-number">{wantToRead.length}</span>
               <span className="stat-label">Want to Read</span>
             </div>
-            <div className="stat-item">
+            <div 
+              className="stat-item stat-item-clickable"
+              onClick={() => handleShelfClick(currentlyReading, 'Currently Reading')}
+              title="Click to view all Currently Reading books"
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            >
               <span className="stat-number">{currentlyReading.length}</span>
               <span className="stat-label">Currently Reading</span>
             </div>
-            <div className="stat-item">
+            <div 
+              className="stat-item stat-item-clickable"
+              onClick={() => handleShelfClick(rankedBooks, 'Read')}
+              title="Click to view all Read books"
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            >
               <span className="stat-number">{rankedBooks.length}</span>
               <span className="stat-label">Read</span>
             </div>
@@ -974,18 +993,27 @@ export const Home: React.FC = () => {
               onClick={() => setShowThemeManager(true)}
               title="Customize bookshelf theme"
             >
-              ⋮
+              Colors
             </button>
           </div>
         </div>
 
         {/* Two-canvas approach: base + hover overlay for smooth cascade with hover */}
         {(rendering || shelfImage) && (
-          <div className="bookshelf-display" style={{ position: 'relative' }}>
+          <div 
+            className="bookshelf-display" 
+            style={{ 
+              position: 'relative',
+              cursor: "url('/rpgui/img/cursor/default.png'), auto"
+            }}
+          >
             <canvas 
               ref={canvasRef}
               className="bookshelf-canvas"
-              style={{ display: 'block' }}
+              style={{ 
+                display: 'block',
+                cursor: "url('/rpgui/img/cursor/default.png'), auto"
+              }}
             />
             <canvas 
               ref={hoverCanvasRef}
@@ -997,7 +1025,8 @@ export const Home: React.FC = () => {
                 top: 0,
                 left: 0,
                 pointerEvents: 'auto',
-                borderRadius: '8px'
+                borderRadius: '8px',
+                cursor: "url('/rpgui/img/cursor/default.png'), auto"
               }}
             />
           </div>
@@ -1246,6 +1275,60 @@ export const Home: React.FC = () => {
           onApplyBulkBookColors={handleApplyBulkBookColors}
           onClose={() => setShowThemeManager(false)}
         />
+      )}
+
+      {/* Shelf Books Modal */}
+      {showShelfModal && (
+        <div className="modal-overlay" onClick={() => setShowShelfModal(false)}>
+          <div 
+            className="modal-content rpgui-container framed-golden" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '700px', width: 'auto', minWidth: '500px' }}
+          >
+            <div className="modal-header">
+              <h2>{shelfModalTitle}</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowShelfModal(false)}
+                style={{ 
+                  cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+                  position: 'absolute',
+                  zIndex: 1000,         // Keep button on top of everything
+                  // Adjust these values to position the close button from the edges
+                  right: '1rem',        // Distance from right edge (decrease to move closer to edge)
+                  top: '1rem'           // Distance from top edge (decrease to move closer to edge)
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden' }}>
+              {shelfModalBooks.length === 0 ? (
+                <p>No books in this shelf yet.</p>
+              ) : (
+                <div className="shelf-books-list">
+                  {shelfModalBooks.map((book) => (
+                    <div 
+                      key={book.id} 
+                      className="shelf-book-item"
+                      onClick={() => {
+                        setSelectedBook(book);
+                        setShowShelfModal(false);
+                      }}
+                      style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                    >
+                      <div className="shelf-book-info">
+                        <h3>{book.title}</h3>
+                        <p>{book.author}</p>
+                        {book.rank_position && <span className="book-rank">Rank: {book.rank_position}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -314,6 +314,117 @@
   min-height: 40px;
 }
 
+/* Color variety for stat items - RPGUI themed */
+.stat-item:nth-child(1) {
+  background: linear-gradient(135deg, #8B6F47 0%, #A68A5F 100%);
+  border: 2px solid #5C4033;
+  color: white;
+}
+
+.stat-item:nth-child(2) {
+  background: linear-gradient(135deg, #6B8E9B 0%, #85A8B5 100%);
+  border: 2px solid #4A6B7A;
+  color: white;
+}
+
+.stat-item:nth-child(3) {
+  background: linear-gradient(135deg, #7B9B7B 0%, #95B595 100%);
+  border: 2px solid #5A7A5A;
+  color: white;
+}
+
+/* Make stat items clickable */
+.stat-item-clickable {
+  transition: all 0.2s ease;
+}
+
+.stat-item-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+
+/* Shelf Books Modal */
+.modal-header {
+  position: relative;
+  padding: 1rem 3rem 1rem 1rem;
+  margin-bottom: 0.5rem;
+  min-height: 60px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  padding: 0;
+}
+
+.modal-body {
+  padding-top: 0.5rem;
+}
+
+.shelf-books-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+.shelf-book-item {
+  padding: 1.25rem;
+  border: 3px solid;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  transform-origin: center;
+}
+
+/* Alternate colors for book items */
+.shelf-book-item:nth-child(odd) {
+  background: linear-gradient(135deg, #E8DCC4 0%, #D4C5B9 100%);
+  border-color: #8B6F47;
+}
+
+.shelf-book-item:nth-child(even) {
+  background: linear-gradient(135deg, #C5D3E0 0%, #B5C4D8 100%);
+  border-color: #6B8E9B;
+}
+
+.shelf-book-item:nth-child(3n) {
+  background: linear-gradient(135deg, #B5C4B0 0%, #A8B8A0 100%);
+  border-color: #7B9B7B;
+}
+
+.shelf-book-item:hover {
+  transform: scale(1.01);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.05);
+  border-width: 4px;
+}
+
+.shelf-book-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.shelf-book-info p {
+  margin: 0;
+  color: #5a5a5a;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.book-rank {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: #3498db;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
@@ -346,13 +457,25 @@
 }
 
 .search-input {
-  flex: 1;
+  flex: 2;
   min-width: 250px;
-  padding: 0.8rem 1.2rem;
+  padding: 0.5rem 1.2rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
+  background: white;
+  color: #333;
   transition: all 0.2s ease;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.search-input::placeholder {
+  color: white;
+}
+
+.search-input:focus::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .search-input:focus {
@@ -362,14 +485,21 @@
 }
 
 .filter-select {
-  padding: 0.8rem 1.2rem;
+  padding: 0.5rem 1.2rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 150px;
+  min-width: 120px;
+  max-width: 180px;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.filter-select:first-of-type {
+  max-width: 165px;
 }
 
 .filter-select:focus {
@@ -379,26 +509,37 @@
 }
 
 .theme-button {
-  padding: 0;
-  height: 50px;
-  background: #9b59b6;
+  padding: 0.5rem 1.2rem;
+  height: 40px;
+  min-width: 100px;
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 16.67%,
+    #ffff00 33.33%,
+    #00ff00 50%,
+    #0000ff 66.67%,
+    #4b0082 83.33%,
+    #9400d3 100%
+  );
   color: white;
-  border: none;
+  border: 2px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 600;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .theme-button:hover {
-  background: #8e44ad;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
 }
 
 .filter-select:hover {

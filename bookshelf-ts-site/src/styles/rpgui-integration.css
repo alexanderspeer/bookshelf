@@ -125,9 +125,36 @@ button:disabled,
 }
 
 /* Small buttons */
-.theme-button,
 .goal-menu-button,
 .modal-close {
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 8px !important;
+  font-size: 1em !important;
+}
+
+/* Theme/Colors button with rainbow background */
+.theme-button {
+  background: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 16.67%,
+    #ffff00 33.33%,
+    #00ff00 50%,
+    #0000ff 66.67%,
+    #4b0082 83.33%,
+    #9400d3 100%
+  ) !important;
+  background-image: linear-gradient(
+    90deg,
+    #ff0000 0%,
+    #ff7f00 16.67%,
+    #ffff00 33.33%,
+    #00ff00 50%,
+    #0000ff 66.67%,
+    #4b0082 83.33%,
+    #9400d3 100%
+  ) !important;
   min-width: 40px !important;
   min-height: 40px !important;
   padding: 8px !important;
@@ -176,7 +203,7 @@ button:disabled,
 /* Sidebar as framed container */
 .home-sidebar {
   border: 15px solid !important;
-  border-image: repeating-linear-gradient(45deg, #DAA520, #DAA520 10px, #B8860B 10px, #B8860B 20px) 15 !important;
+  border-image: repeating-linear-gradient(45deg, #8B6F47, #8B6F47 10px, #5C4033 10px, #5C4033 20px) 15 !important;
   padding: 20px !important;
   box-sizing: border-box !important;
   background: repeating-linear-gradient(

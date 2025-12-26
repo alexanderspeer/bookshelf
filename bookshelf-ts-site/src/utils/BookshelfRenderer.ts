@@ -380,7 +380,7 @@ export class BookshelfRenderer {
   private generateFakeSpine(incompleteBook: book): FakeSpineData {
     // Check cache first - include domColor and version in cache key
     // Version helps invalidate cache when rendering logic changes
-    const renderVersion = 'v6-final'; // Increment when changing rendering logic
+    const renderVersion = 'v7-rpgui-style'; // Increment when changing rendering logic
     const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default') + '||' + renderVersion;
     if (this.fakeSpineCache.has(cacheKey)) {
       return this.fakeSpineCache.get(cacheKey)!;
@@ -460,9 +460,29 @@ export class BookshelfRenderer {
       backgroundColor = selectedColor.bg;
     }
     
-    // Draw main background - keep it simple for alignment
+    // Draw main background
     spineCtx.fillStyle = backgroundColor;
     spineCtx.fillRect(0, 0, heightInPx, widthInPx);
+
+    // Add RPG-style texture pattern (subtle diagonal lines)
+    spineCtx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+    for (let i = 0; i < heightInPx + widthInPx; i += 4) {
+      spineCtx.fillRect(i, 0, 2, widthInPx);
+      spineCtx.fillRect(0, i, heightInPx, 2);
+    }
+
+    // Add darker edges for depth (RPG border style)
+    const borderWidth = 4;
+    spineCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    spineCtx.fillRect(0, 0, heightInPx, borderWidth); // Top
+    spineCtx.fillRect(0, widthInPx - borderWidth, heightInPx, borderWidth); // Bottom
+    spineCtx.fillRect(0, 0, borderWidth, widthInPx); // Left
+    spineCtx.fillRect(heightInPx - borderWidth, 0, borderWidth, widthInPx); // Right
+    
+    // Add lighter inner edge for bevel effect
+    spineCtx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    spineCtx.fillRect(borderWidth, borderWidth, heightInPx - borderWidth * 2, 2); // Top inner
+    spineCtx.fillRect(borderWidth, borderWidth, 2, widthInPx - borderWidth * 2); // Left inner
 
     // LAST NAME
     // extract authors last name from the book
@@ -474,7 +494,7 @@ export class BookshelfRenderer {
     // keep calculating the font until its between 20-25% of the spine
     const MIN_NAME_WIDTH = 0;
     const MAX_NAME_WIDTH = Math.floor(heightInPx * .25);
-    let validMeasuredNameText = this.calculateStringFontSizeInRange(lastName, font, 48, MIN_NAME_WIDTH, MAX_NAME_WIDTH, widthInPx - 8, spineCtx);
+    let validMeasuredNameText = this.calculateStringFontSizeInRange(lastName, font, 48, MIN_NAME_WIDTH, MAX_NAME_WIDTH, widthInPx - 12, spineCtx);
 
     // Determine text color based on background brightness for better visibility
     const getBrightness = (hexColor: string): number => {
@@ -488,20 +508,26 @@ export class BookshelfRenderer {
     const brightness = getBrightness(backgroundColor);
     const isDark = brightness < 128;
     
-    // Use high contrast colors with strong outline
+    // Use high contrast colors with strong outline (RPG style)
     const textColor = isDark ? '#FFFFFF' : '#000000';
-    const outlineColor = isDark ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    const outlineColor = isDark ? '#000000' : '#FFFFFF';
 
-    // place the last name on the spine with RPG-style text outline
-    const NAME_PADDING_RIGHT = 10;
+    // place the last name on the spine with RPG-style thick text outline
+    const NAME_PADDING_RIGHT = 14;
     const nameXPosition = heightInPx - validMeasuredNameText.width - NAME_PADDING_RIGHT;
     const nameYPosition = widthInPx - Math.ceil((widthInPx - validMeasuredNameText.fontBoundingBoxAscent) / 2);
     
-    // Draw text with outline for visibility
+    // Draw thick pixelated-style outline (multiple passes for thickness)
     spineCtx.strokeStyle = outlineColor;
-    spineCtx.lineWidth = 2.5;
-    spineCtx.lineJoin = 'round';
+    spineCtx.lineWidth = 4;
+    spineCtx.lineJoin = 'miter'; // Sharp corners for pixelated look
+    spineCtx.miterLimit = 2;
+    
+    // Draw outline in 4 directions for solid edge
     spineCtx.strokeText(lastName, nameXPosition, nameYPosition);
+    spineCtx.strokeText(lastName, nameXPosition + 1, nameYPosition);
+    spineCtx.strokeText(lastName, nameXPosition, nameYPosition + 1);
+    spineCtx.strokeText(lastName, nameXPosition + 1, nameYPosition + 1);
     
     spineCtx.fillStyle = textColor;
     spineCtx.fillText(lastName, nameXPosition, nameYPosition);
@@ -514,20 +540,25 @@ export class BookshelfRenderer {
     if (indexOfParen > 0) { title = title.slice(0, indexOfParen - 1); }
 
     // get text between 50-70% of spine width
-    // TODO: if title is longer than certain number of chars (and has above certain number of white space) divide to two lines
-    const MIN_TITLE_WIDTH = 0; // No minimum width (in case title is short)
+    const MIN_TITLE_WIDTH = 0;
     const MAX_TITLE_WIDTH = Math.floor(heightInPx * .7) - 10;
-    let validMeasuredTitleText = this.calculateStringFontSizeInRange(title, font, 60, MIN_TITLE_WIDTH, MAX_TITLE_WIDTH, widthInPx - 6, spineCtx);
+    let validMeasuredTitleText = this.calculateStringFontSizeInRange(title, font, 60, MIN_TITLE_WIDTH, MAX_TITLE_WIDTH, widthInPx - 10, spineCtx);
 
-    // place title on spine with RPG-style text outline
-    const titleXPosition = Math.floor((MAX_TITLE_WIDTH - validMeasuredTitleText.width) / 2) + 10;
+    // place title on spine with RPG-style thick text outline
+    const titleXPosition = Math.floor((MAX_TITLE_WIDTH - validMeasuredTitleText.width) / 2) + 14;
     const titleYPosition = widthInPx - Math.ceil((widthInPx - validMeasuredNameText.fontBoundingBoxAscent) / 2);
     
-    // Draw text with outline for visibility
+    // Draw thick pixelated-style outline (multiple passes for thickness)
     spineCtx.strokeStyle = outlineColor;
-    spineCtx.lineWidth = 2.5;
-    spineCtx.lineJoin = 'round';
+    spineCtx.lineWidth = 4;
+    spineCtx.lineJoin = 'miter';
+    spineCtx.miterLimit = 2;
+    
+    // Draw outline in 4 directions for solid edge
     spineCtx.strokeText(title, titleXPosition, titleYPosition);
+    spineCtx.strokeText(title, titleXPosition + 1, titleYPosition);
+    spineCtx.strokeText(title, titleXPosition, titleYPosition + 1);
+    spineCtx.strokeText(title, titleXPosition + 1, titleYPosition + 1);
     
     spineCtx.fillStyle = textColor;
     spineCtx.fillText(title, titleXPosition, titleYPosition);
