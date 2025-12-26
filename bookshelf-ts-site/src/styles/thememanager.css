@@ -98,6 +98,8 @@
   gap: 8px;
 }
 
+/* Override RPGUI button styling for color swatches - must be more specific */
+.rpgui-content .color-swatch,
 .color-swatch {
   width: 40px;
   height: 40px;
@@ -106,6 +108,16 @@
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Override RPGUI button background - allow inline style to work */
+  background-color: var(--swatch-color, #8B6F47) !important;
+  background-image: none !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  border: 3px solid transparent !important;
 }
 
 .color-swatch:hover {
@@ -208,25 +220,28 @@
   font-size: 0.95rem;
 }
 
+/* Override RPGUI button styling for remove color button - must be more specific */
+.rpgui-content .remove-color-btn,
 .remove-color-btn {
-  width: 28px;
-  height: 28px;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: none !important;
+  background-image: none !important;
+  border: none !important;
+  font-size: 2rem !important;
+  color: #95a5a6 !important;
+  transition: color 0.2s;
+  padding: 0 !important;
+  box-shadow: none !important;
 }
 
 .remove-color-btn:hover {
-  background: #c53030;
-  transform: scale(1.1);
+  color: #2c3e50;
 }
 
 .custom-color-input {
@@ -265,6 +280,8 @@
   gap: 1rem;
 }
 
+/* Override RPGUI for font selectors - must be more specific than RPGUI rules */
+.rpgui-content .font-selector,
 .font-selector {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -274,6 +291,19 @@
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--select-font-family, serif) !important;
+  text-shadow: none !important;
+  color: white !important;
+}
+
+.rpgui-content .font-selector option,
+.font-selector option {
+  font-family: inherit !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+  background: white !important;
+  padding: 0.5rem !important;
 }
 
 .font-selector:hover {
@@ -290,12 +320,32 @@
   padding: 0.5rem;
 }
 
+/* Override RPGUI for font previews - must be more specific than RPGUI rules */
+.rpgui-content .font-preview,
 .font-preview {
   padding: 1.5rem;
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 6px;
   text-align: center;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--preview-font-family, serif) !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+}
+
+/* Override RPGUI for all child elements in font previews */
+.rpgui-content .font-preview h3,
+.rpgui-content .font-preview p,
+.rpgui-content .font-preview label,
+.rpgui-content .font-preview span,
+.font-preview h3,
+.font-preview p,
+.font-preview label,
+.font-preview span {
+  font-family: var(--preview-font-family, serif) !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
 }
 
 .font-preview p {
@@ -308,16 +358,31 @@
   font-weight: 500;
 }
 
+/* Override RPGUI for font selectors - must be more specific than RPGUI rules */
+.rpgui-content .font-selector-large,
 .font-selector-large {
   width: 100%;
   padding: 1rem 1.25rem;
-  font-size: 1.1rem;
+  font-size: 2.2rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: white;
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 1.5rem;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--select-font-family, serif) !important;
+  text-shadow: none !important;
+  color: white !important;
+}
+
+.rpgui-content .font-selector-large option,
+.font-selector-large option {
+  font-family: inherit !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+  background: white !important;
+  padding: 0.5rem !important;
 }
 
 .font-selector-large:hover {
@@ -330,12 +395,37 @@
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
 }
 
+/* Override RPGUI for font previews - must be more specific than RPGUI rules */
+.rpgui-content .font-preview-large,
 .font-preview-large {
   padding: 2rem;
   background: white;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   text-align: center;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--preview-font-family, serif) !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+}
+
+/* Override RPGUI for all child elements in font previews */
+.rpgui-content .font-preview-large h3,
+.rpgui-content .font-preview-large p,
+.rpgui-content .font-preview-large label,
+.rpgui-content .font-preview-large span,
+.font-preview-large h3,
+.font-preview-large p,
+.font-preview-large label,
+.font-preview-large span {
+  font-family: var(--preview-font-family, serif) !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+}
+
+/* Increase font sizes for preview elements */
+.font-preview-large h3 {
+  font-size: 2rem !important;
 }
 
 .font-preview-large h3 {
@@ -350,7 +440,7 @@
 }
 
 .preview-section {
-  margin: 2rem 0;
+  margin: 2rem 0; /* this was meant to be 2rem I think */
   padding: 1.5rem;
   background: #f7fafc;
   border-radius: 8px;
@@ -420,12 +510,20 @@
   gap: 1rem;
 }
 
+/* Override RPGUI for theme name input - must be more specific than RPGUI rules */
+.rpgui-content .theme-name-input,
 .theme-name-input {
   flex: 1;
   padding: 0.75rem;
   border: 2px solid #e2e8f0;
   border-radius: 6px;
   font-size: 1rem;
+  color: white !important;
+}
+
+.rpgui-content .theme-name-input::placeholder,
+.theme-name-input::placeholder {
+  color: white !important;
 }
 
 .theme-name-input:focus {
@@ -658,12 +756,17 @@
   margin-top: 0.5rem;
 }
 
+/* Override RPGUI for font name display - must be more specific than RPGUI rules */
+.rpgui-content .font-name,
 .font-name {
   font-size: 0.95rem;
-  color: #2d3748;
+  color: #2d3748 !important;
   font-weight: 500;
   padding: 0.25rem 0.5rem;
   background: #f7fafc;
   border-radius: 4px;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--font-name-family, serif) !important;
+  text-shadow: none !important;
 }
 

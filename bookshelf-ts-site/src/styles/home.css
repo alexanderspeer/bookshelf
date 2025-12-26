@@ -153,11 +153,12 @@
   border-radius: 4px;
   transition: all 0.2s ease;
   line-height: 1;
+  transform-origin: center;
 }
 
 .goal-menu-button:hover {
   background: rgba(255, 255, 255, 0.95);
-  transform: scale(1.1);
+  transform: scale(1.01);
 }
 
 /* Goal Completed */
@@ -708,6 +709,8 @@
   gap: 1rem;
 }
 
+/* Override RPGUI for font selectors - must be more specific than RPGUI rules */
+.rpgui-content .book-font-selector,
 .book-font-selector {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -717,6 +720,19 @@
   background: white;
   cursor: pointer;
   transition: all 0.2s;
+  /* Override RPGUI font styling - use CSS variable set via inline style */
+  font-family: var(--select-font-family, serif) !important;
+  text-shadow: none !important;
+  color: white !important;
+}
+
+.rpgui-content .book-font-selector option,
+.book-font-selector option {
+  font-family: inherit !important;
+  text-shadow: none !important;
+  color: #2d3748 !important;
+  background: white !important;
+  padding: 0.5rem !important;
 }
 
 .book-font-selector:hover {
@@ -769,11 +785,17 @@
 }
 
 .book-preset-colors {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+  width: fit-content;
+  max-width: 100%;
 }
 
+/* Override RPGUI button styling for book color swatches - must be more specific */
+.rpgui-content .book-color-swatch,
 .book-color-swatch {
   width: 35px;
   height: 35px;
@@ -782,6 +804,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Override RPGUI button background - allow inline style to work */
+  background-color: var(--book-swatch-color, #8B6F47) !important;
+  background-image: none !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  color: transparent !important;
+  text-shadow: none !important;
+  border: 2px solid #dee2e6 !important;
 }
 
 .book-color-swatch:hover {

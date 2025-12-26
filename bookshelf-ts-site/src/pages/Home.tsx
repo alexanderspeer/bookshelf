@@ -1082,7 +1082,10 @@ export const Home: React.FC = () => {
                     <button
                       key={color}
                       className="book-color-swatch"
-                      style={{ backgroundColor: color }}
+                      style={{ 
+                        backgroundColor: color,
+                        '--book-swatch-color': color
+                      } as React.CSSProperties}
                       onClick={() => {
                         if (selectedBook.id) {
                           handleBookColorChange(selectedBook.id, color);
@@ -1093,8 +1096,11 @@ export const Home: React.FC = () => {
                   ))}
                 </div>
                 {/* Custom Color Picker */}
-                <div className="book-color-custom">
-                  <label>Custom Color:</label>
+                <div 
+                  className="book-color-custom"
+                  style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                >
+                  <label style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}>Custom Color:</label>
                   <input
                     type="color"
                     value={getBookColor(selectedBook.id) || selectedBook.dom_color || '#888888'}
@@ -1103,6 +1109,7 @@ export const Home: React.FC = () => {
                         handleBookColorChange(selectedBook.id, e.target.value);
                       }
                     }}
+                    style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                   />
                   <span className="current-color-label">
                     {getBookColor(selectedBook.id) || selectedBook.dom_color || '#888888'}
@@ -1139,31 +1146,34 @@ export const Home: React.FC = () => {
                       handleBookFontChange(selectedBook.id, e.target.value);
                     }
                   }}
-                  style={{ fontFamily: getBookFont(selectedBook.id) || currentTheme.spineFont || 'serif' }}
+                  style={{ 
+                    fontFamily: getBookFont(selectedBook.id) || currentTheme.spineFont || 'serif',
+                    '--select-font-family': getBookFont(selectedBook.id) || currentTheme.spineFont || 'serif'
+                  } as React.CSSProperties}
                 >
-                  <option value="serif">Serif (Classic)</option>
-                  <option value="sans-serif">Sans-Serif (Modern)</option>
-                  <option value="monospace">Monospace (Typewriter)</option>
-                  <option value="cursive">Cursive (Elegant)</option>
-                  <option value="fantasy">Fantasy (Decorative)</option>
-                  <option value="Georgia, serif">Georgia (Traditional)</option>
-                  <option value='"Times New Roman", Times, serif'>Times New Roman (Formal)</option>
-                  <option value='"Palatino Linotype", Palatino, serif'>Palatino (Literary)</option>
-                  <option value="Garamond, serif">Garamond (Classic)</option>
-                  <option value='"Bookman Old Style", serif'>Bookman (Sturdy)</option>
-                  <option value="Arial, sans-serif">Arial (Clean)</option>
-                  <option value="Helvetica, Arial, sans-serif">Helvetica (Swiss)</option>
-                  <option value="Verdana, sans-serif">Verdana (Readable)</option>
-                  <option value="Tahoma, Geneva, sans-serif">Tahoma (Compact)</option>
-                  <option value='"Trebuchet MS", sans-serif'>Trebuchet MS (Modern)</option>
-                  <option value='"Century Gothic", sans-serif'>Century Gothic (Geometric)</option>
-                  <option value='"Courier New", Courier, monospace'>Courier New (Fixed)</option>
-                  <option value='"Lucida Console", Monaco, monospace'>Lucida Console (Tech)</option>
-                  <option value='"Comic Sans MS", cursive'>Comic Sans MS (Playful)</option>
-                  <option value='"Brush Script MT", cursive'>Brush Script (Handwritten)</option>
-                  <option value="Papyrus, fantasy">Papyrus (Ancient)</option>
-                  <option value="Impact, fantasy">Impact (Bold)</option>
-                  <option value="Copperplate, fantasy">Copperplate (Engraved)</option>
+                  <option value="serif" style={{ '--option-font-family': 'serif' } as React.CSSProperties}>Serif (Classic)</option>
+                  <option value="sans-serif" style={{ '--option-font-family': 'sans-serif' } as React.CSSProperties}>Sans-Serif (Modern)</option>
+                  <option value="monospace" style={{ '--option-font-family': 'monospace' } as React.CSSProperties}>Monospace (Typewriter)</option>
+                  <option value="cursive" style={{ '--option-font-family': 'cursive' } as React.CSSProperties}>Cursive (Elegant)</option>
+                  <option value="fantasy" style={{ '--option-font-family': 'fantasy' } as React.CSSProperties}>Fantasy (Decorative)</option>
+                  <option value="Georgia, serif" style={{ '--option-font-family': 'Georgia, serif' } as React.CSSProperties}>Georgia (Traditional)</option>
+                  <option value='"Times New Roman", Times, serif' style={{ '--option-font-family': '"Times New Roman", Times, serif' } as React.CSSProperties}>Times New Roman (Formal)</option>
+                  <option value='"Palatino Linotype", Palatino, serif' style={{ '--option-font-family': '"Palatino Linotype", Palatino, serif' } as React.CSSProperties}>Palatino (Literary)</option>
+                  <option value="Garamond, serif" style={{ '--option-font-family': 'Garamond, serif' } as React.CSSProperties}>Garamond (Classic)</option>
+                  <option value='"Bookman Old Style", serif' style={{ '--option-font-family': '"Bookman Old Style", serif' } as React.CSSProperties}>Bookman (Sturdy)</option>
+                  <option value="Arial, sans-serif" style={{ '--option-font-family': 'Arial, sans-serif' } as React.CSSProperties}>Arial (Clean)</option>
+                  <option value="Helvetica, Arial, sans-serif" style={{ '--option-font-family': 'Helvetica, Arial, sans-serif' } as React.CSSProperties}>Helvetica (Swiss)</option>
+                  <option value="Verdana, sans-serif" style={{ '--option-font-family': 'Verdana, sans-serif' } as React.CSSProperties}>Verdana (Readable)</option>
+                  <option value="Tahoma, Geneva, sans-serif" style={{ '--option-font-family': 'Tahoma, Geneva, sans-serif' } as React.CSSProperties}>Tahoma (Compact)</option>
+                  <option value='"Trebuchet MS", sans-serif' style={{ '--option-font-family': '"Trebuchet MS", sans-serif' } as React.CSSProperties}>Trebuchet MS (Modern)</option>
+                  <option value='"Century Gothic", sans-serif' style={{ '--option-font-family': '"Century Gothic", sans-serif' } as React.CSSProperties}>Century Gothic (Geometric)</option>
+                  <option value='"Courier New", Courier, monospace' style={{ '--option-font-family': '"Courier New", Courier, monospace' } as React.CSSProperties}>Courier New (Fixed)</option>
+                  <option value='"Lucida Console", Monaco, monospace' style={{ '--option-font-family': '"Lucida Console", Monaco, monospace' } as React.CSSProperties}>Lucida Console (Tech)</option>
+                  <option value='"Comic Sans MS", cursive' style={{ '--option-font-family': '"Comic Sans MS", cursive' } as React.CSSProperties}>Comic Sans MS (Playful)</option>
+                  <option value='"Brush Script MT", cursive' style={{ '--option-font-family': '"Brush Script MT", cursive' } as React.CSSProperties}>Brush Script (Handwritten)</option>
+                  <option value="Papyrus, fantasy" style={{ '--option-font-family': 'Papyrus, fantasy' } as React.CSSProperties}>Papyrus (Ancient)</option>
+                  <option value="Impact, fantasy" style={{ '--option-font-family': 'Impact, fantasy' } as React.CSSProperties}>Impact (Bold)</option>
+                  <option value="Copperplate, fantasy" style={{ '--option-font-family': 'Copperplate, fantasy' } as React.CSSProperties}>Copperplate (Engraved)</option>
                 </select>
                 {getBookFont(selectedBook.id) && (
                   <button

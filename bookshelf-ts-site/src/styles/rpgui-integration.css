@@ -444,7 +444,8 @@ button:disabled,
 .search-result-item:hover {
   background: rgba(218, 165, 32, 0.2);
   border-color: #DAA520;
-  transform: translateX(5px);
+  transform: scale(1.01);
+  transform-origin: center;
 }
 
 /* Form groups */
@@ -480,8 +481,9 @@ button:disabled,
 .book-color-picker-full {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 10px;
+  gap: 4px;
+  margin-top: 0;
+  padding: 0;
 }
 
 .book-color-swatch {

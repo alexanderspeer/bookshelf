@@ -11,10 +11,6 @@ export const Loading: React.FC = () => {
       color: '#666'
     }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ 
-          marginBottom: '1rem',
-          fontSize: '2rem'
-        }}>⏳</div>
         <div>Loading...</div>
       </div>
     </div>

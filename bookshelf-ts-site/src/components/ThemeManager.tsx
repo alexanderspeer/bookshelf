@@ -312,14 +312,20 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                     <button
                       key={color}
                       className={`color-swatch ${selectedBgColor === color ? 'selected' : ''}`}
-                      style={{ backgroundColor: color }}
+                      style={{ 
+                        backgroundColor: color,
+                        '--swatch-color': color
+                      } as React.CSSProperties}
                       onClick={() => setSelectedBgColor(color)}
                       title={color}
                     />
                   ))}
                 </div>
-                <div className="custom-color-input">
-                  <label>Custom Color:</label>
+                <div 
+                  className="custom-color-input"
+                  style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                >
+                  <label style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}>Custom Color:</label>
                   <input
                     type="color"
                     value={customBgColor}
@@ -327,6 +333,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                       setCustomBgColor(e.target.value);
                       setSelectedBgColor(e.target.value);
                     }}
+                    style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                   />
                   <span className="color-value">{selectedBgColor}</span>
                 </div>
@@ -341,14 +348,20 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                     <button
                       key={color}
                       className={`color-swatch ${selectedFgColor === color ? 'selected' : ''}`}
-                      style={{ backgroundColor: color }}
+                      style={{ 
+                        backgroundColor: color,
+                        '--swatch-color': color
+                      } as React.CSSProperties}
                       onClick={() => setSelectedFgColor(color)}
                       title={color}
                     />
                   ))}
                 </div>
-                <div className="custom-color-input">
-                  <label>Custom Color:</label>
+                <div 
+                  className="custom-color-input"
+                  style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                >
+                  <label style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}>Custom Color:</label>
                   <input
                     type="color"
                     value={customFgColor}
@@ -356,6 +369,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                       setCustomFgColor(e.target.value);
                       setSelectedFgColor(e.target.value);
                     }}
+                    style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                   />
                   <span className="color-value">{selectedFgColor}</span>
                 </div>
@@ -371,7 +385,10 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                     <button
                       key={color}
                       className={`color-swatch ${selectedBookColors.includes(color) ? 'selected-multi' : ''}`}
-                      style={{ backgroundColor: color }}
+                      style={{ 
+                        backgroundColor: color,
+                        '--swatch-color': color
+                      } as React.CSSProperties}
                       onClick={() => toggleBookColor(color)}
                       title={color}
                     />
@@ -390,6 +407,7 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                             className="remove-color-btn"
                             onClick={() => toggleBookColor(color)}
                             title="Remove"
+                            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                           >
                             ×
                           </button>
@@ -409,7 +427,10 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                   className="font-selector"
                   value={selectedFont}
                   onChange={(e) => setSelectedFont(e.target.value)}
-                  style={{ fontFamily: selectedFont }}
+                  style={{ 
+                  fontFamily: selectedFont,
+                  '--select-font-family': selectedFont
+                } as React.CSSProperties}
                 >
                   {AVAILABLE_FONTS.map(font => (
                     <option 
@@ -421,7 +442,13 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                     </option>
                   ))}
                 </select>
-                <div className="font-preview" style={{ fontFamily: selectedFont }}>
+                <div 
+                  className="font-preview" 
+                  style={{ 
+                    fontFamily: selectedFont,
+                    '--preview-font-family': selectedFont
+                  } as React.CSSProperties}
+                >
                   <p>Preview: The Quick Brown Fox</p>
                   <p style={{ fontSize: '0.9em' }}>Sample Book Title by Author Name</p>
                 </div>
@@ -616,7 +643,10 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                 className="font-selector-large"
                 value={selectedFont}
                 onChange={(e) => setSelectedFont(e.target.value)}
-                style={{ fontFamily: selectedFont }}
+                style={{ 
+                  fontFamily: selectedFont,
+                  '--select-font-family': selectedFont
+                } as React.CSSProperties}
               >
                 {AVAILABLE_FONTS.map(font => (
                   <option 
@@ -628,11 +658,17 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                   </option>
                 ))}
               </select>
-              <div className="font-preview-large" style={{ fontFamily: selectedFont }}>
+              <div 
+                className="font-preview-large" 
+                style={{ 
+                  fontFamily: selectedFont,
+                  '--preview-font-family': selectedFont
+                } as React.CSSProperties}
+              >
                 <h3>Preview</h3>
-                <p style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>The Quick Brown Fox Jumps Over The Lazy Dog</p>
-                <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Sample Book Title</p>
-                <p style={{ fontSize: '1rem', color: '#666' }}>by Author Name</p>
+                <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>The Quick Brown Fox Jumps Over The Lazy Dog</p>
+                <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Sample Book Title</p>
+                <p style={{ fontSize: '1.8rem', color: '#666' }}>by Author Name</p>
               </div>
             </div>
 
@@ -688,7 +724,13 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                       {theme.spineFont && (
                         <div className="font-info-row">
                           <label>Spine Font:</label>
-                          <span className="font-name" style={{ fontFamily: theme.spineFont }}>
+                          <span 
+                            className="font-name" 
+                            style={{ 
+                              fontFamily: theme.spineFont,
+                              '--font-name-family': theme.spineFont
+                            } as React.CSSProperties}
+                          >
                             {AVAILABLE_FONTS.find(f => f.value === theme.spineFont)?.name || theme.spineFont}
                           </span>
                         </div>
@@ -757,6 +799,20 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                           <div className="book-colors-row">
                             <span className="book-colors-count">
                               {theme.bookColors.length} custom book color{theme.bookColors.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        )}
+                        {theme.spineFont && (
+                          <div className="font-info-row">
+                            <label>Spine Font:</label>
+                            <span 
+                              className="font-name" 
+                              style={{ 
+                                fontFamily: theme.spineFont,
+                                '--font-name-family': theme.spineFont
+                              } as React.CSSProperties}
+                            >
+                              {AVAILABLE_FONTS.find(f => f.value === theme.spineFont)?.name || theme.spineFont}
                             </span>
                           </div>
                         )}

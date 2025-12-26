@@ -319,7 +319,16 @@
 }
 
 /* Add Book Modal */
-.add-book-search h2,
+.add-book-search {
+  padding-top: 0;
+}
+
+.add-book-search h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  padding-top: 0.5rem;
+}
+
 .add-book-details h2 {
   margin-top: 0;
 }
@@ -328,13 +337,28 @@
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
+  margin-top: 3rem;
 }
 
+.search-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Override RPGUI for search input - must be more specific than RPGUI rules */
+.rpgui-content .search-input-group input,
 .search-input-group input {
   flex: 1;
   padding: 0.75rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  color: white !important;
+}
+
+.rpgui-content .search-input-group input::placeholder,
+.search-input-group input::placeholder {
+  color: white !important;
 }
 
 .search-input-group button {
@@ -350,6 +374,8 @@
   max-height: 400px;
   overflow-y: auto;
   margin-bottom: 1rem;
+  padding-right: 1rem;
+  padding-left: 0.5rem;
 }
 
 .search-result-item {
@@ -358,12 +384,18 @@
   padding: 1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  margin-right: 0.5rem;
   cursor: pointer;
+  min-height: 90px;
+  align-items: flex-start;
+  transform-origin: center;
+  transition: all 0.2s ease;
 }
 
 .search-result-item:hover {
   background: #f5f5f5;
+  transform: scale(1.01);
 }
 
 .search-result-item img {
@@ -371,6 +403,28 @@
   height: 90px;
   object-fit: cover;
   border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.search-result-item .book-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-result-item .book-info h4 {
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+}
+
+.search-result-item .book-info p {
+  margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .book-info h4 {
