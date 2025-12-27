@@ -393,6 +393,23 @@ def get_book_chain(book_id):
 # HEALTH CHECK
 # =============================================================================
 
+@app.route('/', methods=['GET'])
+def root():
+    """Root endpoint - API info"""
+    return jsonify({
+        'message': 'Bookshelf API is running',
+        'version': '1.0.0',
+        'endpoints': {
+            'health': '/api/health',
+            'books': '/api/books',
+            'rankings': '/api/rankings',
+            'tags': '/api/tags',
+            'goals': '/api/goals',
+            'continuations': '/api/continuations'
+        },
+        'documentation': 'See README.md for full API documentation'
+    })
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
