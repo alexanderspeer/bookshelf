@@ -1,0 +1,14 @@
+{
+  "name": "bookshelf-heroku",
+  "version": "1.0.0",
+  "description": "Bookshelf app - Combined frontend and backend for Heroku",
+  "scripts": {
+    "build": "cd bookshelf-ts-site && npm install && npm run build",
+    "heroku-postbuild": "npm run build"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  }
+}
+

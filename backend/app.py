@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 from flask_caching import Cache
 from dotenv import load_dotenv
@@ -15,7 +15,16 @@ from services.tag_service import get_tag_service
 from services.goal_service import get_goal_service
 from services.continuation_service import get_continuation_service
 
-app = Flask(__name__)
+# Determine if we're serving the frontend
+# Look for the built frontend in ../bookshelf-ts-site/build
+FRONTEND_BUILD_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bookshelf-ts-site', 'build')
+SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
+
+if SERVE_FRONTEND:
+    app = Flask(__name__, static_folder=FRONTEND_BUILD_PATH, static_url_path='')
+else:
+    app = Flask(__name__)
+
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}})
 
 # Configure caching
@@ -393,23 +402,6 @@ def get_book_chain(book_id):
 # HEALTH CHECK
 # =============================================================================
 
-@app.route('/', methods=['GET'])
-def root():
-    """Root endpoint - API info"""
-    return jsonify({
-        'message': 'Bookshelf API is running',
-        'version': '1.0.0',
-        'endpoints': {
-            'health': '/api/health',
-            'books': '/api/books',
-            'rankings': '/api/rankings',
-            'tags': '/api/tags',
-            'goals': '/api/goals',
-            'continuations': '/api/continuations'
-        },
-        'documentation': 'See README.md for full API documentation'
-    })
-
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -428,10 +420,48 @@ def serve_spine_image(filename):
     response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
     return response
 
+# =============================================================================
+# FRONTEND SERVING (React App)
+# =============================================================================
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    """Serve React frontend or API info if frontend not built"""
+    if not SERVE_FRONTEND:
+        # Frontend not built, show API info
+        return jsonify({
+            'message': 'Bookshelf API is running',
+            'version': '1.0.0',
+            'endpoints': {
+                'health': '/api/health',
+                'books': '/api/books',
+                'rankings': '/api/rankings',
+                'tags': '/api/tags',
+                'goals': '/api/goals',
+                'continuations': '/api/continuations'
+            },
+            'documentation': 'See README.md for full API documentation',
+            'note': 'Frontend not built. Run `npm run build` in bookshelf-ts-site/'
+        })
+    
+    # Try to serve the requested file
+    if path != "" and os.path.exists(os.path.join(FRONTEND_BUILD_PATH, path)):
+        return send_from_directory(FRONTEND_BUILD_PATH, path)
+    else:
+        # Serve index.html for React Router (SPA)
+        return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
+
 if __name__ == '__main__':
     # On Heroku, bind to 0.0.0.0; locally use localhost
     host = os.getenv('HOST', '0.0.0.0' if os.getenv('DATABASE_URL') else 'localhost')
     port = int(os.getenv('PORT', 5001))  # Changed to 5001 to avoid AirPlay conflicts on macOS
     debug = not bool(os.getenv('DATABASE_URL'))  # Disable debug in production
+    
+    if SERVE_FRONTEND:
+        print(f"Serving React frontend from {FRONTEND_BUILD_PATH}")
+    else:
+        print("Frontend not built - serving API only")
+    
     app.run(host=host, port=port, debug=debug)
 
