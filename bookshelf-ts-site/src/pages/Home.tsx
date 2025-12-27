@@ -9,6 +9,7 @@ import { GoalModal } from '../components/GoalModal';
 import { EditBookModal } from '../components/EditBookModal';
 import { GoodreadsImport } from './GoodreadsImport';
 import { ThemeManager } from '../components/ThemeManager';
+import { RankingsModal } from '../components/RankingsModal';
 import '../styles/home.css';
 
 const DEFAULT_THEME: Theme = {
@@ -77,6 +78,7 @@ export const Home: React.FC = () => {
   const [showEditBookModal, setShowEditBookModal] = useState(false);
   const [showThemeManager, setShowThemeManager] = useState(false);
   const [showShelfModal, setShowShelfModal] = useState(false);
+  const [showRankingsModal, setShowRankingsModal] = useState(false);
   const [shelfModalBooks, setShelfModalBooks] = useState<Book[]>([]);
   const [shelfModalTitle, setShelfModalTitle] = useState('');
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
@@ -938,6 +940,17 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
+        {/* Rankings Section */}
+        <div className="sidebar-section">
+          <h2></h2>
+          <button 
+            className="primary-button"
+            onClick={() => setShowRankingsModal(true)}
+          >
+            Rankings
+          </button>
+        </div>
+
         {/* Import Section */}
         <div className="sidebar-section">
           <h2></h2>
@@ -1314,6 +1327,12 @@ export const Home: React.FC = () => {
           onClose={() => setShowThemeManager(false)}
         />
       )}
+
+      {/* Rankings Modal */}
+      <RankingsModal
+        isOpen={showRankingsModal}
+        onClose={() => setShowRankingsModal(false)}
+      />
 
       {/* Shelf Books Modal */}
       {showShelfModal && (

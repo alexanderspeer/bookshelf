@@ -1,0 +1,117 @@
+.rankings-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.rankings-tabs button {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #8B6F47;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.rankings-tabs button:hover {
+  color: #5C4033;
+  background: rgba(139, 111, 71, 0.1);
+}
+
+.rankings-tabs button.active {
+  color: #5C4033;
+  border-bottom-color: #8B6F47;
+  font-weight: 600;
+}
+
+.rankings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ranking-item {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border: 3px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  color: #2d3748;
+  text-decoration: none;
+  transform-origin: center;
+}
+
+.ranking-item:nth-child(odd) {
+  background: linear-gradient(135deg, #E8DCC4 0%, #D4C5B9 100%);
+  border-color: #8B6F47;
+}
+
+.ranking-item:nth-child(even) {
+  background: linear-gradient(135deg, #C5D3E0 0%, #B5C4D8 100%);
+  border-color: #6B8E9B;
+}
+
+.ranking-item:nth-child(3n) {
+  background: linear-gradient(135deg, #B5C4B0 0%, #A8B8A0 100%);
+  border-color: #7B9B7B;
+}
+
+.ranking-item:hover {
+  transform: scale(1.01);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.05);
+  border-width: 4px;
+}
+
+.rank-number {
+  font-weight: bold;
+  color: #8B6F47;
+  margin-right: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.ranking-book-info,
+.ranking-info {
+  display: inline;
+}
+
+.ranking-book-info h4,
+.ranking-info h4 {
+  display: inline;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.ranking-book-info p,
+.ranking-info p {
+  display: inline;
+  margin: 0 0 0 0.5rem;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.ranking-metrics {
+  display: inline;
+  margin-left: 0.5rem;
+}
+
+.ranking-metrics span {
+  font-size: 0.85rem;
+  color: #4a5568;
+  margin-left: 0.5rem;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
