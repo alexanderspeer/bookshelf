@@ -48,12 +48,7 @@
 }
 
 /* Apply RPGUI button class styling to our button components */
-/* Use absolute pixel values to ensure consistency across environments */
 button, 
-button.rpgui-button,
-.rpgui-button,
-.rpgui-content button,
-.rpgui-content .rpgui-button,
 .primary-button,
 .secondary-button,
 .set-goal-button,
@@ -66,10 +61,9 @@ button.rpgui-button,
 .add-tag-button {
   /* Inherit RPGUI button styles */
   font-family: 'Press Start 2P', cursive !important;
-  font-size: 12.8px !important; /* 0.8em of 16px = 12.8px, use absolute to prevent scaling differences */
+  font-size: 0.8em !important;
   min-width: 100px;
   min-height: 50px;
-  height: auto !important; /* Override RPGUI's fixed 60px height */
   padding: 10px 25px !important;
   color: white !important;
   text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black !important;
@@ -79,16 +73,6 @@ button.rpgui-button,
   background-image: none !important;
   border: 3px solid #5C4033 !important;
   box-shadow: 2px 2px 0px #3C2819 !important;
-}
-
-/* Button text inside RPGUI buttons */
-button p,
-.rpgui-button p,
-.rpgui-button.golden p,
-.rpgui-button.golden:before,
-.rpgui-button.golden:after {
-  font-size: 12.8px !important;
-  line-height: 1.5 !important;
 }
 
 button:hover,

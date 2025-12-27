@@ -8,11 +8,15 @@ import { Home } from './pages/Home';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { applyRPGUICursorFixes } from './utils/rpguiCursorFix';
+import { applyProductionStyleFixes } from './utils/productionStyleFixes';
 
 function App() {
   useEffect(() => {
     // Apply RPGUI cursor fixes on mount
     applyRPGUICursorFixes();
+    
+    // Apply production-only style fixes (only on Heroku, not localhost)
+    applyProductionStyleFixes();
   }, []);
 
   return (
