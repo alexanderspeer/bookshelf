@@ -24,90 +24,202 @@ export function applyProductionStyleFixes() {
   }
   
   // Inject production-specific CSS fixes
-  // These match the local sizes exactly
+  // These match the local sizes exactly using pixel values
   styleElement.textContent = `
     /* Production-only fixes - match local sizing exactly */
     
-    /* Normalize base font size */
+    /* Normalize base font size to prevent scaling */
     html {
       font-size: 16px !important;
-      -webkit-text-size-adjust: none !important;
+      -webkit-text-size-adjust: 100% !important;
     }
     
     body {
       font-size: 16px !important;
-      -webkit-text-size-adjust: none !important;
+      -webkit-text-size-adjust: 100% !important;
     }
     
-    /* Fix button sizing to match local */
-    button,
+    /* Fix search input - should be smaller */
+    .search-input {
+      font-size: 13px !important;
+      height: 32px !important;
+      padding: 6px 12px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix filter select dropdowns - should be smaller */
+    .filter-select {
+      font-size: 13px !important;
+      height: 32px !important;
+      padding: 4px 8px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix theme/color button */
+    .theme-button {
+      font-size: 13px !important;
+      height: 32px !important;
+      padding: 4px 12px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix primary buttons (like Add New Book) */
+    .primary-button {
+      font-size: 13px !important;
+      height: auto !important;
+      min-height: 38px !important;
+      padding: 8px 16px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix secondary buttons */
+    .secondary-button {
+      font-size: 13px !important;
+      height: auto !important;
+      min-height: 36px !important;
+      padding: 6px 14px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix goal menu button (the ⋮ button) */
+    .goal-menu-button {
+      font-size: 18px !important;
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      min-height: 32px !important;
+      padding: 4px !important;
+      line-height: 1 !important;
+    }
+    
+    /* Fix goal display container */
+    .goal-display {
+      font-size: 14px !important;
+      padding: 12px !important;
+      line-height: 1.4 !important;
+    }
+    
+    .goal-display h3 {
+      font-size: 16px !important;
+      margin-bottom: 8px !important;
+    }
+    
+    .goal-display p {
+      font-size: 14px !important;
+      margin: 4px 0 !important;
+    }
+    
+    /* Fix sidebar sections spacing */
+    .sidebar-section {
+      margin-bottom: 16px !important;
+      padding: 12px !important;
+    }
+    
+    .sidebar-section h2 {
+      font-size: 15px !important;
+      margin-bottom: 8px !important;
+    }
+    
+    /* Fix bookshelf controls section */
+    .bookshelf-controls {
+      padding: 12px !important;
+      gap: 8px !important;
+    }
+    
+    .search-filter-section {
+      gap: 8px !important;
+    }
+    
+    /* Fix all generic buttons */
+    button {
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix RPGUI buttons */
     .rpgui-button,
-    .primary-button,
-    .secondary-button,
-    .theme-button,
-    .goal-menu-button,
-    .set-goal-button,
-    .finish-book-button,
-    .edit-book-button,
-    .delete-book-button {
-      font-size: 0.8em !important;
-      line-height: 1.5 !important;
+    .rpgui-button p {
+      font-size: 13px !important;
+      line-height: 1.4 !important;
     }
     
-    /* Fix input and select sizing */
+    .rpgui-button.golden,
+    .rpgui-button.golden p {
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Fix input fields in general */
     input[type="text"],
     input[type="number"],
     input[type="email"],
     input[type="password"],
-    select,
-    textarea,
-    .search-input,
-    .filter-select {
-      font-size: 0.8em !important;
-      line-height: normal !important;
+    input[type="date"] {
+      font-size: 13px !important;
+      height: 32px !important;
+      padding: 6px 12px !important;
+      line-height: 1.4 !important;
     }
     
-    /* Fix label and text sizing */
-    label,
-    p,
-    span {
-      font-size: 1em !important;
+    /* Fix textareas */
+    textarea {
+      font-size: 13px !important;
+      padding: 8px 12px !important;
+      line-height: 1.4 !important;
     }
     
-    /* Fix heading sizes */
-    .rpgui-content h1 {
-      font-size: 1.2em !important;
+    /* Fix labels */
+    label {
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+      margin-bottom: 4px !important;
     }
     
-    .rpgui-content h2 {
-      font-size: 1.1em !important;
+    /* Fix select elements */
+    select {
+      font-size: 13px !important;
+      height: 32px !important;
+      padding: 4px 8px !important;
+      line-height: 1.4 !important;
     }
     
-    .rpgui-content h3 {
-      font-size: 1.0em !important;
+    /* Fix general paragraphs and text */
+    p {
+      font-size: 14px !important;
+      line-height: 1.4 !important;
     }
     
-    .rpgui-content h4 {
-      font-size: 0.9em !important;
+    /* Fix headings */
+    h1 {
+      font-size: 20px !important;
+      line-height: 1.3 !important;
     }
     
-    .rpgui-content p,
-    .rpgui-content label {
-      font-size: 0.8em !important;
+    h2 {
+      font-size: 18px !important;
+      line-height: 1.3 !important;
     }
     
-    /* Ensure RPGUI button text matches */
-    .rpgui-button p,
-    .rpgui-button.golden p {
-      font-size: 1em !important;
+    h3 {
+      font-size: 16px !important;
+      line-height: 1.3 !important;
     }
     
-    /* Goal menu button specific fix */
-    .goal-menu-button {
-      min-width: 40px !important;
-      min-height: 40px !important;
-      padding: 8px !important;
-      font-size: 1em !important;
+    h4 {
+      font-size: 14px !important;
+      line-height: 1.3 !important;
+    }
+    
+    /* Fix book action buttons */
+    .finish-book-button,
+    .edit-book-button,
+    .delete-book-button,
+    .set-goal-button {
+      font-size: 12px !important;
+      height: auto !important;
+      min-height: 28px !important;
+      padding: 4px 10px !important;
+      line-height: 1.4 !important;
     }
   `;
 }
