@@ -21,19 +21,42 @@ body {
 }
 
 /* Ensure buttons maintain consistent sizing - match local dev exactly */
+/* Use very specific selectors to override RPGUI styles */
+/* Force absolute pixel values to prevent em-based scaling differences */
 button,
+button.rpgui-button,
 .rpgui-button,
+.rpgui-button.golden,
+.rpgui-content button,
+.rpgui-content .rpgui-button,
 .primary-button,
 .secondary-button,
 .set-goal-button,
 .finish-book-button,
 .edit-book-button,
-.delete-book-button {
-  font-size: 0.8em !important;
+.delete-book-button,
+.reset-color-button,
+.reset-font-button,
+.goal-menu-button,
+.add-tag-button,
+.tag-button {
+  font-size: 12.8px !important; /* 0.8em of 16px base = 12.8px, force absolute value */
   box-sizing: border-box !important;
   line-height: 1.5 !important;
   padding: 10px 25px !important;
   min-height: 50px !important;
+  height: auto !important; /* Override RPGUI's fixed height: 60px */
+  max-height: none !important;
+}
+
+/* Override RPGUI button paragraph text size */
+.rpgui-button p,
+.rpgui-button.golden p,
+button p,
+.rpgui-button.golden:before,
+.rpgui-button.golden:after {
+  font-size: 12.8px !important;
+  line-height: 1.5 !important;
 }
 
 /* Ensure consistent font sizes for text elements */
