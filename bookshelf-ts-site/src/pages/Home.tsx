@@ -53,6 +53,19 @@ const getInitialSavedThemes = (): Theme[] => {
   return [DEFAULT_THEME];
 };
 
+// Initialize bookshelf title from localStorage
+const getInitialBookshelfTitle = (): string => {
+  try {
+    const savedTitle = localStorage.getItem('bookshelf_title');
+    if (savedTitle) {
+      return savedTitle;
+    }
+  } catch (e) {
+    console.error('Failed to load bookshelf title', e);
+  }
+  return 'My Bookshelf';
+};
+
 // DEBUG MODE - set to true to show book position outlines
 const DEBUG_HOVER = false;
 
@@ -84,6 +97,9 @@ export const Home: React.FC = () => {
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [currentTheme, setCurrentTheme] = useState<Theme>(getInitialTheme());
   const [savedThemes, setSavedThemes] = useState<Theme[]>(getInitialSavedThemes());
+  const [bookshelfTitle, setBookshelfTitle] = useState<string>(getInitialBookshelfTitle());
+  const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
+  const [titleInputValue, setTitleInputValue] = useState<string>('');
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const hoverCanvasRef = React.useRef<HTMLCanvasElement>(null); // Separate overlay for hover
   const renderingRef = React.useRef<boolean>(false);
@@ -458,23 +474,44 @@ export const Home: React.FC = () => {
   };
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!hoverCanvasRef.current || bookPositions.length === 0) return;
+    if (!hoverCanvasRef.current || !canvasRef.current || bookPositions.length === 0) return;
     
-    const canvas = hoverCanvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+    // Use base canvas for coordinate calculation (where books are actually positioned)
+    const baseCanvas = canvasRef.current;
+    const baseRect = baseCanvas.getBoundingClientRect();
     
     // Calculate scale factors (internal canvas size / displayed size)
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const scaleX = baseCanvas.width / baseRect.width;
+    const scaleY = baseCanvas.height / baseRect.height;
     
     // Transform mouse coords from display space to internal canvas space
-    const x = (event.clientX - rect.left) * scaleX;
-    const y = (event.clientY - rect.top) * scaleY;
+    const x = (event.clientX - baseRect.left) * scaleX;
+    const y = (event.clientY - baseRect.top) * scaleY;
 
-    const clickedBook = bookPositions.find(pos => 
+    // Find all books that contain the click point
+    const overlappingBooks = bookPositions.filter(pos => 
       x >= pos.x && x <= pos.x + pos.width &&
       y >= pos.y && y <= pos.y + pos.height
     );
+
+    if (overlappingBooks.length === 0) return;
+
+    // If multiple books overlap, find the one whose center is closest to the click point
+    let clickedBook = overlappingBooks[0];
+    if (overlappingBooks.length > 1) {
+      let minDistance = Infinity;
+      for (const book of overlappingBooks) {
+        const centerX = book.x + book.width / 2;
+        const centerY = book.y + book.height / 2;
+        const distance = Math.sqrt(
+          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          clickedBook = book;
+        }
+      }
+    }
 
     if (clickedBook) {
       const fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
@@ -817,7 +854,50 @@ export const Home: React.FC = () => {
   return (
     <div className="home-container">
       <div className="home-sidebar">
-        <h1 className="home-title">My Bookshelf</h1>
+        {isEditingTitle ? (
+          <div 
+            className="title-edit-container"
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+          >
+            <input
+              type="text"
+              className="title-edit-input"
+              value={titleInputValue}
+              onChange={(e) => setTitleInputValue(e.target.value)}
+              onBlur={() => {
+                if (titleInputValue.trim()) {
+                  setBookshelfTitle(titleInputValue.trim());
+                  localStorage.setItem('bookshelf_title', titleInputValue.trim());
+                } else {
+                  setTitleInputValue(bookshelfTitle);
+                }
+                setIsEditingTitle(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                } else if (e.key === 'Escape') {
+                  setTitleInputValue(bookshelfTitle);
+                  setIsEditingTitle(false);
+                }
+              }}
+              autoFocus
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            />
+          </div>
+        ) : (
+          <h1 
+            className="home-title"
+            onDoubleClick={() => {
+              setTitleInputValue(bookshelfTitle);
+              setIsEditingTitle(true);
+            }}
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            title="Double-click to edit"
+          >
+            {bookshelfTitle}
+          </h1>
+        )}
         
         {/* Add Book Section */}
         <div className="sidebar-section">
@@ -972,11 +1052,13 @@ export const Home: React.FC = () => {
               placeholder="Search books by title or author..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
             />
             <select
               className="filter-select"
               value={shelfFilter}
               onChange={(e) => setShelfFilter(e.target.value)}
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
             >
               <option value="all">All Shelves</option>
               <option value="currently_reading">Currently Reading</option>
@@ -988,6 +1070,7 @@ export const Home: React.FC = () => {
               className="filter-select"
               value={tagFilter}
               onChange={(e) => setTagFilter(e.target.value)}
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
             >
               <option value="">All Tags</option>
               {allTags.map(tag => (
@@ -998,6 +1081,7 @@ export const Home: React.FC = () => {
               className="filter-select"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
+              style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
             >
               <option value="none">No Sort</option>
               <option value="title_asc">Title (A-Z)</option>
@@ -1332,6 +1416,7 @@ export const Home: React.FC = () => {
       <RankingsModal
         isOpen={showRankingsModal}
         onClose={() => setShowRankingsModal(false)}
+        onBookClick={(book) => setSelectedBook(book)}
       />
 
       {/* Shelf Books Modal */}

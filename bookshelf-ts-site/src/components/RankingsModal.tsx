@@ -6,6 +6,7 @@ import '../styles/rankings-modal.css';
 interface RankingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onBookClick?: (book: Book) => void;
 }
 
 interface AuthorRanking {
@@ -26,7 +27,7 @@ interface YearRanking {
   books: Book[];
 }
 
-export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose }) => {
+export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, onBookClick }) => {
   const [activeTab, setActiveTab] = useState<'books' | 'authors' | 'years'>('books');
   const [rankedBooks, setRankedBooks] = useState<Book[]>([]);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
@@ -244,9 +245,26 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose })
                     <p>No ranked books yet.</p>
                   ) : (
                     rankedBooks.map((book, index) => (
-                      <div key={book.id} className="ranking-item">
+                      <div 
+                        key={book.id} 
+                        className="ranking-item"
+                        style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                      >
                         <span className="rank-number">Rank: {book.rank_position || index + 1}</span>
-                        <h4>{book.title}</h4>
+                        <h4 
+                          onClick={() => {
+                            if (onBookClick) {
+                              onBookClick(book);
+                              onClose();
+                            }
+                          }}
+                          style={{ 
+                            cursor: onBookClick ? "url('/rpgui/img/cursor/point.png') 10 0, pointer" : "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+                            textDecoration: onBookClick ? 'underline' : 'none'
+                          }}
+                        >
+                          {book.title}
+                        </h4>
                         <p>{book.author}</p>
                         {book.initial_stars && (
                           <div className="ranking-metrics">
@@ -265,7 +283,11 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose })
                     <p>No author rankings available yet.</p>
                   ) : (
                     authorRankings.map((authorRank, index) => (
-                      <div key={authorRank.author} className="ranking-item">
+                      <div 
+                        key={authorRank.author} 
+                        className="ranking-item"
+                        style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                      >
                         <span className="rank-number">Rank: {index + 1}</span>
                         <h4>{authorRank.author}</h4>
                         <div className="ranking-metrics">
@@ -289,7 +311,11 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose })
                     <p>No year rankings available yet.</p>
                   ) : (
                     yearRankings.map((yearRank, index) => (
-                      <div key={yearRank.year} className="ranking-item">
+                      <div 
+                        key={yearRank.year} 
+                        className="ranking-item"
+                        style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                      >
                         <span className="rank-number">Rank: {index + 1}</span>
                         <h4>{yearRank.year}</h4>
                         <div className="ranking-metrics">

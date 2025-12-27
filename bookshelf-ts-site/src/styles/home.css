@@ -29,6 +29,29 @@
   margin-bottom: 1rem;
   color: #2c3e50;
   font-weight: 700;
+  user-select: none;
+}
+
+.title-edit-container {
+  margin-bottom: 1rem;
+}
+
+.title-edit-input {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  background: transparent;
+  border: 2px solid #3498db;
+  border-radius: 4px;
+  padding: 0.5rem;
+  width: 100%;
+  font-family: inherit;
+  outline: none;
+}
+
+.title-edit-input:focus {
+  border-color: #2980b9;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
 }
 
 .sidebar-section {
