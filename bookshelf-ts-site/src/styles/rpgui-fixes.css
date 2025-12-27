@@ -1,78 +1,6 @@
 /* RPGUI Cursor and Font Fixes for Production */
 /* This file fixes cursor paths and ensures global cursor styling */
-
-/* Fix cursor paths - use absolute paths from root */
-/* Apply default cursor globally within rpgui-content and to body */
-body,
-html {
-  cursor: url("/rpgui/img/cursor/default.png"), auto !important;
-}
-
-.rpgui-cursor-default,
-.rpgui-content,
-.rpgui-content *,
-label {
-  cursor: url("/rpgui/img/cursor/default.png"), auto !important;
-}
-
-/* Pointer cursor for interactive elements */
-.rpgui-cursor-point,
-.rpgui-cursor-point *,
-.rpgui-content a,
-.rpgui-content button,
-.rpgui-button,
-.rpgui-slider-container,
-.rpgui-content input[type=radio].rpgui-radio + label,
-.rpgui-list-imp,
-.rpgui-dropdown-imp,
-.rpgui-content input[type=checkbox].rpgui-checkbox + label,
-a,
-button,
-[role="button"],
-[onclick],
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-select,
-.rpgui-content *[style*="cursor: pointer"] {
-  cursor: url("/rpgui/img/cursor/point.png") 10 0, auto !important;
-}
-
-/* Text selection cursor */
-.rpgui-cursor-select,
-.rpgui-cursor-select *,
-.rpgui-content input,
-.rpgui-content textarea,
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-textarea {
-  cursor: url("/rpgui/img/cursor/select.png") 10 0, auto !important;
-}
-
-/* Grab cursors */
-.rpgui-cursor-grab-open,
-.rpgui-cursor-grab-open * {
-  cursor: url("/rpgui/img/cursor/grab-open.png") 10 0, auto !important;
-}
-
-.rpgui-cursor-grab-close,
-.rpgui-cursor-grab-close * {
-  cursor: url("/rpgui/img/cursor/grab-close.png") 10 0, auto !important;
-}
-
-/* Disabled elements */
-.rpgui-disabled,
-.rpgui-content :disabled,
-.rpgui-content input[type=radio]:disabled + label,
-.rpgui-content input[type=checkbox]:disabled + label,
-.rpgui-content input[type=range]:disabled + .rpgui-slider-container,
-.rpgui-content :disabled + .rpgui-dropdown-imp,
-.rpgui-content :disabled + .rpgui-dropdown-imp + .rpgui-dropdown-imp,
-.rpgui-content :disabled + .rpgui-list-imp {
-  cursor: url("/rpgui/img/cursor/default.png"), auto !important;
-}
+/* Cursor styles are injected via JavaScript to avoid webpack path resolution issues */
 
 /* Font size normalization - ensure consistent base font size */
 /* This prevents different browsers/devices from applying different base sizes */
@@ -144,4 +72,3 @@ button,
     font-size: 16px !important;
   }
 }
-
