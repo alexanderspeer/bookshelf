@@ -13,130 +13,174 @@ export function applyProductionStyleFixes() {
   
   console.log('Production environment detected - applying style fixes');
   
-  // Create or update style element
+  // Create or update style element with maximum priority
   const styleId = 'production-style-fixes';
   let styleElement = document.getElementById(styleId);
   
   if (!styleElement) {
     styleElement = document.createElement('style');
     styleElement.id = styleId;
+    // Insert at the END of head to override everything
     document.head.appendChild(styleElement);
   }
   
-  // Inject production-specific CSS fixes
-  // Force the exact computed pixel values that work locally
+  // Force exact pixel sizes to match local environment
+  // Local CSS uses 0.8em which computes to 12.8px when base is 16px
   styleElement.textContent = `
-    /* Production-only fixes - force exact local sizes */
+    /* Production override - force local rendering exactly */
     
-    /* Normalize base font size to 16px (standard) */
-    html, body {
+    /* CRITICAL: Lock base font-size */
+    html {
       font-size: 16px !important;
-      -webkit-text-size-adjust: 100% !important;
-      -moz-text-size-adjust: 100% !important;
     }
     
-    /* Force computed pixel values for all RPGUI text elements */
-    /* Local: 0.8em of 16px = 12.8px */
+    body {
+      font-size: 16px !important;
+    }
+    
+    /* Force ALL containers to use 16px base */
+    #root,
+    .rpgui-content,
+    .app,
+    .home-container,
+    .home-main,
+    .home-sidebar,
+    .bookshelf-controls {
+      font-size: 16px !important;
+    }
+    
+    /* Override RPGUI and all button styles with exact pixel values */
+    body button,
+    body .rpgui-button,
+    body .primary-button,
+    body .secondary-button,
+    body .set-goal-button,
+    body .finish-book-button,
+    body .edit-book-button,
+    body .delete-book-button,
+    body .reset-color-button,
+    body .reset-font-button,
+    body .add-tag-button,
+    .rpgui-content button,
+    .rpgui-content .rpgui-button,
+    .rpgui-content .primary-button,
+    .rpgui-content .secondary-button {
+      font-size: 12.8px !important;
+      line-height: 1.5 !important;
+      min-height: 50px !important;
+      max-height: 50px !important;
+      padding: 10px 25px !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+    }
+    
+    /* Override ALL input and select styles */
+    body .search-input,
+    body .filter-select,
+    body input[type="text"],
+    body input[type="number"],
+    body input[type="email"],
+    body input[type="password"],
+    body select,
+    body textarea,
     .rpgui-content input[type="text"],
     .rpgui-content input[type="number"],
     .rpgui-content input[type="email"],
     .rpgui-content input[type="password"],
     .rpgui-content textarea,
-    .search-input,
-    .form-group input,
     .rpgui-content select,
-    .filter-select,
-    .book-font-selector,
-    .form-group select,
-    button,
-    .rpgui-button,
-    .primary-button,
-    .secondary-button,
-    .set-goal-button,
-    .finish-book-button,
-    .edit-book-button,
-    .delete-book-button,
-    .reset-color-button,
-    .reset-font-button,
-    .goal-menu-button,
-    .add-tag-button,
-    .rpgui-content p,
-    .rpgui-content label {
+    .rpgui-content .search-input,
+    .rpgui-content .filter-select {
       font-size: 12.8px !important;
+      line-height: 32px !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      max-height: 40px !important;
+      box-sizing: border-box !important;
     }
     
-    /* Goal menu button and modal close - local: 1em = 16px */
-    .goal-menu-button,
-    .modal-close {
+    /* Goal menu button - smaller button */
+    body .goal-menu-button,
+    .rpgui-content .goal-menu-button {
       font-size: 16px !important;
       min-width: 40px !important;
       min-height: 40px !important;
+      max-width: 40px !important;
+      max-height: 40px !important;
+      padding: 8px !important;
+      line-height: 1 !important;
+    }
+    
+    /* Theme button */
+    body .theme-button,
+    .rpgui-content .theme-button {
+      font-size: 16px !important;
+      height: 40px !important;
+      min-width: 100px !important;
       padding: 8px !important;
     }
     
-    /* Headings - maintain relative sizes */
-    .rpgui-content h1 {
-      font-size: 19.2px !important; /* 1.2em of 16px */
+    /* Text and labels */
+    .rpgui-content p,
+    .rpgui-content label,
+    body .rpgui-content p,
+    body .rpgui-content label {
+      font-size: 12.8px !important;
+      line-height: 1.8 !important;
     }
     
-    .rpgui-content h2 {
-      font-size: 17.6px !important; /* 1.1em of 16px */
+    /* Headings */
+    .rpgui-content h1,
+    body .rpgui-content h1 {
+      font-size: 19.2px !important;
     }
     
-    .rpgui-content h3 {
-      font-size: 16px !important; /* 1.0em */
+    .rpgui-content h2,
+    body .rpgui-content h2 {
+      font-size: 17.6px !important;
     }
     
-    .rpgui-content h4 {
-      font-size: 14.4px !important; /* 0.9em of 16px */
+    .rpgui-content h3,
+    body .rpgui-content h3 {
+      font-size: 16px !important;
     }
     
-    /* Tag buttons and small text */
-    .tag-button {
-      font-size: 11.2px !important; /* 0.7em of 16px */
+    .rpgui-content h4,
+    body .rpgui-content h4 {
+      font-size: 14.4px !important;
     }
     
-    /* Goal numbers display */
-    .goal-numbers {
-      font-size: 24px !important; /* 1.5em of 16px */
+    /* Goal numbers */
+    .goal-numbers,
+    body .goal-numbers,
+    .rpgui-content .goal-numbers {
+      font-size: 24px !important;
     }
     
-    /* Theme button specific */
-    .theme-button {
-      font-size: 16px !important; /* 1em of 16px */
+    /* Tag buttons */
+    .tag-button,
+    body .tag-button,
+    .rpgui-content .tag-button {
+      font-size: 11.2px !important;
     }
     
-    /* Ensure line heights match local */
-    .search-input,
-    .filter-select {
-      line-height: 32px !important;
+    /* Sidebar sections */
+    .sidebar-section,
+    body .sidebar-section {
+      font-size: 16px !important;
     }
     
-    button,
-    .rpgui-button,
-    .primary-button,
-    .secondary-button {
-      line-height: 1.5 !important;
+    /* Goal display */
+    .goal-display,
+    body .goal-display {
+      font-size: 16px !important;
     }
     
-    /* Force exact heights */
-    .search-input,
-    .filter-select,
-    .theme-button {
-      height: 40px !important;
-      box-sizing: border-box !important;
-    }
-    
-    button,
-    .primary-button,
-    .secondary-button,
-    .set-goal-button,
-    .finish-book-button,
-    .edit-book-button,
-    .delete-book-button {
-      min-height: 50px !important;
-      box-sizing: border-box !important;
+    .goal-display p,
+    body .goal-display p {
+      font-size: 12.8px !important;
     }
   `;
 }
+
 
