@@ -412,7 +412,9 @@ def serve_spine_image(filename):
     return response
 
 if __name__ == '__main__':
-    host = os.getenv('HOST', 'localhost')
+    # On Heroku, bind to 0.0.0.0; locally use localhost
+    host = os.getenv('HOST', '0.0.0.0' if os.getenv('DATABASE_URL') else 'localhost')
     port = int(os.getenv('PORT', 5001))  # Changed to 5001 to avoid AirPlay conflicts on macOS
-    app.run(host=host, port=port, debug=True)
+    debug = not bool(os.getenv('DATABASE_URL'))  # Disable debug in production
+    app.run(host=host, port=port, debug=debug)
 
