@@ -321,7 +321,10 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                         backgroundColor: color,
                         '--swatch-color': color
                       } as React.CSSProperties}
-                      onClick={() => setSelectedBgColor(color)}
+                      onClick={() => {
+                        setSelectedBgColor(color);
+                        setCustomBgColor(color);
+                      }}
                       title={color}
                     />
                   ))}
@@ -357,7 +360,10 @@ export const ThemeManager: React.FC<ThemeManagerProps> = ({
                         backgroundColor: color,
                         '--swatch-color': color
                       } as React.CSSProperties}
-                      onClick={() => setSelectedFgColor(color)}
+                      onClick={() => {
+                        setSelectedFgColor(color);
+                        setCustomFgColor(color);
+                      }}
                       title={color}
                     />
                   ))}

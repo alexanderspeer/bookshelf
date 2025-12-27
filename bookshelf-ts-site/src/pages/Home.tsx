@@ -652,6 +652,8 @@ export const Home: React.FC = () => {
         bookFonts: newBookFonts,
       };
     });
+    // Regenerate bookshelf to apply the font change
+    generateBookshelf();
     
     // Trigger re-render
     generateBookshelf();
@@ -1274,10 +1276,25 @@ export const Home: React.FC = () => {
           onClose={() => {
             setShowEditBookModal(false);
           }}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowEditBookModal(false);
-            setSelectedBook(null);
-            fetchBooks();
+            // Fetch the updated book data to ensure we have the latest notes
+            if (selectedBook.id) {
+              try {
+                const updatedBook = await apiService.getBook(selectedBook.id);
+                setSelectedBook(updatedBook);
+                // Also refresh all books to update state arrays
+                fetchBooks();
+              } catch (error) {
+                console.error('Failed to fetch updated book:', error);
+                // Fallback to refreshing all books
+                fetchBooks();
+                setSelectedBook(null);
+              }
+            } else {
+              fetchBooks();
+              setSelectedBook(null);
+            }
           }}
           onRerank={handleRerankBook}
         />

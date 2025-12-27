@@ -1,0 +1,107 @@
+/* Toast Notification Styles - Minimalist RPGUI Theme */
+
+/* Override react-toastify default styles */
+.Toastify__toast-container {
+  z-index: 9999 !important;
+}
+
+.Toastify__toast {
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 0.6em !important;
+  background: #3a3025 !important;
+  color: white !important;
+  border: 2px solid #5C4033 !important;
+  border-radius: 0 !important;
+  box-shadow: 2px 2px 0px #3C2819 !important;
+  padding: 0.75rem 1rem !important;
+  min-height: 50px !important;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
+}
+
+.Toastify__toast--success {
+  background: #2F855A !important;
+  border-color: #1A202C !important;
+}
+
+.Toastify__toast--error {
+  background: #742A2A !important;
+  border-color: #3C1A1A !important;
+}
+
+.Toastify__toast--info {
+  background: #2C5282 !important;
+  border-color: #1A202C !important;
+}
+
+.Toastify__toast--warning {
+  background: #C05621 !important;
+  border-color: #7A3419 !important;
+}
+
+.Toastify__toast-body {
+  color: white !important;
+  font-family: 'Press Start 2P', cursive !important;
+  font-size: 0.6em !important;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.Toastify__close-button {
+  display: none !important;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.3) !important;
+  height: 4px !important;
+}
+
+.Toastify__progress-bar--success {
+  background: rgba(72, 187, 120, 0.8) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: rgba(245, 101, 101, 0.8) !important;
+}
+
+.Toastify__progress-bar--info {
+  background: rgba(99, 179, 237, 0.8) !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: rgba(246, 173, 85, 0.8) !important;
+}
+
+/* Animation adjustments for RPGUI feel */
+.Toastify__toast--rtl {
+  direction: rtl;
+}
+
+.Toastify__toast-container--top-right {
+  top: 1em !important;
+  right: 1em !important;
+}
+
+.Toastify__toast-container--top-left {
+  top: 1em !important;
+  left: 1em !important;
+}
+
+.Toastify__toast-container--top-center {
+  top: 1em !important;
+}
+
+.Toastify__toast-container--bottom-right {
+  bottom: 1em !important;
+  right: 1em !important;
+}
+
+.Toastify__toast-container--bottom-left {
+  bottom: 1em !important;
+  left: 1em !important;
+}
+
+.Toastify__toast-container--bottom-center {
+  bottom: 1em !important;
+}
+

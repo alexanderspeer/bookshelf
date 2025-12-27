@@ -74,7 +74,25 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
     setSubmitting(true);
     
     try {
-      await apiService.updateBook(book.id!, formData);
+      // Prepare update data - only include fields that should be updated
+      const updateData: any = {
+        title: formData.title,
+        author: formData.author,
+        notes: formData.notes || '', // Ensure notes is always included, even if empty
+      };
+      
+      // Only include date_finished and initial_stars if book is read
+      if (book.reading_state === 'read') {
+        if (formData.date_finished) {
+          updateData.date_finished = formData.date_finished;
+        }
+        if (formData.initial_stars !== undefined) {
+          updateData.initial_stars = formData.initial_stars;
+        }
+      }
+      
+      // Update the book
+      const updatedBook = await apiService.updateBook(book.id!, updateData);
       
       // Update tags - remove old tags and add new ones
       const currentTagIds = book.tags?.map(tag => tag.id) || [];

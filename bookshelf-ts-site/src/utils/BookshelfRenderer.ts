@@ -378,10 +378,11 @@ export class BookshelfRenderer {
   }
 
   private generateFakeSpine(incompleteBook: book): FakeSpineData {
-    // Check cache first - include domColor and version in cache key
+    // Check cache first - include domColor, spineFont, and version in cache key
     // Version helps invalidate cache when rendering logic changes
     const renderVersion = 'v7-rpgui-style'; // Increment when changing rendering logic
-    const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default') + '||' + renderVersion;
+    const bookFont = incompleteBook.spineFont || this.spineFont || 'serif';
+    const cacheKey = this.getBookCacheKey(incompleteBook) + '||' + (incompleteBook.domColor || 'default') + '||' + bookFont + '||' + renderVersion;
     if (this.fakeSpineCache.has(cacheKey)) {
       return this.fakeSpineCache.get(cacheKey)!;
     }
