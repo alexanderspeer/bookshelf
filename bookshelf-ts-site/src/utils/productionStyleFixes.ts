@@ -28,86 +28,134 @@ export function applyProductionStyleFixes() {
   styleElement.textContent = `
     /* Production-only fixes - match local sizing exactly */
     
-    /* Normalize base font size */
+    /* Normalize base font size to exactly match localhost */
     html {
       font-size: 16px !important;
-      -webkit-text-size-adjust: none !important;
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
     }
     
     body {
       font-size: 16px !important;
-      -webkit-text-size-adjust: none !important;
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
     }
     
-    /* Fix button sizing to match local */
-    button,
-    .rpgui-button,
-    .primary-button,
-    .secondary-button,
-    .theme-button,
-    .goal-menu-button,
-    .set-goal-button,
-    .finish-book-button,
-    .edit-book-button,
-    .delete-book-button {
-      font-size: 0.8em !important;
+    /* Fix button sizing to match local - use exact pixel values */
+    .rpgui-content button,
+    button.rpgui-button,
+    button.primary-button,
+    button.secondary-button,
+    button.theme-button,
+    button.set-goal-button,
+    button.finish-book-button,
+    button.edit-book-button,
+    button.delete-book-button,
+    button.reset-color-button,
+    button.reset-font-button,
+    button.add-tag-button,
+    .rpgui-content .primary-button,
+    .rpgui-content .secondary-button,
+    .rpgui-content .theme-button,
+    .rpgui-content .set-goal-button,
+    .rpgui-content .finish-book-button,
+    .rpgui-content .edit-book-button,
+    .rpgui-content .delete-book-button,
+    .rpgui-content .reset-color-button,
+    .rpgui-content .reset-font-button,
+    .rpgui-content .add-tag-button {
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
       line-height: 1.5 !important;
     }
     
-    /* Fix input and select sizing */
-    input[type="text"],
-    input[type="number"],
-    input[type="email"],
-    input[type="password"],
-    select,
-    textarea,
+    /* Fix input and select sizing - use exact pixel values */
+    .rpgui-content input[type="text"],
+    .rpgui-content input[type="number"],
+    .rpgui-content input[type="email"],
+    .rpgui-content input[type="password"],
+    input[type="text"].search-input,
+    input.search-input,
     .search-input,
-    .filter-select {
-      font-size: 0.8em !important;
-      line-height: normal !important;
+    select.filter-select,
+    .filter-select,
+    .rpgui-content select,
+    .rpgui-content textarea,
+    .form-group input,
+    .form-group select {
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
+      line-height: 32px !important;
     }
     
-    /* Fix label and text sizing */
-    label,
-    p,
-    span {
-      font-size: 1em !important;
+    /* Fix label and text sizing - use exact pixel values */
+    .rpgui-content label,
+    .rpgui-content p,
+    .rpgui-content span {
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
+      line-height: 1.8 !important;
     }
     
-    /* Fix heading sizes */
+    /* Fix heading sizes - use exact pixel values */
     .rpgui-content h1 {
-      font-size: 1.2em !important;
+      font-size: 19.2px !important; /* 1.2em of 16px = exact match to localhost */
     }
     
     .rpgui-content h2 {
-      font-size: 1.1em !important;
+      font-size: 17.6px !important; /* 1.1em of 16px = exact match to localhost */
     }
     
     .rpgui-content h3 {
-      font-size: 1.0em !important;
+      font-size: 16px !important; /* 1.0em of 16px = exact match to localhost */
     }
     
     .rpgui-content h4 {
-      font-size: 0.9em !important;
+      font-size: 14.4px !important; /* 0.9em of 16px = exact match to localhost */
     }
     
-    .rpgui-content p,
-    .rpgui-content label {
-      font-size: 0.8em !important;
-    }
-    
-    /* Ensure RPGUI button text matches */
+    /* Ensure RPGUI button text matches - use exact pixel values */
     .rpgui-button p,
     .rpgui-button.golden p {
-      font-size: 1em !important;
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
     }
     
-    /* Goal menu button specific fix */
+    /* Goal menu button specific fix - use exact pixel values */
     .goal-menu-button {
       min-width: 40px !important;
       min-height: 40px !important;
       padding: 8px !important;
-      font-size: 1em !important;
+      font-size: 16px !important; /* 1em of 16px = exact match to localhost */
+      line-height: 1 !important;
+    }
+    
+    /* Theme button - use exact pixel values */
+    .theme-button {
+      font-size: 16px !important; /* 1em of 16px = exact match to localhost */
+    }
+    
+    /* Fix stat items - use exact pixel values */
+    .rpgui-content .stat-item,
+    .stat-item {
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
+    }
+    
+    .stat-item-clickable {
+      font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
+    }
+    
+    /* Fix goal numbers - use exact pixel values */
+    .goal-numbers {
+      font-size: 24px !important; /* 1.5em of 16px = exact match to localhost */
+    }
+    
+    .goal-current {
+      font-size: 40px !important; /* 2.5em of 16px = exact match to localhost */
+    }
+    
+    .goal-target {
+      font-size: 32px !important; /* 2em of 16px = exact match to localhost */
+    }
+    
+    .goal-separator {
+      font-size: 28.8px !important; /* 1.8em of 16px = exact match to localhost */
     }
     
     /* Fix dropdown truncation - increase width for "All Shelves" dropdown */
