@@ -18,11 +18,64 @@
     <!-- Google Fonts for RPGUI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" rel="stylesheet">
+    
+    <!-- Preload RPGUI cursor images to prevent loading delay -->
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/cursor/default.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/cursor/point.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/cursor/select.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/cursor/grab-open.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/cursor/grab-close.png" as="image">
+    
+    <!-- Preload critical RPGUI UI images -->
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/border-image-golden.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/background-image-golden.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/button.png" as="image">
+    <link rel="preload" href="%PUBLIC_URL%/rpgui/img/button-hover.png" as="image">
     
     <!-- RPGUI styling -->
     <link href="%PUBLIC_URL%/rpgui/dist/rpgui.css" rel="stylesheet" type="text/css" />
     <script src="%PUBLIC_URL%/rpgui/dist/rpgui.js"></script>
+    
+    <!-- Preload cursor images immediately to prevent loading delay -->
+    <script>
+      (function() {
+        // Cursor images are served from the public folder root
+        var cursorBasePath = '/rpgui/img/cursor';
+        var cursorImages = [
+          'default.png',
+          'point.png',
+          'select.png',
+          'grab-open.png',
+          'grab-close.png'
+        ];
+        
+        // Preload all cursor images immediately
+        cursorImages.forEach(function(cursorFile) {
+          var img = new Image();
+          img.src = cursorBasePath + '/' + cursorFile;
+        });
+        
+        // Apply default cursor to body as soon as it's available
+        function applyDefaultCursor() {
+          if (document.body) {
+            document.body.style.cursor = 'url("' + cursorBasePath + '/default.png"), auto';
+          } else {
+            // If body isn't ready yet, wait for DOMContentLoaded
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', applyDefaultCursor);
+            } else {
+              // DOM already loaded, try again immediately
+              setTimeout(applyDefaultCursor, 0);
+            }
+          }
+        }
+        
+        // Try to apply cursor immediately
+        applyDefaultCursor();
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
