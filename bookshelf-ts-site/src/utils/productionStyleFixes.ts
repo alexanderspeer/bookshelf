@@ -13,178 +13,161 @@ export function applyProductionStyleFixes() {
   
   console.log('Production environment detected - applying style fixes');
   
-  // Apply styles with a slight delay to ensure all CSS has loaded
-  const applyStyles = () => {
-    // Create or update style element
-    const styleId = 'production-style-fixes';
-    let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-    
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = styleId;
-      // Add to end of head to ensure it overrides other styles
-      document.head.appendChild(styleElement);
-    }
+  // Create or update style element
+  const styleId = 'production-style-fixes';
+  let styleElement = document.getElementById(styleId);
+  
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = styleId;
+    document.head.appendChild(styleElement);
+  }
   
   // Inject production-specific CSS fixes
-  // These match the local sizes exactly using pixel values for consistency
+  // These match the local sizes exactly
   styleElement.textContent = `
     /* Production-only fixes - match local sizing exactly */
     
-    /* Normalize base font size to ensure consistent em calculations */
+    /* Normalize base font size */
     html {
       font-size: 16px !important;
-      -webkit-text-size-adjust: 100% !important;
-      text-size-adjust: 100% !important;
+      -webkit-text-size-adjust: none !important;
     }
     
     body {
       font-size: 16px !important;
-      -webkit-text-size-adjust: 100% !important;
-      text-size-adjust: 100% !important;
+      -webkit-text-size-adjust: none !important;
     }
     
-    /* Fix button sizing to match local - use pixel values for consistency */
-    .rpgui-content button,
-    button.rpgui-button,
-    button.primary-button,
-    button.secondary-button,
-    button.theme-button,
-    button.set-goal-button,
-    button.finish-book-button,
-    button.edit-book-button,
-    button.delete-book-button,
-    button.reset-color-button,
-    button.reset-font-button,
-    button.add-tag-button,
-    .rpgui-content .primary-button,
-    .rpgui-content .secondary-button,
-    .rpgui-content .theme-button,
-    .rpgui-content .set-goal-button,
-    .rpgui-content .finish-book-button,
-    .rpgui-content .edit-book-button,
-    .rpgui-content .delete-book-button,
-    .rpgui-content .reset-color-button,
-    .rpgui-content .reset-font-button,
-    .rpgui-content .add-tag-button {
-      font-size: 12.8px !important; /* 0.8em of 16px */
+    /* Fix button sizing to match local */
+    button,
+    .rpgui-button,
+    .primary-button,
+    .secondary-button,
+    .theme-button,
+    .goal-menu-button,
+    .set-goal-button,
+    .finish-book-button,
+    .edit-book-button,
+    .delete-book-button {
+      font-size: 0.8em !important;
       line-height: 1.5 !important;
-      padding: 10px 25px !important;
-      min-height: 50px !important;
     }
     
-    /* Goal menu button specific fix - matches localhost */
-    .goal-menu-button {
-      min-width: 40px !important;
-      min-height: 40px !important;
-      padding: 8px !important;
-      font-size: 16px !important; /* 1em of 16px */
-      line-height: 1 !important;
-    }
-    
-    /* Fix input and select sizing - use pixel values */
-    .rpgui-content input[type="text"],
-    .rpgui-content input[type="number"],
-    .rpgui-content input[type="email"],
-    .rpgui-content input[type="password"],
-    input[type="text"].search-input,
-    input.search-input,
+    /* Fix input and select sizing */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    select,
+    textarea,
     .search-input,
-    select.filter-select,
-    .filter-select,
-    .rpgui-content select,
-    .rpgui-content textarea,
-    .form-group input,
-    .form-group select {
-      font-size: 12.8px !important; /* 0.8em of 16px */
-      line-height: 32px !important;
-      min-height: 40px !important;
-      padding: 8px 10px !important;
-      height: 40px !important;
-    }
-    
-    /* Fix stat items */
-    .rpgui-content .stat-item,
-    .stat-item {
-      font-size: 12.8px !important; /* 0.8em of 16px */
-      min-height: 40px !important;
-      padding: 12px !important;
-    }
-    
-    .rpgui-content .stat-item-clickable,
-    .stat-item.stat-item-clickable,
-    .stat-item-clickable {
-      font-size: 12.8px !important;
-      min-height: 47px !important;
-      height: 47px !important;
-    }
-    
-    /* Goal numbers */
-    .goal-numbers {
-      font-size: 24px !important; /* 1.5em of 16px */
-    }
-    
-    .goal-current {
-      font-size: 40px !important; /* 2.5em of 16px */
-    }
-    
-    .goal-target {
-      font-size: 32px !important; /* 2em of 16px */
-    }
-    
-    .goal-separator {
-      font-size: 28.8px !important; /* 1.8em of 16px */
+    .filter-select {
+      font-size: 0.8em !important;
+      line-height: normal !important;
     }
     
     /* Fix label and text sizing */
-    .rpgui-content label,
-    .rpgui-content p,
-    .rpgui-content span {
-      font-size: 12.8px !important; /* 0.8em of 16px */
-      line-height: 1.8 !important;
+    label,
+    p,
+    span {
+      font-size: 1em !important;
     }
     
     /* Fix heading sizes */
     .rpgui-content h1 {
-      font-size: 19.2px !important; /* 1.2em of 16px */
+      font-size: 1.2em !important;
     }
     
     .rpgui-content h2 {
-      font-size: 17.6px !important; /* 1.1em of 16px */
+      font-size: 1.1em !important;
     }
     
     .rpgui-content h3 {
-      font-size: 16px !important; /* 1.0em of 16px */
+      font-size: 1.0em !important;
     }
     
     .rpgui-content h4 {
-      font-size: 14.4px !important; /* 0.9em of 16px */
+      font-size: 0.9em !important;
+    }
+    
+    .rpgui-content p,
+    .rpgui-content label {
+      font-size: 0.8em !important;
     }
     
     /* Ensure RPGUI button text matches */
     .rpgui-button p,
     .rpgui-button.golden p {
-      font-size: 12.8px !important; /* 0.8em of 16px */
+      font-size: 1em !important;
     }
     
-    /* Tag buttons */
-    .tag-button {
-      font-size: 11.2px !important; /* 0.7em of 16px */
-      min-height: 35px !important;
-      padding: 8px 15px !important;
+    /* Goal menu button specific fix */
+    .goal-menu-button {
+      min-width: 40px !important;
+      min-height: 40px !important;
+      padding: 8px !important;
+      font-size: 1em !important;
+    }
+    
+    /* Fix dropdown truncation - increase width for "All Shelves" dropdown */
+    .filter-select:first-of-type {
+      max-width: 200px !important;
+      min-width: 180px !important;
+      width: auto !important;
+      flex-shrink: 0 !important;
+    }
+    
+    /* Ensure dropdown text isn't truncated - allow text to display fully */
+    .filter-select {
+      text-overflow: ellipsis !important;
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      padding-right: 25px !important;
+    }
+    
+    /* Make sure the selected option text displays fully */
+    .filter-select option {
+      white-space: normal !important;
+    }
+    
+    /* Fix search input to prevent placeholder truncation */
+    .search-filter-section {
+      gap: 10px !important;
+    }
+    
+    .search-input {
+      min-width: 320px !important;
+      width: auto !important;
+      flex: 2 1 320px !important;
+      flex-shrink: 1 !important;
+      max-width: none !important;
+    }
+    
+    /* Ensure placeholder text can display fully - no truncation */
+    .search-input::placeholder {
+      opacity: 1 !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+    
+    /* Remove default focus/active state from dropdowns on page load */
+    .filter-select:not(:focus):not(:active) {
+      border-color: #8B6F47 !important;
+      box-shadow: none !important;
+      background-color: #4e4a4e !important;
+    }
+    
+    /* Ensure dropdowns don't appear focused by default */
+    .filter-select {
+      outline: none !important;
+    }
+    
+    .filter-select:focus {
+      border-color: #DAA520 !important;
+      box-shadow: 0 0 5px #DAA520 !important;
     }
   `;
-  };
-  
-  // Apply immediately
-  applyStyles();
-  
-  // Also apply after a short delay to ensure all CSS has loaded
-  setTimeout(applyStyles, 100);
-  
-  // Apply again after DOM is fully ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyStyles);
-  }
 }
 
