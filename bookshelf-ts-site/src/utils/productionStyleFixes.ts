@@ -41,7 +41,7 @@ export function applyProductionStyleFixes() {
       text-size-adjust: 100% !important;
     }
     
-    /* Fix button sizing to match local - use exact pixel values */
+    /* Fix button sizing to match local - use exact pixel values with MAXIMUM specificity */
     .rpgui-content button,
     button.rpgui-button,
     button.primary-button,
@@ -63,21 +63,42 @@ export function applyProductionStyleFixes() {
     .rpgui-content .delete-book-button,
     .rpgui-content .reset-color-button,
     .rpgui-content .reset-font-button,
-    .rpgui-content .add-tag-button {
+    .rpgui-content .add-tag-button,
+    .home-sidebar .primary-button,
+    .home-sidebar .secondary-button,
+    .sidebar-section .primary-button,
+    .sidebar-section .secondary-button {
       font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
       line-height: 1.5 !important;
     }
     
-    /* Fix input and select sizing - use exact pixel values */
+    /* Force button font size with even more specificity */
+    div.home-sidebar button.primary-button,
+    div.home-sidebar button.secondary-button,
+    div.sidebar-section button.primary-button,
+    div.sidebar-section button.secondary-button,
+    div.rpgui-content button.primary-button,
+    div.rpgui-content button.secondary-button {
+      font-size: 12.8px !important;
+    }
+    
+    /* Fix input and select sizing - use exact pixel values with MAXIMUM specificity */
     .rpgui-content input[type="text"],
     .rpgui-content input[type="number"],
     .rpgui-content input[type="email"],
     .rpgui-content input[type="password"],
+    .rpgui-content .search-input,
     input[type="text"].search-input,
     input.search-input,
-    .search-input,
+    .search-filter-section .search-input,
+    .bookshelf-controls .search-input,
+    .home-main .search-input,
+    .rpgui-content .filter-select,
     select.filter-select,
     .filter-select,
+    .search-filter-section .filter-select,
+    .bookshelf-controls .filter-select,
+    .home-main .filter-select,
     .rpgui-content select,
     .rpgui-content textarea,
     .form-group input,
@@ -86,12 +107,32 @@ export function applyProductionStyleFixes() {
       line-height: 32px !important;
     }
     
+    /* Force filter-select font size with even more specificity */
+    div.search-filter-section select.filter-select,
+    div.bookshelf-controls select.filter-select,
+    div.home-main select.filter-select {
+      font-size: 12.8px !important;
+    }
+    
+    /* Force search-input font size with even more specificity */
+    div.search-filter-section input.search-input,
+    div.bookshelf-controls input.search-input,
+    div.home-main input.search-input {
+      font-size: 12.8px !important;
+    }
+    
     /* Fix label and text sizing - use exact pixel values */
     .rpgui-content label,
     .rpgui-content p,
     .rpgui-content span {
       font-size: 12.8px !important; /* 0.8em of 16px = exact match to localhost */
       line-height: 1.8 !important;
+    }
+    
+    /* Empty shelf message should use 1em (16px) - override the above */
+    .empty-shelf p,
+    .rpgui-content .empty-shelf p {
+      font-size: 16px !important; /* 1em of 16px = exact match to localhost */
     }
     
     /* Fix heading sizes - use exact pixel values */
