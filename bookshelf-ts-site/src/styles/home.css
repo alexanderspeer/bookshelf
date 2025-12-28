@@ -155,18 +155,18 @@
 }
 
 .goal-current {
-  font-size: 2.5rem;
+  font-size: 19.2px !important; /* Exact measured value from localhost */
   font-weight: 700;
   color: #2e7d32;
 }
 
 .goal-separator {
-  font-size: 1.8rem;
+  font-size: 19.2px !important; /* Should match goal numbers */
   color: #66bb6a;
 }
 
 .goal-target {
-  font-size: 2rem;
+  font-size: 19.2px !important; /* Should match goal numbers */
   font-weight: 600;
   color: #66bb6a;
 }

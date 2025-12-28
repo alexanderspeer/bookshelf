@@ -20,7 +20,7 @@ body {
   text-size-adjust: 100% !important;
 }
 
-/* Ensure buttons maintain consistent sizing - match local dev exactly */
+/* Ensure buttons maintain consistent sizing - use exact pixel values */
 button,
 .rpgui-button,
 .primary-button,
@@ -29,33 +29,33 @@ button,
 .finish-book-button,
 .edit-book-button,
 .delete-book-button {
-  font-size: 0.8em !important;
+  font-size: 10.24px !important; /* Exact measured value from localhost */
   box-sizing: border-box !important;
   line-height: 1.5 !important;
   padding: 10px 25px !important;
   min-height: 50px !important;
 }
 
-/* Ensure consistent font sizes for text elements */
+/* Ensure consistent font sizes for text elements - use exact pixel values */
 .rpgui-content h1 {
-  font-size: 1.2em !important;
+  font-size: 15.36px !important; /* Exact measured value from localhost */
 }
 
 .rpgui-content h2 {
-  font-size: 1.1em !important;
+  font-size: 14.08px !important; /* Exact measured value from localhost */
 }
 
 .rpgui-content h3 {
-  font-size: 1.0em !important;
+  font-size: 16px !important; /* 1.0em of 16px */
 }
 
 .rpgui-content h4 {
-  font-size: 0.9em !important;
+  font-size: 14.4px !important; /* 0.9em of 16px */
 }
 
 .rpgui-content p,
 .rpgui-content label {
-  font-size: 0.8em !important;
+  font-size: 10.24px !important; /* Exact measured value from localhost */
 }
 
 /* Prevent font size inflation on mobile - keep same as desktop */
