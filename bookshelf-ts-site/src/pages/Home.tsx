@@ -572,7 +572,28 @@ export const Home: React.FC = () => {
   };
 
   const handleShelfClick = (books: Book[], title: string) => {
-    setShelfModalBooks(books);
+    let sortedBooks = [...books];
+    
+    // Sort Read books by date_finished (most recent first)
+    if (title === 'Read') {
+      sortedBooks.sort((a, b) => {
+        // Books with date_finished come first
+        if (a.date_finished && !b.date_finished) return -1;
+        if (!a.date_finished && b.date_finished) return 1;
+        
+        // If both have date_finished, sort by date (most recent first)
+        if (a.date_finished && b.date_finished) {
+          const dateA = new Date(a.date_finished).getTime();
+          const dateB = new Date(b.date_finished).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        }
+        
+        // If neither has date_finished, maintain original order
+        return 0;
+      });
+    }
+    
+    setShelfModalBooks(sortedBooks);
     setShelfModalTitle(title);
     setShowShelfModal(true);
   };
@@ -607,6 +628,34 @@ export const Home: React.FC = () => {
     setShowEditBookModal(false);
     setSelectedBook(null);
     setBookToRank(book);
+  };
+
+  const handleReadingStateChange = async (bookId: number, newState: string) => {
+    try {
+      await apiService.setReadingState(bookId, newState, {
+        date_started: newState === 'currently_reading' ? new Date().toISOString() : undefined,
+        date_finished: newState === 'read' ? new Date().toISOString() : undefined
+      });
+      
+      // Update the selected book's reading state
+      if (selectedBook && selectedBook.id === bookId) {
+        const updatedBook = await apiService.getBook(bookId);
+        setSelectedBook(updatedBook);
+      }
+      
+      // Refresh all books to update the shelves
+      fetchBooks();
+      
+      // Refresh goal if book was moved to/from read state (affects goal progress)
+      if (newState === 'read' || selectedBook?.reading_state === 'read') {
+        fetchCurrentGoal();
+      }
+      
+      toast.success('Book status updated!');
+    } catch (error) {
+      toast.error('Failed to update book status');
+      console.error(error);
+    }
   };
 
   // Theme management functions
@@ -1152,8 +1201,29 @@ export const Home: React.FC = () => {
               {selectedBook.pub_date && <p><strong>Published:</strong> {selectedBook.pub_date}</p>}
               {selectedBook.num_pages && <p><strong>Pages:</strong> {selectedBook.num_pages}</p>}
               {selectedBook.genre && <p><strong>Genre:</strong> {selectedBook.genre}</p>}
-              {selectedBook.reading_state && (
-                <p><strong>Status:</strong> {selectedBook.reading_state.replace('_', ' ')}</p>
+              {!(selectedBook.reading_state === 'read' || selectedBook.rank_position) && (
+                <p>
+                  <strong>Status:</strong>{' '}
+                  <select
+                    value={selectedBook.reading_state || 'want_to_read'}
+                    onChange={(e) => {
+                      if (selectedBook.id) {
+                        handleReadingStateChange(selectedBook.id, e.target.value);
+                      }
+                    }}
+                    style={{ 
+                      cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+                      marginLeft: '0.5rem',
+                      padding: '0.25rem 0.5rem',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    <option value="want_to_read">Want to Read</option>
+                    <option value="currently_reading">Currently Reading</option>
+                    <option value="read">Read</option>
+                  </select>
+                </p>
               )}
               {selectedBook.initial_stars && (
                 <p><strong>Rating:</strong> {'⭐'.repeat(selectedBook.initial_stars)}</p>

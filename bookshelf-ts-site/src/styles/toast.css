@@ -7,14 +7,14 @@
 
 .Toastify__toast {
   font-family: 'Press Start 2P', cursive !important;
-  font-size: 0.6em !important;
+  font-size: 0.75em !important;
   background: #3a3025 !important;
   color: white !important;
   border: 2px solid #5C4033 !important;
   border-radius: 0 !important;
   box-shadow: 2px 2px 0px #3C2819 !important;
-  padding: 0.75rem 1rem !important;
-  min-height: 50px !important;
+  padding: 1rem 1.25rem !important;
+  min-height: 60px !important;
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
 }
 
@@ -41,7 +41,7 @@
 .Toastify__toast-body {
   color: white !important;
   font-family: 'Press Start 2P', cursive !important;
-  font-size: 0.6em !important;
+  font-size: 0.75em !important;
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
   padding: 0 !important;
   margin: 0 !important;

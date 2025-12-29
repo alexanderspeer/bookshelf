@@ -16,3 +16,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.logout-link {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  min-width: auto !important;
+  min-height: auto !important;
+  height: auto !important;
+  width: auto !important;
+}

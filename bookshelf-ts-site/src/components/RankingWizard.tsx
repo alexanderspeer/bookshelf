@@ -129,11 +129,6 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
       
       setStep('complete');
       toast.success(`${book.title} ranked at position #${position}!`);
-      
-      // Close wizard after a brief delay
-      setTimeout(() => {
-        onComplete();
-      }, 2000);
     } catch (error) {
       toast.error('Failed to save ranking');
       console.error(error);
@@ -148,17 +143,32 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
       
       <div className="stars-container">
         <div className="star-rating">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              className={`star ${value <= (hoveredStars || stars) ? 'filled' : ''}`}
-              onClick={() => setStars(value)}
-              onMouseEnter={() => setHoveredStars(value)}
-              onMouseLeave={() => setHoveredStars(0)}
-            >
-              ★
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5].map((value) => {
+            // Determine potion color based on selected rating (or hovered rating)
+            const currentRating = hoveredStars || stars;
+            let potionColor = 'green'; // Default for 1-3 stars
+            if (currentRating === 4) {
+              potionColor = 'red';
+            } else if (currentRating === 5) {
+              potionColor = 'blue';
+            }
+            
+            return (
+              <div
+                key={value}
+                className={`star-potion ${value <= currentRating ? 'filled' : ''}`}
+                onClick={() => setStars(value)}
+                onMouseEnter={() => setHoveredStars(value)}
+                onMouseLeave={() => setHoveredStars(0)}
+              >
+                <img 
+                  src={`/rpgui/img/icons/potion-${potionColor}.png`}
+                  alt={`${value} star rating`}
+                  className="potion-icon"
+                />
+              </div>
+            );
+          })}
         </div>
         <div className="star-label">
           {stars} {stars === 1 ? 'star' : 'stars'}
@@ -192,75 +202,185 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
     </div>
   );
 
+  const handleBackToStars = () => {
+    setStep('stars');
+    setCurrentComparisonIndex(0);
+    setComparisonResults([]);
+  };
+
   const renderComparisonsStep = () => {
     if (comparisons.length === 0) return null;
     
     const currentQuestion = comparisons[currentComparisonIndex];
     const progress = ((currentComparisonIndex + 1) / comparisons.length) * 100;
+    
+    // Determine progress bar color based on star rating
+    let progressColor = 'green'; // Default for 1-3 stars
+    let badgeTextColor = '#6eaa2c'; // Green for 1-3 stars
+    if (stars === 4) {
+      progressColor = 'red';
+      badgeTextColor = '#d04648'; // Red for 4 stars
+    } else if (stars === 5) {
+      progressColor = 'blue';
+      badgeTextColor = '#5a7dce'; // Blue for 5 stars
+    }
 
     return (
       <div className="wizard-step comparisons-step">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        <div className="comparisons-content">
+          <div className="rpgui-progress">
+            <div 
+              className="rpgui-progress-left-edge"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-left.png')" }}
+            ></div>
+            <div 
+              className="rpgui-progress-track"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-track.png')" }}
+            >
+              <div 
+                className="rpgui-progress-fill" 
+                style={{ 
+                  width: `${progress}%`,
+                  backgroundImage: `url('/rpgui/img/progress-${progressColor}.png')`
+                }}
+              ></div>
+            </div>
+            <div 
+              className="rpgui-progress-right-edge"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-right.png')" }}
+            ></div>
+          </div>
+          
+          <p className="progress-text">
+            Question {currentComparisonIndex + 1} of {comparisons.length}
+          </p>
+
+          <h2>Which book did you enjoy more?</h2>
+
+          <div className="comparison-choices">
+            <div 
+              className="comparison-choice-border"
+              style={{ backgroundImage: "url('/rpgui/img/hr-golden.png')" }}
+            >
+              <button 
+                className="comparison-choice"
+                onClick={() => handleComparison(true)}
+                disabled={submitting}
+              >
+              <div className="book-info">
+                <h3>{book.title}</h3>
+                <p className="author">by {book.author}</p>
+                <span 
+                  className="badge new-book"
+                  style={{ '--badge-text-color': badgeTextColor, color: badgeTextColor } as React.CSSProperties}
+                >
+                  The book you just finished
+                </span>
+              </div>
+              </button>
+            </div>
+
+            <div className="vs-divider">VS</div>
+
+            <div 
+              className="comparison-choice-border"
+              style={{ backgroundImage: "url('/rpgui/img/hr-golden.png')" }}
+            >
+              <button 
+                className="comparison-choice"
+                onClick={() => handleComparison(false)}
+                disabled={submitting}
+              >
+              <div className="book-info">
+                <h3>{currentQuestion.candidate_title}</h3>
+                <p className="author">by {currentQuestion.candidate_author}</p>
+                <span 
+                  className="badge ranked"
+                  style={{ '--badge-text-color': badgeTextColor, color: badgeTextColor } as React.CSSProperties}
+                >
+                  Currently ranked #{currentQuestion.candidate_position}
+                </span>
+              </div>
+              </button>
+            </div>
+          </div>
+
+          <p className="helper-text">
+            Choose the book you enjoyed more overall. These comparisons will determine the final ranking.
+          </p>
         </div>
         
-        <p className="progress-text">
-          Question {currentComparisonIndex + 1} of {comparisons.length}
-        </p>
-
-        <h2>Which book did you enjoy more?</h2>
-
-        <div className="comparison-choices">
-          <button 
-            className="comparison-choice"
-            onClick={() => handleComparison(true)}
-            disabled={submitting}
-          >
-            <div className="book-info">
-              <h3>{book.title}</h3>
-              <p className="author">by {book.author}</p>
-              <span className="badge new-book">The book you just finished</span>
-            </div>
-          </button>
-
-          <div className="vs-divider">VS</div>
-
-          <button 
-            className="comparison-choice"
-            onClick={() => handleComparison(false)}
-            disabled={submitting}
-          >
-            <div className="book-info">
-              <h3>{currentQuestion.candidate_title}</h3>
-              <p className="author">by {currentQuestion.candidate_author}</p>
-              <span className="badge ranked">Currently ranked #{currentQuestion.candidate_position}</span>
-            </div>
-          </button>
-        </div>
-
-        <p className="helper-text">
-          Choose the book you enjoyed more overall. These comparisons will determine the final ranking.
-        </p>
+        <button 
+          className="back-button"
+          onClick={handleBackToStars}
+          disabled={submitting}
+          title="Go back to change rating"
+        >
+          ← Back
+        </button>
       </div>
     );
   };
 
   const renderCompleteStep = () => (
     <div className="wizard-step complete-step">
-      <div className="success-icon">✓</div>
-      <h2>Ranking Complete!</h2>
-      <p className="result-text">
-        <strong>{book.title}</strong> has been ranked at position <strong>#{finalPosition}</strong> out of {totalRanked + 1} books.
-      </p>
-      <p className="stars-given">
-        Initial rating: {'★'.repeat(stars)}
-      </p>
+      <div className="modal-header">
+        <h2>Ranking Complete!</h2>
+        <button 
+          className="modal-close" 
+          onClick={onComplete}
+          style={{ 
+            cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+            position: 'absolute',
+            zIndex: 1000,
+            right: '1rem',
+            top: '1rem'
+          }}
+        >
+          ×
+        </button>
+      </div>
+      <div className="modal-body">
+        <p className="result-text">
+          <strong>{book.title}</strong> has been ranked at position <strong>#{finalPosition}</strong> out of {totalRanked + 1} books.
+        </p>
+        <p className="stars-given">
+          Initial rating: {'★'.repeat(stars)}
+        </p>
+      </div>
     </div>
   );
 
+  // Determine modal size based on step
+  const getModalStyle = () => {
+    const baseStyle = {
+      width: '90%',
+      minWidth: '500px',
+      maxHeight: '90vh',
+      overflowY: 'auto' as const
+    };
+    
+    if (step === 'comparisons') {
+      return {
+        ...baseStyle,
+        maxWidth: '900px',
+        minWidth: '700px'
+      };
+    }
+    
+    return {
+      ...baseStyle,
+      maxWidth: '700px'
+    };
+  };
+
   return (
-    <div className="ranking-wizard-overlay" onClick={onCancel}>
-      <div className="ranking-wizard-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onCancel}>
+      <div 
+        className="modal-content rpgui-container framed-golden" 
+        onClick={(e) => e.stopPropagation()}
+        style={getModalStyle()}
+      >
         {step === 'stars' && renderStarsStep()}
         {step === 'comparisons' && renderComparisonsStep()}
         {step === 'complete' && renderCompleteStep()}

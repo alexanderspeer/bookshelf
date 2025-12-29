@@ -14,6 +14,7 @@ class ApiService {
     const url = `${this.baseUrl}${endpoint}`;
     const config = {
       ...options,
+      credentials: 'include' as RequestCredentials, // Include cookies for session auth
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -23,13 +24,54 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error message from response body
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If JSON parsing fails, use default message
+        }
+        
+        if (response.status === 401) {
+          // For login/register endpoints, pass through the actual error
+          // For other endpoints, it means auth is required
+          throw new Error(errorMessage);
+        }
+        throw new Error(errorMessage);
       }
       return await response.json();
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
     }
+  }
+
+  // Authentication
+  async register(email: string, password: string) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async login(email: string, password: string) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async logout() {
+    return this.request('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  async getCurrentUser() {
+    return this.request('/auth/me');
   }
 
   // Books
@@ -193,33 +235,13 @@ class ApiService {
   }
 
   async getCurrentGoal() {
-    const url = `${this.baseUrl}/goals/current`;
-    console.log('Calling API:', url);
     try {
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
+      return await this.request('/goals/current');
+    } catch (error: any) {
       // If no goal exists (404), return null instead of throwing
-      if (response.status === 404) {
-        console.log('404 - No goal found');
+      if (error.message && (error.message.includes('404') || error.message.includes('No goal set'))) {
         return null;
       }
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Goal data from API:', JSON.stringify(data, null, 2));
-      return data;
-    } catch (error) {
-      console.error('Get current goal failed:', error);
       throw error;
     }
   }
@@ -265,6 +287,11 @@ class ApiService {
 
   async getBookChain(bookId: number, direction = 'both') {
     return this.request(`/books/${bookId}/chain?direction=${direction}`);
+  }
+
+  // Public bookshelf
+  async getPublicBooks() {
+    return this.request('/public/books');
   }
 }
 

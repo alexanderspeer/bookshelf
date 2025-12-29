@@ -10,17 +10,21 @@ class BookService:
         self.spine_images_path = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
         os.makedirs(self.spine_images_path, exist_ok=True)
     
-    def create_book(self, book_data, initial_state='want_to_read'):
+    def create_book(self, book_data, initial_state='want_to_read', user_id=None):
         """Create a new book entry"""
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
         query = """
             INSERT INTO books (
-                title, author, isbn, isbn13, pub_date, num_pages, genre,
+                user_id, title, author, isbn, isbn13, pub_date, num_pages, genre,
                 cover_image_url, spine_image_path, dimensions, series, series_position,
-                notes, why_reading
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                notes, why_reading, is_public
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
         params = (
+            user_id,
             book_data.get('title'),
             book_data.get('author'),
             book_data.get('isbn'),
@@ -34,7 +38,8 @@ class BookService:
             book_data.get('series'),
             book_data.get('series_position'),
             book_data.get('notes'),
-            book_data.get('why_reading')
+            book_data.get('why_reading'),
+            book_data.get('is_public', False)
         )
         
         book_id = self.db.execute_update(query, params)
@@ -48,7 +53,7 @@ class BookService:
         
         return self.get_book(book_id)
     
-    def get_book(self, book_id):
+    def get_book(self, book_id, user_id=None):
         """Get a single book by ID with tags"""
         query = """
             SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
@@ -57,7 +62,14 @@ class BookService:
             LEFT JOIN rankings r ON b.id = r.book_id
             WHERE b.id = ?
         """
-        results = self.db.execute_query(query, (book_id,))
+        params = [book_id]
+        
+        # If user_id is provided, filter by user
+        if user_id is not None:
+            query += " AND b.user_id = ?"
+            params.append(user_id)
+        
+        results = self.db.execute_query(query, params)
         if not results:
             return None
         
@@ -75,7 +87,7 @@ class BookService:
         
         return book
     
-    def update_book(self, book_id, book_data):
+    def update_book(self, book_id, book_data, user_id=None):
         """Update book information"""
         # Build dynamic update query
         fields = []
@@ -84,7 +96,7 @@ class BookService:
         updateable_fields = [
             'title', 'author', 'isbn', 'isbn13', 'pub_date', 'num_pages', 
             'genre', 'cover_image_url', 'spine_image_path', 'dimensions',
-            'series', 'series_position', 'notes', 'why_reading'
+            'series', 'series_position', 'notes', 'why_reading', 'is_public'
         ]
         
         for field in updateable_fields:
@@ -100,24 +112,37 @@ class BookService:
         params.append(book_id)
         
         query = f"UPDATE books SET {', '.join(fields)} WHERE id = ?"
+        
+        # If user_id is provided, add user ownership check
+        if user_id is not None:
+            query += " AND user_id = ?"
+            params.append(user_id)
+        
         self.db.execute_update(query, params)
         
-        return self.get_book(book_id)
+        return self.get_book(book_id, user_id)
     
-    def delete_book(self, book_id):
+    def delete_book(self, book_id, user_id=None):
         """Delete a book"""
         # Get book to check for spine image
-        book = self.get_book(book_id)
+        book = self.get_book(book_id, user_id)
         if book and book.get('spine_image_path'):
             spine_path = os.path.join(self.spine_images_path, book['spine_image_path'])
             if os.path.exists(spine_path):
                 os.remove(spine_path)
         
         query = "DELETE FROM books WHERE id = ?"
-        self.db.execute_update(query, (book_id,))
+        params = [book_id]
+        
+        # If user_id is provided, add ownership check
+        if user_id is not None:
+            query += " AND user_id = ?"
+            params.append(user_id)
+        
+        self.db.execute_update(query, params)
         return True
     
-    def search_books(self, query=None, author=None, tag=None, state=None, limit=50, offset=0):
+    def search_books(self, query=None, author=None, tag=None, state=None, limit=50, offset=0, user_id=None):
         """Search books with filters - optimized to fetch tags in single query"""
         # Build base query without DISTINCT for better performance
         base_query = """
@@ -129,6 +154,11 @@ class BookService:
         
         params = []
         where_clauses = []
+        
+        # Filter by user_id if provided
+        if user_id is not None:
+            where_clauses.append("b.user_id = ?")
+            params.append(user_id)
         
         # Add tag filter via subquery if needed (more efficient than JOIN with DISTINCT)
         if tag:
@@ -187,7 +217,7 @@ class BookService:
         
         return books
     
-    def get_books_by_state(self, state, limit=50, offset=0):
+    def get_books_by_state(self, state, limit=50, offset=0, user_id=None):
         """Get books by reading state - optimized with tag fetching"""
         query = """
             SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
@@ -195,10 +225,18 @@ class BookService:
             JOIN reading_states rs ON b.id = rs.book_id
             LEFT JOIN rankings r ON b.id = r.book_id
             WHERE rs.state = ?
-            ORDER BY rs.updated_at DESC
-            LIMIT ? OFFSET ?
         """
-        books = self.db.execute_query(query, (state, limit, offset))
+        params = [state]
+        
+        # Filter by user_id if provided
+        if user_id is not None:
+            query += " AND b.user_id = ?"
+            params.append(user_id)
+        
+        query += " ORDER BY rs.updated_at DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        
+        books = self.db.execute_query(query, params)
         
         # Fetch tags for all books in one query (avoid N+1 problem)
         if books:
@@ -280,7 +318,7 @@ class BookService:
         
         return filename
     
-    def get_total_count(self, state=None):
+    def get_total_count(self, state=None, user_id=None):
         """Get total count of books"""
         if state:
             query = """
@@ -289,12 +327,66 @@ class BookService:
                 JOIN reading_states rs ON b.id = rs.book_id
                 WHERE rs.state = ?
             """
-            result = self.db.execute_query(query, (state,))
+            params = [state]
+            
+            if user_id is not None:
+                query += " AND b.user_id = ?"
+                params.append(user_id)
+            
+            result = self.db.execute_query(query, params)
         else:
             query = "SELECT COUNT(*) as count FROM books"
-            result = self.db.execute_query(query)
+            params = []
+            
+            if user_id is not None:
+                query += " WHERE user_id = ?"
+                params.append(user_id)
+            
+            result = self.db.execute_query(query, params)
         
         return result[0]['count'] if result else 0
+    
+    def get_public_books(self, owner_user_id):
+        """Get public books for the owner user"""
+        query = """
+            SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
+            FROM books b
+            LEFT JOIN reading_states rs ON b.id = rs.book_id
+            LEFT JOIN rankings r ON b.id = r.book_id
+            WHERE b.user_id = ? AND b.is_public = ?
+            ORDER BY r.rank_position ASC, b.date_added DESC
+        """
+        books = self.db.execute_query(query, (owner_user_id, True))
+        
+        # Fetch tags for all books in one query (avoid N+1 problem)
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            # Group tags by book_id
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            # Add tags to each book
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
 
 # Singleton
 _book_service = None

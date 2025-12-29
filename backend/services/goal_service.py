@@ -7,57 +7,67 @@ class GoalService:
     def __init__(self):
         self.db = get_db()
     
-    def set_goal(self, year, target_count, period='year'):
+    def set_goal(self, year, target_count, period='year', user_id=None):
         """Set or update reading goal"""
-        print(f"🎯 SET_GOAL called: year={year}, target_count={target_count}, period={period}")
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        print(f"🎯 SET_GOAL called: year={year}, target_count={target_count}, period={period}, user_id={user_id}")
         query = """
-            INSERT INTO reading_goals (year, target_count, period)
-            VALUES (?, ?, ?)
-            ON CONFLICT(year) DO UPDATE SET
+            INSERT INTO reading_goals (user_id, year, target_count, period)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, year) DO UPDATE SET
                 target_count = excluded.target_count,
                 period = excluded.period
         """
         print(f"📝 Executing update query...")
-        result = self.db.execute_update(query, (year, target_count, period))
+        result = self.db.execute_update(query, (user_id, year, target_count, period))
         print(f"✅ Update executed, lastrowid={result}")
         
         print(f"📖 Fetching goal back...")
-        goal = self.get_goal(year)
+        goal = self.get_goal(year, user_id)
         print(f"📦 Returning goal: {goal}")
         return goal
     
-    def get_goal(self, year):
+    def get_goal(self, year, user_id=None):
         """Get reading goal for a year"""
-        print(f"🔍 GET_GOAL called: year={year}")
-        query = "SELECT * FROM reading_goals WHERE year = ?"
-        results = self.db.execute_query(query, (year,))
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        print(f"🔍 GET_GOAL called: year={year}, user_id={user_id}")
+        query = "SELECT * FROM reading_goals WHERE year = ? AND user_id = ?"
+        results = self.db.execute_query(query, (year, user_id))
         print(f"📊 Query results: {results}")
         
         if not results:
-            print(f"❌ No goal found for year {year}")
+            print(f"❌ No goal found for year {year}, user_id={user_id}")
             return None
         
         goal = results[0]
         print(f"✅ Found goal: {dict(goal)}")
         
         # Calculate progress
-        progress = self.get_goal_progress(year, goal['period'])
+        progress = self.get_goal_progress(year, goal['period'], user_id)
         goal.update(progress)
         
         print(f"📦 Returning goal with progress: {dict(goal)}")
         return goal
     
-    def get_goal_progress(self, year, period='year'):
+    def get_goal_progress(self, year, period='year', user_id=None):
         """Calculate progress towards goal"""
-        # Count books finished in the year
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        # Count books finished in the year for this user
         query = """
             SELECT COUNT(*) as count
             FROM books b
             JOIN reading_states rs ON b.id = rs.book_id
             WHERE rs.state = 'read'
+            AND b.user_id = ?
             AND strftime('%Y', b.date_finished) = ?
         """
-        result = self.db.execute_query(query, (str(year),))
+        result = self.db.execute_query(query, (user_id, str(year)))
         completed = result[0]['count'] if result else 0
         
         # Calculate time-based progress
@@ -94,32 +104,44 @@ class GoalService:
             'time_progress': round(time_progress, 3)
         }
     
-    def get_current_goal(self):
+    def get_current_goal(self, user_id=None):
         """Get goal for current year"""
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
         current_year = datetime.now().year
-        print(f"📅 GET_CURRENT_GOAL called: current_year={current_year}")
-        return self.get_goal(current_year)
+        print(f"📅 GET_CURRENT_GOAL called: current_year={current_year}, user_id={user_id}")
+        return self.get_goal(current_year, user_id)
     
-    def delete_goal(self, year):
+    def delete_goal(self, year, user_id=None):
         """Delete reading goal"""
-        query = "DELETE FROM reading_goals WHERE year = ?"
-        self.db.execute_update(query, (year,))
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        query = "DELETE FROM reading_goals WHERE year = ? AND user_id = ?"
+        self.db.execute_update(query, (year, user_id))
         return True
     
-    def get_all_goals(self):
+    def get_all_goals(self, user_id=None):
         """Get all goals"""
-        query = "SELECT * FROM reading_goals ORDER BY year DESC"
-        goals = self.db.execute_query(query)
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        query = "SELECT * FROM reading_goals WHERE user_id = ? ORDER BY year DESC"
+        goals = self.db.execute_query(query, (user_id,))
         
         for goal in goals:
-            progress = self.get_goal_progress(goal['year'], goal['period'])
+            progress = self.get_goal_progress(goal['year'], goal['period'], user_id)
             goal.update(progress)
         
         return goals
     
-    def calculate_pace_needed(self, year, target_count, period):
+    def calculate_pace_needed(self, year, target_count, period, user_id=None):
         """Calculate reading pace needed to meet goal"""
-        progress = self.get_goal_progress(year, period)
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        progress = self.get_goal_progress(year, period, user_id)
         completed = progress['completed']
         remaining = target_count - completed
         

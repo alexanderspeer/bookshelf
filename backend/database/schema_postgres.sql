@@ -1,9 +1,18 @@
 -- PostgreSQL Schema for Bookshelf Application
 -- Converted from SQLite schema.sql
 
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Books table with all metadata
 CREATE TABLE IF NOT EXISTS books (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     author TEXT,
     isbn TEXT,
@@ -19,11 +28,13 @@ CREATE TABLE IF NOT EXISTS books (
     series_position TEXT,
     notes TEXT,
     why_reading TEXT,
+    is_public BOOLEAN DEFAULT FALSE,
     date_added TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     date_started TIMESTAMPTZ,
     date_finished TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Reading states/shelves
@@ -94,11 +105,13 @@ CREATE TABLE IF NOT EXISTS thought_continuations (
 -- Reading goals
 CREATE TABLE IF NOT EXISTS reading_goals (
     id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
     year INTEGER NOT NULL,
     target_count INTEGER NOT NULL,
     period TEXT NOT NULL CHECK(period IN ('year', 'month', 'week')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(year)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(user_id, year)
 );
 
 -- Import history (for Goodreads imports)
@@ -110,6 +123,9 @@ CREATE TABLE IF NOT EXISTS import_history (
 );
 
 -- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);
+CREATE INDEX IF NOT EXISTS idx_books_is_public ON books(is_public);
 CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
 CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
 CREATE INDEX IF NOT EXISTS idx_books_isbn13 ON books(isbn13);
