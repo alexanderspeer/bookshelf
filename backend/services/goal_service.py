@@ -59,19 +59,26 @@ class GoalService:
             raise ValueError('user_id is required')
         
         # Count books finished in the year for this user
+        # Only count books with a non-null date_finished that is not in the future
+        now = datetime.now()
+        current_date = now.strftime('%Y-%m-%d')
+        
+        # For SQLite, use date comparison
+        # For PostgreSQL, the _convert_query will handle strftime and DATE() conversion
         query = """
             SELECT COUNT(*) as count
             FROM books b
             JOIN reading_states rs ON b.id = rs.book_id
             WHERE rs.state = 'read'
             AND b.user_id = ?
+            AND b.date_finished IS NOT NULL
             AND strftime('%Y', b.date_finished) = ?
+            AND DATE(b.date_finished) <= DATE(?)
         """
-        result = self.db.execute_query(query, (user_id, str(year)))
+        result = self.db.execute_query(query, (user_id, str(year), current_date))
         completed = result[0]['count'] if result else 0
         
         # Calculate time-based progress
-        now = datetime.now()
         current_year = now.year
         
         if period == 'year':
@@ -185,6 +192,60 @@ class GoalService:
     def _is_leap_year(self, year):
         """Check if year is leap year"""
         return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
+    
+    def get_goal_books(self, year, user_id=None):
+        """Get list of books that count towards the goal"""
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        # Get books finished in the year for this user
+        # Exclude books with future dates
+        now = datetime.now()
+        current_date = now.strftime('%Y-%m-%d')
+        
+        query = """
+            SELECT b.*, rs.state as reading_state, r.rank_position, r.initial_stars
+            FROM books b
+            JOIN reading_states rs ON b.id = rs.book_id
+            LEFT JOIN rankings r ON b.id = r.book_id
+            WHERE rs.state = 'read'
+            AND b.user_id = ?
+            AND b.date_finished IS NOT NULL
+            AND strftime('%Y', b.date_finished) = ?
+            AND DATE(b.date_finished) <= DATE(?)
+            ORDER BY b.date_finished DESC
+        """
+        books = self.db.execute_query(query, (user_id, str(year), current_date))
+        
+        # Fetch tags for all books in one query (avoid N+1 problem)
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            # Group tags by book_id
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            # Add tags to each book
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
     
     def _days_in_month(self, year, month):
         """Get number of days in month"""

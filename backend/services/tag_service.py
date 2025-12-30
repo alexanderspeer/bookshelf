@@ -28,10 +28,23 @@ class TagService:
         results = self.db.execute_query(query, (name,))
         return results[0] if results else None
     
-    def get_all_tags(self):
-        """Get all tags"""
-        query = "SELECT * FROM tags ORDER BY name"
-        return self.db.execute_query(query)
+    def get_all_tags(self, user_id=None):
+        """Get all tags (optionally filtered by user's books)"""
+        if user_id is not None:
+            # Only return tags used by this user's books
+            query = """
+                SELECT DISTINCT t.* 
+                FROM tags t
+                JOIN book_tags bt ON t.id = bt.tag_id
+                JOIN books b ON bt.book_id = b.id
+                WHERE b.user_id = ?
+                ORDER BY t.name
+            """
+            return self.db.execute_query(query, (user_id,))
+        else:
+            # Return all tags (global)
+            query = "SELECT * FROM tags ORDER BY name"
+            return self.db.execute_query(query)
     
     def update_tag(self, tag_id, name=None, color=None):
         """Update tag"""
@@ -97,16 +110,35 @@ class TagService:
         """
         return self.db.execute_query(query, (book_id,))
     
-    def get_tag_stats(self):
+    def get_tag_stats(self, user_id=None):
         """Get tag usage statistics"""
-        query = """
-            SELECT t.*, COUNT(bt.book_id) as book_count
-            FROM tags t
-            LEFT JOIN book_tags bt ON t.id = bt.tag_id
-            GROUP BY t.id
-            ORDER BY book_count DESC, t.name
-        """
-        return self.db.execute_query(query)
+        if user_id is not None:
+            # Only count tags used by this user's books
+            query = """
+                SELECT t.*, COUNT(bt.book_id) as book_count
+                FROM tags t
+                LEFT JOIN book_tags bt ON t.id = bt.tag_id
+                LEFT JOIN books b ON bt.book_id = b.id AND b.user_id = ?
+                WHERE t.id IN (
+                    SELECT DISTINCT bt2.tag_id 
+                    FROM book_tags bt2 
+                    JOIN books b2 ON bt2.book_id = b2.id 
+                    WHERE b2.user_id = ?
+                )
+                GROUP BY t.id
+                ORDER BY book_count DESC, t.name
+            """
+            return self.db.execute_query(query, (user_id, user_id))
+        else:
+            # Global tag stats
+            query = """
+                SELECT t.*, COUNT(bt.book_id) as book_count
+                FROM tags t
+                LEFT JOIN book_tags bt ON t.id = bt.tag_id
+                GROUP BY t.id
+                ORDER BY book_count DESC, t.name
+            """
+            return self.db.execute_query(query)
 
 # Singleton
 _tag_service = None

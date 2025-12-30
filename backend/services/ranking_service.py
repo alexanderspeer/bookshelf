@@ -7,10 +7,10 @@ class RankingService:
     def __init__(self):
         self.db = get_db()
     
-    def start_ranking_wizard(self, book_id, initial_stars):
+    def start_ranking_wizard(self, book_id, initial_stars, user_id=None):
         """Start the ranking wizard for a newly finished book"""
-        # Get all ranked books
-        ranked_books = self.get_ranked_books()
+        # Get all ranked books for this user
+        ranked_books = self.get_ranked_books(user_id)
         
         if not ranked_books:
             # First book - just insert at rank 1
@@ -53,7 +53,7 @@ class RankingService:
         """
         return self.db.execute_query(query, (book_id, book_id))
     
-    def finalize_ranking(self, book_id, final_position, initial_stars, comparisons):
+    def finalize_ranking(self, book_id, final_position, initial_stars, comparisons, user_id=None):
         """Finalize ranking after wizard completes"""
         # Insert the new ranking
         self._insert_ranking(book_id, final_position, initial_stars)
@@ -67,19 +67,28 @@ class RankingService:
             )
         
         # Adjust positions of books that were shifted
-        self._reorder_rankings(final_position)
+        self._reorder_rankings(final_position, user_id)
         
-        return self.get_ranked_books()
+        return self.get_ranked_books(user_id)
     
-    def get_ranked_books(self):
+    def get_ranked_books(self, user_id=None):
         """Get all ranked books in order with tags"""
         query = """
             SELECT b.*, r.rank_position, r.initial_stars
             FROM books b
             JOIN rankings r ON b.id = r.book_id
-            ORDER BY r.rank_position ASC
         """
-        books = self.db.execute_query(query)
+        
+        params = []
+        if user_id is not None:
+            query += " WHERE b.user_id = ?"
+            params.append(user_id)
+        
+        # Sort by: rank_position first, then by initial_stars (descending), then alphabetically by title
+        # This ensures books with same rating are in alphabetical order
+        query += " ORDER BY r.rank_position ASC, r.initial_stars DESC NULLS LAST, b.title ASC"
+        
+        books = self.db.execute_query(query, params) if params else self.db.execute_query(query)
         
         # Fetch tags for all books in one query (avoid N+1 problem)
         if books:
@@ -111,20 +120,32 @@ class RankingService:
         
         return books
     
-    def get_book_rank(self, book_id):
+    def get_book_rank(self, book_id, user_id=None):
         """Get rank information for a specific book"""
-        query = """
+        # Build subquery with user_id filter if provided
+        count_subquery = "SELECT COUNT(*) FROM rankings r2"
+        if user_id is not None:
+            count_subquery += " JOIN books b2 ON r2.book_id = b2.id WHERE b2.user_id = ?"
+        
+        query = f"""
             SELECT r.*, 
-                   (SELECT COUNT(*) FROM rankings) as total_ranked
+                   ({count_subquery}) as total_ranked
             FROM rankings r
+            JOIN books b ON r.book_id = b.id
             WHERE r.book_id = ?
         """
-        result = self.db.execute_query(query, (book_id,))
+        
+        params = []
+        if user_id is not None:
+            params.append(user_id)
+        params.append(book_id)
+        
+        result = self.db.execute_query(query, tuple(params))
         return result[0] if result else None
     
-    def update_rank_position(self, book_id, new_position):
+    def update_rank_position(self, book_id, new_position, user_id=None):
         """Manually update a book's rank position"""
-        old_rank = self.get_book_rank(book_id)
+        old_rank = self.get_book_rank(book_id, user_id)
         if not old_rank:
             return False
         
@@ -134,41 +155,42 @@ class RankingService:
         query = "UPDATE rankings SET rank_position = ?, updated_at = ? WHERE book_id = ?"
         self.db.execute_update(query, (new_position, datetime.now().isoformat(), book_id))
         
+        # Build WHERE clause for user filtering
+        user_filter = ""
+        if user_id is not None:
+            user_filter = " AND book_id IN (SELECT id FROM books WHERE user_id = ?)"
+        
         # Shift other books
         if new_position < old_position:
             # Moving up - shift books down
-            shift_query = """
+            shift_query = f"""
                 UPDATE rankings 
                 SET rank_position = rank_position + 1,
                     updated_at = ?
-                WHERE rank_position >= ? AND rank_position < ? AND book_id != ?
+                WHERE rank_position >= ? AND rank_position < ? AND book_id != ?{user_filter}
             """
-            self.db.execute_update(shift_query, (
-                datetime.now().isoformat(),
-                new_position,
-                old_position,
-                book_id
-            ))
+            params = [datetime.now().isoformat(), new_position, old_position, book_id]
+            if user_id is not None:
+                params.append(user_id)
+            self.db.execute_update(shift_query, tuple(params))
         elif new_position > old_position:
             # Moving down - shift books up
-            shift_query = """
+            shift_query = f"""
                 UPDATE rankings 
                 SET rank_position = rank_position - 1,
                     updated_at = ?
-                WHERE rank_position > ? AND rank_position <= ? AND book_id != ?
+                WHERE rank_position > ? AND rank_position <= ? AND book_id != ?{user_filter}
             """
-            self.db.execute_update(shift_query, (
-                datetime.now().isoformat(),
-                old_position,
-                new_position,
-                book_id
-            ))
+            params = [datetime.now().isoformat(), old_position, new_position, book_id]
+            if user_id is not None:
+                params.append(user_id)
+            self.db.execute_update(shift_query, tuple(params))
         
         return True
     
-    def get_derived_rating(self, book_id):
+    def get_derived_rating(self, book_id, user_id=None):
         """Calculate derived 0-10 rating based on rank position"""
-        rank_info = self.get_book_rank(book_id)
+        rank_info = self.get_book_rank(book_id, user_id)
         if not rank_info:
             return None
         
@@ -196,15 +218,22 @@ class RankingService:
         """
         return self.db.execute_update(query, (book_id, position, initial_stars))
     
-    def _reorder_rankings(self, from_position):
+    def _reorder_rankings(self, from_position, user_id=None):
         """Shift rankings after inserting a new book"""
-        query = """
+        user_filter = ""
+        params = [datetime.now().isoformat(), from_position]
+        
+        if user_id is not None:
+            user_filter = " AND book_id IN (SELECT id FROM books WHERE user_id = ?)"
+            params.append(user_id)
+        
+        query = f"""
             UPDATE rankings 
             SET rank_position = rank_position + 1,
                 updated_at = ?
-            WHERE rank_position >= ?
+            WHERE rank_position >= ?{user_filter}
         """
-        self.db.execute_update(query, (datetime.now().isoformat(), from_position))
+        self.db.execute_update(query, tuple(params))
     
     def _get_comparison_candidates(self, initial_stars, ranked_books):
         """Get books with similar ratings for comparison"""

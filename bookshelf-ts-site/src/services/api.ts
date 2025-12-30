@@ -263,6 +263,10 @@ class ApiService {
     return this.request(`/goals/${year}/pace`);
   }
 
+  async getGoalBooks(year: number) {
+    return this.request(`/goals/${year}/books`);
+  }
+
   // Continuations
   async getAllContinuations() {
     return this.request('/continuations');

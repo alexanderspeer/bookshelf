@@ -94,6 +94,8 @@ export const Home: React.FC = () => {
   const [showRankingsModal, setShowRankingsModal] = useState(false);
   const [shelfModalBooks, setShelfModalBooks] = useState<Book[]>([]);
   const [shelfModalTitle, setShelfModalTitle] = useState('');
+  const [showGoalBooksModal, setShowGoalBooksModal] = useState(false);
+  const [goalBooks, setGoalBooks] = useState<Book[]>([]);
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [currentTheme, setCurrentTheme] = useState<Theme>(getInitialTheme());
   const [savedThemes, setSavedThemes] = useState<Theme[]>(getInitialSavedThemes());
@@ -571,6 +573,19 @@ export const Home: React.FC = () => {
     fetchCurrentGoal();
   };
 
+  const handleGoalClick = async () => {
+    if (!currentGoal) return;
+    
+    try {
+      const response = await apiService.getGoalBooks(currentGoal.year);
+      setGoalBooks(response.books || []);
+      setShowGoalBooksModal(true);
+    } catch (error) {
+      toast.error('Failed to load goal books');
+      console.error(error);
+    }
+  };
+
   const handleShelfClick = (books: Book[], title: string) => {
     let sortedBooks = [...books];
     
@@ -997,7 +1012,12 @@ export const Home: React.FC = () => {
               </div>
             ) : (
               <div className="goal-display-container">
-                <div className="goal-display">
+                <div 
+                  className="goal-display"
+                  onClick={handleGoalClick}
+                  style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                  title="Click to view books contributing to this goal"
+                >
                   <div className="goal-numbers">
                     <span className="goal-current">{currentGoal.completed || 0}</span>
                     <span className="goal-separator">/</span>
@@ -1225,8 +1245,13 @@ export const Home: React.FC = () => {
                   </select>
                 </p>
               )}
-              {selectedBook.initial_stars && (
-                <p><strong>Rating:</strong> {'⭐'.repeat(selectedBook.initial_stars)}</p>
+              {selectedBook.initial_stars !== null && selectedBook.initial_stars !== undefined && (
+                <p>
+                  <strong>Rating:</strong>{' '}
+                  {selectedBook.initial_stars > 0 
+                    ? '⭐'.repeat(selectedBook.initial_stars)
+                    : 'Unrated'}
+                </p>
               )}
               {selectedBook.rank_position && (
                 <p><strong>Rank:</strong> #{selectedBook.rank_position}</p>
@@ -1412,6 +1437,7 @@ export const Home: React.FC = () => {
         isOpen={showGoalModal}
         onClose={() => setShowGoalModal(false)}
         onSuccess={fetchCurrentGoal}
+        currentGoal={currentGoal}
       />
 
       {/* Import Modal */}
@@ -1526,6 +1552,58 @@ export const Home: React.FC = () => {
                       onClick={() => {
                         setSelectedBook(book);
                         setShowShelfModal(false);
+                      }}
+                      style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+                    >
+                      <div className="shelf-book-info">
+                        <h3>{book.title}</h3>
+                        <p>{book.author}</p>
+                        {book.rank_position && <span className="book-rank">Rank: {book.rank_position}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGoalBooksModal && currentGoal && (
+        <div className="modal-overlay" onClick={() => setShowGoalBooksModal(false)}>
+          <div 
+            className="modal-content rpgui-container framed-golden" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '700px', width: 'auto', minWidth: '500px' }}
+          >
+            <div className="modal-header">
+              <h2>{currentGoal.year} Goal - {currentGoal.completed || 0} / {currentGoal.target_count} Books</h2>
+              <button 
+                className="modal-close" 
+                onClick={() => setShowGoalBooksModal(false)}
+                style={{ 
+                  cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+                  position: 'absolute',
+                  zIndex: 1000,
+                  right: '1rem',
+                  top: '1rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'hidden' }}>
+              {goalBooks.length === 0 ? (
+                <p>No books have contributed to this goal yet.</p>
+              ) : (
+                <div className="shelf-books-list">
+                  {goalBooks.map((book) => (
+                    <div 
+                      key={book.id} 
+                      className="shelf-book-item"
+                      onClick={() => {
+                        setSelectedBook(book);
+                        setShowGoalBooksModal(false);
                       }}
                       style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                     >

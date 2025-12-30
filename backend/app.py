@@ -91,6 +91,9 @@ def register():
         # Auto-login after registration
         login_result = auth_service.login(email, password)
         
+        # Clear cache on registration to ensure clean state
+        cache.clear()
+        
         response = jsonify({
             'user': {
                 'id': user['id'],
@@ -127,6 +130,10 @@ def login():
     try:
         result = auth_service.login(email, password)
         print(f"Login successful for: {email}")
+        
+        # Clear cache on login to ensure user sees their own data
+        cache.clear()
+        
         response = jsonify({
             'user': {
                 'id': result['user_id'],
@@ -157,6 +164,9 @@ def logout():
     session_token = get_session_token()
     if session_token:
         auth_service.logout(session_token)
+    
+    # Clear cache on logout to prevent data leakage
+    cache.clear()
     
     response = jsonify({'success': True})
     response.set_cookie('session_token', '', expires=0)
@@ -349,13 +359,15 @@ def get_public_books():
 @require_auth
 def get_rankings():
     """Get all ranked books"""
-    books = ranking_service.get_ranked_books()
+    user = request.current_user
+    books = ranking_service.get_ranked_books(user['id'])
     return jsonify(books)
 
 @app.route('/api/rankings/wizard/start', methods=['POST'])
 @require_auth
 def start_ranking_wizard():
     """Start ranking wizard for a book"""
+    user = request.current_user
     data = request.json
     book_id = data.get('book_id')
     initial_stars = data.get('initial_stars')
@@ -363,31 +375,33 @@ def start_ranking_wizard():
     if not book_id or initial_stars is None:
         return jsonify({'error': 'book_id and initial_stars required'}), 400
     
-    wizard_data = ranking_service.start_ranking_wizard(book_id, initial_stars)
+    wizard_data = ranking_service.start_ranking_wizard(book_id, initial_stars, user['id'])
     return jsonify(wizard_data)
 
 @app.route('/api/rankings/wizard/finalize', methods=['POST'])
 @require_auth
 def finalize_ranking():
     """Finalize ranking after wizard"""
+    user = request.current_user
     data = request.json
     book_id = data.get('book_id')
     final_position = data.get('final_position')
     initial_stars = data.get('initial_stars')
     comparisons = data.get('comparisons', [])
     
-    books = ranking_service.finalize_ranking(book_id, final_position, initial_stars, comparisons)
+    books = ranking_service.finalize_ranking(book_id, final_position, initial_stars, comparisons, user['id'])
     return jsonify(books)
 
 @app.route('/api/rankings/<int:book_id>', methods=['GET'])
 @require_auth
 def get_book_ranking(book_id):
     """Get ranking info for a book"""
-    rank = ranking_service.get_book_rank(book_id)
+    user = request.current_user
+    rank = ranking_service.get_book_rank(book_id, user['id'])
     if not rank:
         return jsonify({'error': 'Book not ranked'}), 404
     
-    derived = ranking_service.get_derived_rating(book_id)
+    derived = ranking_service.get_derived_rating(book_id, user['id'])
     rank['derived_rating'] = derived
     
     return jsonify(rank)
@@ -396,13 +410,14 @@ def get_book_ranking(book_id):
 @require_auth
 def update_ranking(book_id):
     """Update book's rank position"""
+    user = request.current_user
     data = request.json
     new_position = data.get('position')
     
     if not new_position:
         return jsonify({'error': 'Position required'}), 400
     
-    ranking_service.update_rank_position(book_id, new_position)
+    ranking_service.update_rank_position(book_id, new_position, user['id'])
     return jsonify({'success': True})
 
 @app.route('/api/rankings/<int:book_id>/comparisons', methods=['GET'])
@@ -420,14 +435,16 @@ def get_comparisons(book_id):
 @require_auth
 def get_tags():
     """Get all tags"""
-    tags = tag_service.get_all_tags()
+    user = request.current_user
+    tags = tag_service.get_all_tags(user['id'])
     return jsonify(tags)
 
 @app.route('/api/tags/stats', methods=['GET'])
 @require_auth
 def get_tag_stats():
     """Get tag usage statistics"""
-    stats = tag_service.get_tag_stats()
+    user = request.current_user
+    stats = tag_service.get_tag_stats(user['id'])
     return jsonify(stats)
 
 @app.route('/api/tags', methods=['POST'])
@@ -553,6 +570,14 @@ def get_pace_needed(year):
     
     pace = goal_service.calculate_pace_needed(year, goal['target_count'], goal['period'], user['id'])
     return jsonify(pace)
+
+@app.route('/api/goals/<int:year>/books', methods=['GET'])
+@require_auth
+def get_goal_books(year):
+    """Get books that count towards a goal"""
+    user = request.current_user
+    books = goal_service.get_goal_books(year, user['id'])
+    return jsonify({'books': books})
 
 # =============================================================================
 # CONTINUATION ENDPOINTS

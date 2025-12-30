@@ -127,9 +127,11 @@ export const PublicBookshelf: React.FC = () => {
                   Rank #{book.rank_position}
                 </div>
               )}
-              {book.initial_stars && (
+              {book.initial_stars !== null && book.initial_stars !== undefined && (
                 <div style={{ marginTop: '8px', textAlign: 'center' }}>
-                  {'⭐'.repeat(book.initial_stars)}
+                  {book.initial_stars > 0 
+                    ? '⭐'.repeat(book.initial_stars)
+                    : 'Unrated'}
                 </div>
               )}
             </div>
@@ -211,8 +213,13 @@ export const PublicBookshelf: React.FC = () => {
               {selectedBook.genre && (
                 <p><strong>Genre:</strong> {selectedBook.genre}</p>
               )}
-              {selectedBook.initial_stars && (
-                <p><strong>Rating:</strong> {'⭐'.repeat(selectedBook.initial_stars)}</p>
+              {selectedBook.initial_stars !== null && selectedBook.initial_stars !== undefined && (
+                <p>
+                  <strong>Rating:</strong>{' '}
+                  {selectedBook.initial_stars > 0 
+                    ? '⭐'.repeat(selectedBook.initial_stars)
+                    : 'Unrated'}
+                </p>
               )}
               {selectedBook.rank_position && (
                 <p><strong>Rank:</strong> #{selectedBook.rank_position}</p>

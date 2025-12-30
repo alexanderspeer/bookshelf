@@ -80,6 +80,15 @@ class Database:
             converted_query
         )
         
+        # Replace DATE() function - SQLite DATE() -> PostgreSQL DATE cast
+        # DATE(column) -> column::DATE
+        # DATE(?) -> ?::DATE (parameter binding)
+        converted_query = re.sub(
+            r"DATE\(([^)]+)\)",
+            r"\1::DATE",
+            converted_query
+        )
+        
         return converted_query, params
     
     @contextmanager

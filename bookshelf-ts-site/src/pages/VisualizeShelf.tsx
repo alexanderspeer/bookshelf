@@ -305,7 +305,14 @@ export const VisualizeShelf: React.FC = () => {
               {selectedBook.num_pages && <p><strong>Pages:</strong> {selectedBook.num_pages}</p>}
               {selectedBook.genre && <p><strong>Genre:</strong> {selectedBook.genre}</p>}
               {selectedBook.reading_state && <p><strong>Status:</strong> {selectedBook.reading_state.replace('_', ' ')}</p>}
-              {selectedBook.initial_stars && <p><strong>Rating:</strong> {'⭐'.repeat(selectedBook.initial_stars)}</p>}
+              {selectedBook.initial_stars !== null && selectedBook.initial_stars !== undefined && (
+                <p>
+                  <strong>Rating:</strong>{' '}
+                  {selectedBook.initial_stars > 0 
+                    ? '⭐'.repeat(selectedBook.initial_stars)
+                    : 'Unrated'}
+                </p>
+              )}
               {selectedBook.rank_position && <p><strong>Rank:</strong> #{selectedBook.rank_position}</p>}
               {selectedBook.notes && <p><strong>Notes:</strong> {selectedBook.notes}</p>}
             </div>

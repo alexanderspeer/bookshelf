@@ -135,10 +135,16 @@ export const Rankings: React.FC = () => {
               <div className="book-info">
                 <h3>{book.title}</h3>
                 <p>{book.author}</p>
-                {book.initial_stars && (
+                {book.initial_stars !== null && book.initial_stars !== undefined && (
                   <div className="stars">
-                    {'★'.repeat(Math.round(book.initial_stars))}
-                    {'☆'.repeat(5 - Math.round(book.initial_stars))}
+                    {book.initial_stars > 0 ? (
+                      <>
+                        {'★'.repeat(Math.round(book.initial_stars))}
+                        {'☆'.repeat(5 - Math.round(book.initial_stars))}
+                      </>
+                    ) : (
+                      <span className="unrated">Unrated</span>
+                    )}
                   </div>
                 )}
               </div>

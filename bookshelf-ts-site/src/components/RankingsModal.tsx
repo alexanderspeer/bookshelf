@@ -73,9 +73,18 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
     const rankings: AuthorRanking[] = [];
     
     authorMap.forEach((books, author) => {
-      const bookCount = books.length;
+      // Only count books that have been rated (stars > 0) for the main metrics
+      const ratedBooks = books.filter(b => b.initial_stars && b.initial_stars > 0);
+      const bookCount = ratedBooks.length; // Only count rated books
+      const totalBooks = books.length; // Keep total for display if needed
+      
       const ranks = books.map(b => b.rank_position || 999).filter(r => r !== 999);
       const stars = books.map(b => b.initial_stars || 0).filter(s => s > 0);
+      
+      // Skip authors with no rated books
+      if (bookCount === 0) {
+        return;
+      }
       
       const averageRank = ranks.length > 0 
         ? ranks.reduce((sum, r) => sum + r, 0) / ranks.length 
@@ -85,11 +94,14 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
         : 0;
 
       // Scoring algorithm: 
-      // - Higher book count = better (weighted by 0.3)
+      // - Higher rated book count = better (weighted by 0.3)
       // - Lower average rank = better (inverted, weighted by 0.5)
       // - Higher average stars = better (weighted by 0.2)
       // Normalize: book count / max count, (max rank - avg rank) / max rank, stars / 5
-      const maxBookCount = Math.max(...Array.from(authorMap.values()).map(bs => bs.length), 1);
+      const maxBookCount = Math.max(
+        ...Array.from(authorMap.values()).map(bs => bs.filter(b => b.initial_stars && b.initial_stars > 0).length),
+        1
+      );
       const maxRank = Math.max(...ranks, 1);
       
       const bookCountScore = (bookCount / maxBookCount) * 0.3;
@@ -141,9 +153,17 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
     const rankings: YearRanking[] = [];
     
     yearMap.forEach((books, year) => {
-      const bookCount = books.length;
+      // Only count books that have been rated (stars > 0) for the main metrics
+      const ratedBooks = books.filter(b => b.initial_stars && b.initial_stars > 0);
+      const bookCount = ratedBooks.length; // Only count rated books
+      
       const ranks = books.map(b => b.rank_position || 999).filter(r => r !== 999);
       const stars = books.map(b => b.initial_stars || 0).filter(s => s > 0);
+      
+      // Skip years with no rated books
+      if (bookCount === 0) {
+        return;
+      }
       
       const averageRank = ranks.length > 0 
         ? ranks.reduce((sum, r) => sum + r, 0) / ranks.length 
@@ -153,7 +173,10 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
         : 0;
 
       // Same scoring algorithm as authors
-      const maxBookCount = Math.max(...Array.from(yearMap.values()).map(bs => bs.length), 1);
+      const maxBookCount = Math.max(
+        ...Array.from(yearMap.values()).map(bs => bs.filter(b => b.initial_stars && b.initial_stars > 0).length),
+        1
+      );
       const maxRank = Math.max(...ranks, 1);
       
       const bookCountScore = (bookCount / maxBookCount) * 0.3;

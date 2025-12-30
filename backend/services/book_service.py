@@ -19,8 +19,8 @@ class BookService:
             INSERT INTO books (
                 user_id, title, author, isbn, isbn13, pub_date, num_pages, genre,
                 cover_image_url, spine_image_path, dimensions, series, series_position,
-                notes, why_reading, is_public
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                notes, why_reading, is_public, date_finished
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
         params = (
@@ -39,7 +39,8 @@ class BookService:
             book_data.get('series_position'),
             book_data.get('notes'),
             book_data.get('why_reading'),
-            book_data.get('is_public', False)
+            book_data.get('is_public', False),
+            book_data.get('date_finished')
         )
         
         book_id = self.db.execute_update(query, params)
@@ -50,6 +51,17 @@ class BookService:
         
         # Set initial reading state
         self.set_reading_state(book_id, initial_state)
+        
+        # Set initial ranking/stars if provided
+        initial_stars = book_data.get('initial_stars')
+        if initial_stars is not None:
+            # Add to rankings table
+            ranking_query = """
+                INSERT INTO rankings (book_id, rank_position, initial_stars)
+                VALUES (?, ?, ?)
+            """
+            # Default position is 0 (unranked), will be updated later
+            self.db.execute_update(ranking_query, (book_id, 0, initial_stars))
         
         return self.get_book(book_id)
     

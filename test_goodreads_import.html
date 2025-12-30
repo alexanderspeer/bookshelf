@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Goodreads CSV Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .book-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Goodreads CSV Parser Test</h1>
+    <p>Paste a few lines from your Goodreads CSV export below (including the header):</p>
+    
+    <textarea id="csvInput" placeholder="Paste CSV here...">Book Id,Title,Author,Author l-f,Additional Authors,ISBN,ISBN13,My Rating,Average Rating,Publisher,Binding,Number of Pages,Year Published,Original Publication Year,Date Read,Date Added,Bookshelves,Bookshelves with positions,Exclusive Shelf,My Review,Spoiler,Private Notes,Read Count,Owned Copies
+36510196,"Old Man's War (Old Man's War, #1)",John Scalzi,"Scalzi, John",,"=""""","=""""",5,4.23,Tor Books,Kindle Edition,318,2007,2005,2025/05/05,2025/05/05,,,read,,,,1,0
+9809,Invisible Cities,Italo Calvino,"Calvino, Italo",William Weaver,"=""0156453800""","=""9780156453806""",5,4.10,Harcourt,Paperback,165,1974,1972,2024/08/26,2024/08/26,,,read,Kublai would never ,,,1,0</textarea>
+    
+    <button onclick="testParser()">Test Parser</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        // Escaped quote
+                        current += '"';
+                        i++; // Skip next quote
+                    } else {
+                        // Toggle quote state
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // End of field
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            // Add last field
+            result.push(current);
+            
+            return result;
+        }
+
+        function cleanISBN(isbn) {
+            if (!isbn) return '';
+            let cleaned = isbn.trim();
+            // Remove Excel formula wrapper: ="..." becomes ...
+            cleaned = cleaned.replace(/^="?(.*?)"?$/, '$1');
+            // Remove any remaining quotes
+            cleaned = cleaned.replace(/"/g, '');
+            return cleaned;
+        }
+
+        function parseGoodreadsDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            
+            try {
+                // Parse YYYY/MM/DD format
+                const parts = dateStr.trim().split('/');
+                if (parts.length === 3) {
+                    const [year, month, day] = parts;
+                    // Return in ISO format YYYY-MM-DD
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+            } catch (e) {
+                console.warn('Failed to parse date:', dateStr);
+            }
+            
+            return null;
+        }
+
+        function testParser() {
+            const csv = document.getElementById('csvInput').value;
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const lines = csv.split('\n');
+                if (lines.length < 2) {
+                    resultsDiv.innerHTML = '<div class="test-result error">Need at least a header and one data row</div>';
+                    return;
+                }
+                
+                // Parse header
+                const headers = parseCSVLine(lines[0]);
+                console.log('Headers:', headers);
+                
+                const books = [];
+                
+                // Parse data lines
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const values = parseCSVLine(line);
+                    
+                    const book = {};
+                    headers.forEach((header, index) => {
+                        book[header] = values[index] || '';
+                    });
+                    
+                    // Only import books from "read" shelf
+                    const exclusiveShelf = book['Exclusive Shelf'] || '';
+                    if (exclusiveShelf.toLowerCase() === 'read') {
+                        const title = book['Title'] || '';
+                        const author = book['Author'] || '';
+                        
+                        if (!title.trim()) {
+                            console.warn(`Skipping book at line ${i + 1}: no title`);
+                            continue;
+                        }
+                        
+                        const isbn = cleanISBN(book['ISBN']);
+                        const isbn13 = cleanISBN(book['ISBN13']);
+                        const myRating = book['My Rating'] || '0';
+                        const numPages = book['Number of Pages'] || '';
+                        const dateRead = book['Date Read'] || '';
+                        const yearPublished = book['Year Published'] || book['Original Publication Year'] || '';
+                        const myReview = book['My Review'] || '';
+                        
+                        books.push({
+                            title: title.trim(),
+                            author: author.trim(),
+                            isbn: isbn || null,
+                            isbn13: isbn13 || null,
+                            pub_date: yearPublished.trim() || null,
+                            num_pages: numPages ? parseInt(numPages) : null,
+                            date_finished: parseGoodreadsDate(dateRead),
+                            initial_stars: myRating ? parseFloat(myRating) : null,
+                            notes: myReview.trim() || null
+                        });
+                    }
+                }
+                
+                // Display results
+                let html = `<div class="test-result success">
+                    <h3>Successfully parsed ${books.length} books!</h3>
+                </div>`;
+                
+                books.forEach((book, index) => {
+                    html += `
+                        <div class="book-card">
+                            <h4>${index + 1}. ${book.title}</h4>
+                            <p><strong>Author:</strong> ${book.author}</p>
+                            ${book.isbn ? `<p><strong>ISBN:</strong> ${book.isbn}</p>` : ''}
+                            ${book.isbn13 ? `<p><strong>ISBN13:</strong> ${book.isbn13}</p>` : ''}
+                            ${book.pub_date ? `<p><strong>Published:</strong> ${book.pub_date}</p>` : ''}
+                            ${book.num_pages ? `<p><strong>Pages:</strong> ${book.num_pages}</p>` : ''}
+                            ${book.date_finished ? `<p><strong>Date Finished:</strong> ${book.date_finished}</p>` : ''}
+                            ${book.initial_stars ? `<p><strong>Rating:</strong> ${book.initial_stars} stars</p>` : ''}
+                            ${book.notes ? `<p><strong>Notes:</strong> ${book.notes}</p>` : ''}
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="test-result error">
+                    <h3>Error parsing CSV</h3>
+                    <pre>${error.message}</pre>
+                </div>`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
+
