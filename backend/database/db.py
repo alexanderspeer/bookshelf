@@ -59,21 +59,37 @@ class Database:
     
     def _ensure_postgres_schema(self):
         """Initialize PostgreSQL schema if tables don't exist"""
+        print("_ensure_postgres_schema called")
         if self.db_type != 'postgres':
+            print(f"Skipping schema init - db_type is {self.db_type}")
             return
         
         schema_path = os.path.join(os.path.dirname(__file__), 'schema_postgres.sql')
+        print(f"Looking for schema at: {schema_path}")
+        print(f"__file__ is: {__file__}")
+        print(f"os.path.dirname(__file__) is: {os.path.dirname(__file__)}")
+        
         if not os.path.exists(schema_path):
-            print(f"Warning: PostgreSQL schema file not found at {schema_path}")
+            print(f"ERROR: PostgreSQL schema file not found at {schema_path}")
+            # List what files ARE in this directory
+            try:
+                dir_path = os.path.dirname(__file__)
+                print(f"Files in {dir_path}: {os.listdir(dir_path)}")
+            except Exception as e:
+                print(f"Could not list directory: {e}")
             return
         
+        print(f"Schema file found, reading...")
         try:
             with open(schema_path, 'r') as f:
                 schema = f.read()
             
+            print(f"Schema file read successfully, {len(schema)} characters")
+            
             # Execute schema - split by semicolon and execute each statement
             # PostgreSQL doesn't support executing multiple statements in one execute()
             # so we need to split them carefully
+            print("Opening database connection...")
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 
@@ -85,9 +101,12 @@ class Database:
                     if stmt and not stmt.startswith('--'):
                         statements.append(stmt)
                 
-                for statement in statements:
+                print(f"Executing {len(statements)} schema statements...")
+                for i, statement in enumerate(statements):
                     try:
                         cursor.execute(statement)
+                        if i < 5 or 'users' in statement.lower():  # Log first few and users table
+                            print(f"  Statement {i+1} executed successfully")
                     except Exception as e:
                         # Ignore errors for "table already exists", "already exists", etc.
                         # since we're using CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS
@@ -95,16 +114,16 @@ class Database:
                         ignore_patterns = ['already exists', 'duplicate', 'relation']
                         if any(pattern in error_msg for pattern in ignore_patterns):
                             # Expected error - table/index already exists, skip silently
-                            pass
+                            print(f"  Statement {i+1} already exists (expected), skipping")
                         else:
                             # Unexpected error - log it but continue
-                            print(f"Warning: Error executing schema statement: {e}")
+                            print(f"ERROR: Error executing schema statement {i+1}: {e}")
                             print(f"Statement (first 150 chars): {statement[:150]}...")
             
             # Context manager handles commit automatically
-            print("PostgreSQL schema initialized")
+            print("PostgreSQL schema initialized successfully!")
         except Exception as e:
-            print(f"Warning: Could not initialize PostgreSQL schema: {e}")
+            print(f"ERROR: Could not initialize PostgreSQL schema: {e}")
             import traceback
             traceback.print_exc()
             # Don't raise - allow app to continue in case schema already exists
