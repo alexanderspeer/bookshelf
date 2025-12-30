@@ -88,51 +88,53 @@ class Database:
             
             # Execute schema - split by semicolon and execute each statement
             # PostgreSQL doesn't support executing multiple statements in one execute()
-            # so we need to split them carefully
+            # Each statement needs its own transaction to avoid rollback of successful ones
             print("Opening database connection...")
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                
-                # Split schema by semicolon, filtering out comments and empty statements
-                # Remove comment lines first, then split
-                lines = []
-                for line in schema.split('\n'):
-                    stripped = line.strip()
-                    # Keep lines that aren't just comments
-                    if stripped and not stripped.startswith('--'):
-                        lines.append(line)
-                
-                # Rejoin and split by semicolon
-                cleaned_schema = '\n'.join(lines)
-                statements = []
-                for stmt in cleaned_schema.split(';'):
-                    stmt = stmt.strip()
-                    if stmt:  # Skip empty statements
-                        statements.append(stmt)
-                
-                print(f"Executing {len(statements)} schema statements...")
-                for i, statement in enumerate(statements):
-                    try:
+            
+            # Split schema by semicolon, filtering out comments and empty statements
+            # Remove comment lines first, then split
+            lines = []
+            for line in schema.split('\n'):
+                stripped = line.strip()
+                # Keep lines that aren't just comments
+                if stripped and not stripped.startswith('--'):
+                    lines.append(line)
+            
+            # Rejoin and split by semicolon
+            cleaned_schema = '\n'.join(lines)
+            statements = []
+            for stmt in cleaned_schema.split(';'):
+                stmt = stmt.strip()
+                if stmt:  # Skip empty statements
+                    statements.append(stmt)
+            
+            print(f"Executing {len(statements)} schema statements...")
+            # Execute each statement in its own transaction to avoid rollback issues
+            for i, statement in enumerate(statements):
+                try:
+                    with self.get_connection() as conn:
+                        cursor = conn.cursor()
                         cursor.execute(statement)
                         # Log table creations
                         if 'CREATE TABLE' in statement.upper():
                             table_name = statement.split()[5] if len(statement.split()) > 5 else "unknown"
                             print(f"  Statement {i+1}: Created table {table_name}")
-                        elif i < 3:  # Log first few
-                            print(f"  Statement {i+1} executed successfully")
-                    except Exception as e:
-                        # Ignore errors for "table already exists", "already exists", etc.
-                        # since we're using CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS
-                        error_msg = str(e).lower()
-                        ignore_patterns = ['already exists', 'duplicate']
-                        if any(pattern in error_msg for pattern in ignore_patterns):
-                            # Expected error - table/index already exists, skip silently
-                            if i < 5:  # Only log first few
-                                print(f"  Statement {i+1} already exists (expected), skipping")
-                        else:
-                            # Unexpected error - log it but continue
-                            print(f"ERROR: Error executing schema statement {i+1}: {e}")
-                            print(f"Statement (first 150 chars): {statement[:150]}...")
+                        elif 'CREATE INDEX' in statement.upper() and i < 15:  # Log first few indexes
+                            print(f"  Statement {i+1}: Created index")
+                except Exception as e:
+                    # Ignore errors for "table already exists", "already exists", etc.
+                    # since we're using CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS
+                    error_msg = str(e).lower()
+                    ignore_patterns = ['already exists', 'duplicate']
+                    if any(pattern in error_msg for pattern in ignore_patterns):
+                        # Expected error - table/index already exists, skip silently
+                        if i < 5:  # Only log first few
+                            print(f"  Statement {i+1} already exists (expected), skipping")
+                    else:
+                        # Unexpected error - log it but DON'T abort entire schema init
+                        print(f"WARNING: Error executing schema statement {i+1}: {e}")
+                        print(f"Statement (first 150 chars): {statement[:150]}...")
+                        print(f"Continuing with remaining statements...")
             
             # Context manager handles commit automatically
             print("PostgreSQL schema initialized successfully!")
