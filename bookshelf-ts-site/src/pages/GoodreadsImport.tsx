@@ -254,7 +254,6 @@ export const GoodreadsImport: React.FC = () => {
       } catch (error) {
         toast.error('Failed to parse CSV file');
         console.error(error);
-      } finally {
         setImporting(false);
         setProgress({ current: 0, total: 0 });
       }
@@ -355,13 +354,29 @@ export const GoodreadsImport: React.FC = () => {
         </button>
       </div>
 
-      {importing && (
+      {importing && progress.total > 0 && (
         <div className="import-progress">
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${(progress.current / progress.total) * 100}%` }}
-            />
+          <div className="rpgui-progress">
+            <div 
+              className="rpgui-progress-left-edge"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-left.png')" }}
+            ></div>
+            <div 
+              className="rpgui-progress-track"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-track.png')" }}
+            >
+              <div 
+                className="rpgui-progress-fill" 
+                style={{ 
+                  width: `${Math.min(100, Math.max(0, (progress.current / progress.total) * 100))}%`,
+                  backgroundImage: "url('/rpgui/img/progress-red.png')"
+                }}
+              ></div>
+            </div>
+            <div 
+              className="rpgui-progress-right-edge"
+              style={{ backgroundImage: "url('/rpgui/img/progress-bar-right.png')" }}
+            ></div>
           </div>
           <p>Importing {progress.current} of {progress.total} books...</p>
         </div>
@@ -379,11 +394,7 @@ export const GoodreadsImport: React.FC = () => {
         </ul>
       </div>
 
-      <div className="danger-zone">
-        <h3>Testing Tools</h3>
-        <p className="danger-warning">
-          ⚠️ Danger Zone: The following actions cannot be undone!
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
         <button
           className={showDeleteConfirm ? "delete-confirm-btn" : "delete-btn"}
           onClick={deleteAllBooks}
@@ -394,7 +405,7 @@ export const GoodreadsImport: React.FC = () => {
             ? 'Deleting...' 
             : showDeleteConfirm 
             ? 'Click Again to Confirm Delete All' 
-            : 'Delete All My Books (Testing Only)'}
+            : 'Delete All My Books'}
         </button>
         {showDeleteConfirm && (
           <button

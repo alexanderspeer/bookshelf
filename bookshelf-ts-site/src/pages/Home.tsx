@@ -10,6 +10,7 @@ import { EditBookModal } from '../components/EditBookModal';
 import { GoodreadsImport } from './GoodreadsImport';
 import { ThemeManager } from '../components/ThemeManager';
 import { RankingsModal } from '../components/RankingsModal';
+import { WelcomeModal } from '../components/WelcomeModal';
 import '../styles/home.css';
 
 const DEFAULT_THEME: Theme = {
@@ -54,15 +55,19 @@ const getInitialSavedThemes = (): Theme[] => {
 };
 
 // Initialize bookshelf title from localStorage
-const getInitialBookshelfTitle = (): string => {
+const getInitialBookshelfTitle = (userEmail?: string): string => {
   try {
-    const savedTitle = localStorage.getItem('bookshelf_title');
-    if (savedTitle) {
-      return savedTitle;
+    // Use user-specific key if email is provided
+    const storageKey = userEmail ? `bookshelf_title_${userEmail}` : 'bookshelf_title';
+    const savedTitle = localStorage.getItem(storageKey);
+    // Only return saved title if it exists and is not empty
+    if (savedTitle && savedTitle.trim()) {
+      return savedTitle.trim();
     }
   } catch (e) {
     console.error('Failed to load bookshelf title', e);
   }
+  // Default title for new users
   return 'My Bookshelf';
 };
 
@@ -90,6 +95,7 @@ export const Home: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditBookModal, setShowEditBookModal] = useState(false);
   const [showThemeManager, setShowThemeManager] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showShelfModal, setShowShelfModal] = useState(false);
   const [showRankingsModal, setShowRankingsModal] = useState(false);
   const [shelfModalBooks, setShelfModalBooks] = useState<Book[]>([]);
@@ -99,7 +105,8 @@ export const Home: React.FC = () => {
   const [currentGoal, setCurrentGoal] = useState<Goal | null>(null);
   const [currentTheme, setCurrentTheme] = useState<Theme>(getInitialTheme());
   const [savedThemes, setSavedThemes] = useState<Theme[]>(getInitialSavedThemes());
-  const [bookshelfTitle, setBookshelfTitle] = useState<string>(getInitialBookshelfTitle());
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [bookshelfTitle, setBookshelfTitle] = useState<string>('My Bookshelf');
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [titleInputValue, setTitleInputValue] = useState<string>('');
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -127,7 +134,91 @@ export const Home: React.FC = () => {
     localStorage.setItem('bookshelf_current_theme', JSON.stringify(currentTheme));
   }, [currentTheme]);
 
+  // Helper function to check and show welcome modal (moved before useEffect that uses it)
+  const checkAndShowWelcomeModal = React.useCallback((userEmail: string | null, currentlyReadingBooks: Book[], wantToReadBooks: Book[], rankedBooksList: Book[]) => {
+    if (!userEmail) return;
+    
+    const totalBooks = currentlyReadingBooks.length + wantToReadBooks.length + rankedBooksList.length;
+    const welcomeStorageKey = `hasSeenWelcomeModal_${userEmail}`;
+    const hasSeenWelcome = localStorage.getItem(welcomeStorageKey);
+    
+    console.log('Checking welcome modal:', {
+      userEmail,
+      totalBooks,
+      hasSeenWelcome,
+      shouldShow: totalBooks === 0 && !hasSeenWelcome
+    });
+    
+    if (totalBooks === 0 && !hasSeenWelcome) {
+      setShowWelcomeModal(true);
+    }
+  }, []);
+
   useEffect(() => {
+    // Fetch current user first to get email for user-specific localStorage
+    const fetchUser = async () => {
+      try {
+        const response = await apiService.getCurrentUser();
+        console.log('getCurrentUser response:', response);
+        // API returns { user: { id, email } }
+        const userEmail = response.user?.email || response.email;
+        if (userEmail) {
+          setCurrentUserEmail(userEmail);
+          // Set bookshelf title with user-specific key
+          const titleStorageKey = `bookshelf_title_${userEmail}`;
+          const savedTitle = localStorage.getItem(titleStorageKey);
+          if (savedTitle && savedTitle.trim()) {
+            setBookshelfTitle(savedTitle.trim());
+          } else {
+            // Clear any old non-user-specific title if it exists
+            const oldTitle = localStorage.getItem('bookshelf_title');
+            if (oldTitle && oldTitle !== 'My Bookshelf') {
+              localStorage.removeItem('bookshelf_title');
+            }
+            setBookshelfTitle('My Bookshelf');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user', error);
+      }
+    };
+    
+    fetchUser();
+    fetchBooks();
+    fetchCurrentGoal();
+    fetchTags();
+  }, []);
+
+  useEffect(() => {
+    // Fetch current user first to get email for user-specific localStorage
+    const fetchUser = async () => {
+      try {
+        const response = await apiService.getCurrentUser();
+        console.log('getCurrentUser response:', response);
+        // API returns { user: { id, email } }
+        const userEmail = response.user?.email || response.email;
+        if (userEmail) {
+          setCurrentUserEmail(userEmail);
+          // Set bookshelf title with user-specific key
+          const titleStorageKey = `bookshelf_title_${userEmail}`;
+          const savedTitle = localStorage.getItem(titleStorageKey);
+          if (savedTitle && savedTitle.trim()) {
+            setBookshelfTitle(savedTitle.trim());
+          } else {
+            // Clear any old non-user-specific title if it exists
+            const oldTitle = localStorage.getItem('bookshelf_title');
+            if (oldTitle && oldTitle !== 'My Bookshelf') {
+              localStorage.removeItem('bookshelf_title');
+            }
+            setBookshelfTitle('My Bookshelf');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user', error);
+      }
+    };
+    
+    fetchUser();
     fetchBooks();
     fetchCurrentGoal();
     fetchTags();
@@ -161,6 +252,8 @@ export const Home: React.FC = () => {
 
       // Fetch all ranked books (read books)
       const rankedResponse = await apiService.getRankings();
+      
+      // Welcome modal check happens in useEffect when user email and books are available
       // Sort by date_finished (most recent first), then by rank position as secondary sort
       const sorted = [...rankedResponse].sort((a: Book, b: Book) => {
         // Parse date_finished - handles YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, and ISO timestamp formats
@@ -221,6 +314,13 @@ export const Home: React.FC = () => {
   const isGoalCompleted = (goal: Goal): boolean => {
     return (goal.completed || 0) >= goal.target_count;
   };
+
+  // Check welcome modal when user email and books are both available
+  useEffect(() => {
+    if (currentUserEmail && !loading) {
+      checkAndShowWelcomeModal(currentUserEmail, currentlyReading, wantToRead, rankedBooks);
+    }
+  }, [currentUserEmail, currentlyReading, wantToRead, rankedBooks, loading, checkAndShowWelcomeModal]);
 
   const fetchCurrentGoal = async (goalData?: any) => {
     // If goal data is passed directly (from setGoal response), use it
@@ -970,8 +1070,15 @@ export const Home: React.FC = () => {
               onChange={(e) => setTitleInputValue(e.target.value)}
               onBlur={() => {
                 if (titleInputValue.trim()) {
-                  setBookshelfTitle(titleInputValue.trim());
-                  localStorage.setItem('bookshelf_title', titleInputValue.trim());
+                  const newTitle = titleInputValue.trim();
+                  setBookshelfTitle(newTitle);
+                  // Save with user-specific key if available
+                  if (currentUserEmail) {
+                    localStorage.setItem(`bookshelf_title_${currentUserEmail}`, newTitle);
+                  } else {
+                    // Fallback to non-user-specific key (shouldn't happen normally)
+                    localStorage.setItem('bookshelf_title', newTitle);
+                  }
                 } else {
                   setTitleInputValue(bookshelfTitle);
                 }
@@ -1478,6 +1585,24 @@ export const Home: React.FC = () => {
         onClose={() => setShowGoalModal(false)}
         onSuccess={fetchCurrentGoal}
         currentGoal={currentGoal}
+      />
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onImportClick={() => {
+          if (currentUserEmail) {
+            localStorage.setItem(`hasSeenWelcomeModal_${currentUserEmail}`, 'true');
+          }
+          setShowWelcomeModal(false);
+          setShowImportModal(true);
+        }}
+        onSkipClick={() => {
+          if (currentUserEmail) {
+            localStorage.setItem(`hasSeenWelcomeModal_${currentUserEmail}`, 'true');
+          }
+          setShowWelcomeModal(false);
+        }}
       />
 
       {/* Import Modal */}

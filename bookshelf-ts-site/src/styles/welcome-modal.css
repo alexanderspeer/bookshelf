@@ -1,0 +1,60 @@
+.welcome-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.welcome-intro {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #D4AF37;
+}
+
+.import-instructions {
+  margin-bottom: 2rem;
+}
+
+.import-instructions h3 {
+  color: #D4AF37;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.import-instructions ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.8;
+}
+
+.import-instructions li {
+  margin-bottom: 0.5rem;
+  color: #E8E8E8;
+}
+
+.import-instructions strong {
+  color: #D4AF37;
+}
+
+.import-note {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.import-note strong {
+  color: #D4AF37;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.welcome-actions .rpgui-button {
+  min-width: 200px;
+}
+

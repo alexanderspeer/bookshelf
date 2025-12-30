@@ -82,12 +82,18 @@
 
 .import-btn {
   padding: 1rem 2rem;
-  background: #4CAF50;
-  color: white;
-  border: none;
+  background: #4CAF50 !important;
+  color: white !important;
+  border: 3px solid #2E7D32 !important;
+  border-style: inset !important;
   border-radius: 4px;
   font-size: 1rem;
   white-space: nowrap;
+}
+
+.import-btn:hover:not(:disabled) {
+  background: #4CAF50 !important;
+  border-color: #1B5E20 !important;
 }
 
 .import-btn:disabled {
@@ -97,6 +103,54 @@
 
 .import-progress {
   margin-bottom: 1.5rem;
+}
+
+/* RPG-style progress bar (copied from RankingWizard) */
+.import-progress .rpgui-progress {
+  height: 42px;
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.import-progress .rpgui-progress-left-edge {
+  position: absolute;
+  height: 42px;
+  width: 40px;
+  left: 0px;
+  background-size: 100% 100%;
+  z-index: 2;
+}
+
+.import-progress .rpgui-progress-right-edge {
+  position: absolute;
+  height: 42px;
+  width: 40px;
+  right: 0px;
+  background-size: 100% 100%;
+  z-index: 2;
+}
+
+.import-progress .rpgui-progress-track {
+  position: absolute;
+  height: 42px;
+  left: 40px;
+  right: 40px;
+  background-repeat: repeat-x;
+  background-size: 36px 100%;
+  z-index: 1;
+}
+
+.import-progress .rpgui-progress-fill {
+  position: absolute;
+  top: 9px;
+  bottom: 8px;
+  left: 0;
+  background-repeat: repeat-x;
+  background-size: 36px 100%;
+  transition: width 0.3s ease;
+  z-index: 3;
 }
 
 .progress-bar {
@@ -116,7 +170,7 @@
 .import-progress p {
   color: #2c3e50;
   text-align: center;
-  margin: 0;
+  margin: 1rem 0 0 0;
 }
 
 .import-warnings {
@@ -181,6 +235,14 @@
   margin: 0.5rem 0 1rem 0;
 }
 
+.danger-zone-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .delete-btn,
 .delete-confirm-btn,
 .cancel-btn {
@@ -189,17 +251,21 @@
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 600;
-  margin-right: 1rem;
   transition: all 0.2s;
 }
 
 .delete-btn {
-  background: #dc3545;
-  color: white;
+  background: #dc3545 !important;
+  color: white !important;
+  border: 3px solid #a0262e !important;
+  border-style: inset !important;
+  box-shadow: 2px 2px 0px #3C2819 !important;
 }
 
 .delete-btn:hover:not(:disabled) {
-  background: #c82333;
+  background: #dc3545 !important;
+  border-color: #8b1f26 !important;
+  box-shadow: 3px 3px 0px #3C2819 !important;
   transform: scale(1.02);
 }
 
