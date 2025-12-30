@@ -29,6 +29,7 @@ class Database:
                 raise RuntimeError("DATABASE_URL is set but psycopg2 is not installed")
             self.db_type = 'postgres'
             print(f"Using PostgreSQL database")
+            self._ensure_postgres_schema()
         else:
             if not SQLITE_AVAILABLE:
                 raise RuntimeError("SQLite is not available")
@@ -55,6 +56,58 @@ class Database:
             conn.close()
         else:
             print(f"Warning: Schema file not found at {schema_path}")
+    
+    def _ensure_postgres_schema(self):
+        """Initialize PostgreSQL schema if tables don't exist"""
+        if self.db_type != 'postgres':
+            return
+        
+        schema_path = os.path.join(os.path.dirname(__file__), 'schema_postgres.sql')
+        if not os.path.exists(schema_path):
+            print(f"Warning: PostgreSQL schema file not found at {schema_path}")
+            return
+        
+        try:
+            with open(schema_path, 'r') as f:
+                schema = f.read()
+            
+            # Execute schema - split by semicolon and execute each statement
+            # PostgreSQL doesn't support executing multiple statements in one execute()
+            # so we need to split them carefully
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Split schema by semicolon, filtering out comments and empty statements
+                statements = []
+                for stmt in schema.split(';'):
+                    stmt = stmt.strip()
+                    # Skip empty statements and comment-only lines
+                    if stmt and not stmt.startswith('--'):
+                        statements.append(stmt)
+                
+                for statement in statements:
+                    try:
+                        cursor.execute(statement)
+                    except Exception as e:
+                        # Ignore errors for "table already exists", "already exists", etc.
+                        # since we're using CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS
+                        error_msg = str(e).lower()
+                        ignore_patterns = ['already exists', 'duplicate', 'relation']
+                        if any(pattern in error_msg for pattern in ignore_patterns):
+                            # Expected error - table/index already exists, skip silently
+                            pass
+                        else:
+                            # Unexpected error - log it but continue
+                            print(f"Warning: Error executing schema statement: {e}")
+                            print(f"Statement (first 150 chars): {statement[:150]}...")
+            
+            # Context manager handles commit automatically
+            print("PostgreSQL schema initialized")
+        except Exception as e:
+            print(f"Warning: Could not initialize PostgreSQL schema: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't raise - allow app to continue in case schema already exists
     
     def _convert_query(self, query, params):
         """
