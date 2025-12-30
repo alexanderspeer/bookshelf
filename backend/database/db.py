@@ -94,27 +94,41 @@ class Database:
                 cursor = conn.cursor()
                 
                 # Split schema by semicolon, filtering out comments and empty statements
+                # Remove comment lines first, then split
+                lines = []
+                for line in schema.split('\n'):
+                    stripped = line.strip()
+                    # Keep lines that aren't just comments
+                    if stripped and not stripped.startswith('--'):
+                        lines.append(line)
+                
+                # Rejoin and split by semicolon
+                cleaned_schema = '\n'.join(lines)
                 statements = []
-                for stmt in schema.split(';'):
+                for stmt in cleaned_schema.split(';'):
                     stmt = stmt.strip()
-                    # Skip empty statements and comment-only lines
-                    if stmt and not stmt.startswith('--'):
+                    if stmt:  # Skip empty statements
                         statements.append(stmt)
                 
                 print(f"Executing {len(statements)} schema statements...")
                 for i, statement in enumerate(statements):
                     try:
                         cursor.execute(statement)
-                        if i < 5 or 'users' in statement.lower():  # Log first few and users table
+                        # Log table creations
+                        if 'CREATE TABLE' in statement.upper():
+                            table_name = statement.split()[5] if len(statement.split()) > 5 else "unknown"
+                            print(f"  Statement {i+1}: Created table {table_name}")
+                        elif i < 3:  # Log first few
                             print(f"  Statement {i+1} executed successfully")
                     except Exception as e:
                         # Ignore errors for "table already exists", "already exists", etc.
                         # since we're using CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS
                         error_msg = str(e).lower()
-                        ignore_patterns = ['already exists', 'duplicate', 'relation']
+                        ignore_patterns = ['already exists', 'duplicate']
                         if any(pattern in error_msg for pattern in ignore_patterns):
                             # Expected error - table/index already exists, skip silently
-                            print(f"  Statement {i+1} already exists (expected), skipping")
+                            if i < 5:  # Only log first few
+                                print(f"  Statement {i+1} already exists (expected), skipping")
                         else:
                             # Unexpected error - log it but continue
                             print(f"ERROR: Error executing schema statement {i+1}: {e}")
