@@ -52,18 +52,21 @@ class BookService:
         # Set initial reading state
         self.set_reading_state(book_id, initial_state)
         
-        # Set initial ranking/stars if provided
+        # Set initial ranking/stars if book is in 'read' state
+        # Books in 'read' state should always have a ranking entry, even with 0 or null stars
         initial_stars = book_data.get('initial_stars')
-        if initial_stars is not None:
+        if initial_state == 'read':
             # Add to rankings table
             ranking_query = """
                 INSERT INTO rankings (book_id, rank_position, initial_stars)
                 VALUES (?, ?, ?)
             """
-            # Default position is 0 (unranked), will be updated later
-            self.db.execute_update(ranking_query, (book_id, 0, initial_stars))
+            # Default position is 0 (unranked), will be updated later via rerank_all_books_by_stars
+            # If initial_stars is None, default to 0 (unrated)
+            stars_value = initial_stars if initial_stars is not None else 0
+            self.db.execute_update(ranking_query, (book_id, 0, stars_value))
         
-        return self.get_book(book_id)
+        return self.get_book(book_id, user_id)
     
     def get_book(self, book_id, user_id=None):
         """Get a single book by ID with tags"""

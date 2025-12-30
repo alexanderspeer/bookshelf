@@ -363,6 +363,15 @@ def get_rankings():
     books = ranking_service.get_ranked_books(user['id'])
     return jsonify(books)
 
+@app.route('/api/rankings/rerank-all', methods=['POST'])
+@require_auth
+def rerank_all_books():
+    """Re-rank all books based on star ratings and alphabetical order"""
+    user = request.current_user
+    count = ranking_service.rerank_all_books_by_stars(user['id'])
+    cache.clear()  # Clear cache after re-ranking
+    return jsonify({'success': True, 'books_reranked': count})
+
 @app.route('/api/rankings/wizard/start', methods=['POST'])
 @require_auth
 def start_ranking_wizard():

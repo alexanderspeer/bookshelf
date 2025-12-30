@@ -125,7 +125,8 @@ export const GoodreadsImport: React.FC = () => {
         const myReview = book['My Review'] || '';
         
         // Parse rating - handle 0 explicitly (0 is valid, means unrated/not yet rated)
-        let parsedRating: number | null = null;
+        // Default to 0 if no rating is provided
+        let parsedRating: number = 0;
         if (myRating && myRating.trim() !== '') {
           const rating = parseFloat(myRating);
           if (!isNaN(rating)) {
@@ -141,7 +142,7 @@ export const GoodreadsImport: React.FC = () => {
           pub_date: yearPublished.trim() || null,
           num_pages: numPages ? parseInt(numPages) : null,
           date_finished: parseGoodreadsDate(dateRead),
-          initial_stars: parsedRating,
+          initial_stars: parsedRating, // Always a number, defaults to 0
           notes: myReview.trim() || null
         });
       }
@@ -233,8 +234,18 @@ export const GoodreadsImport: React.FC = () => {
         const message = `Import complete! ${successCount} books imported${skipCount > 0 ? `, ${skipCount} duplicates skipped` : ''}${errorCount > 0 ? `, ${errorCount} failed` : ''}`;
         toast.success(message);
         
-        // Reload the page after a short delay to show the new books
+        // Re-rank all books based on star ratings after import
         if (successCount > 0) {
+          try {
+            toast.info('Organizing books by star ratings...');
+            await apiService.rerankAllBooks();
+            toast.success('Books organized successfully!');
+          } catch (error) {
+            console.error('Failed to re-rank books:', error);
+            toast.warning('Books imported but ranking organization failed');
+          }
+          
+          // Reload the page after a short delay to show the new books
           setTimeout(() => {
             window.location.reload();
           }, 2000); // 2 second delay to let user see the success message

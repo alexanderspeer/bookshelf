@@ -16,8 +16,26 @@ class RankingService:
             # First book - just insert at rank 1
             return self._insert_ranking(book_id, 1, initial_stars)
         
-        # Find books with similar star ratings for comparison
-        candidates = self._get_comparison_candidates(initial_stars, ranked_books)
+        # CRITICAL: Only compare against books with THE SAME star rating
+        # A 5-star book should NEVER be ranked below a 4-star book
+        same_star_books = [b for b in ranked_books if b.get('initial_stars') == initial_stars]
+        
+        if not same_star_books:
+            # No books with same star rating - will be placed automatically by rerank_all_books_by_stars
+            # Just insert with temporary position 0
+            self._insert_ranking(book_id, 0, initial_stars)
+            # Re-rank to place it correctly within star groups
+            self.rerank_all_books_by_stars(user_id)
+            return {
+                'book_id': book_id,
+                'initial_stars': initial_stars,
+                'comparisons': [],
+                'total_ranked': len(ranked_books),
+                'message': f'Placed in {initial_stars}-star group (only book with this rating)'
+            }
+        
+        # Find books with similar star ratings for comparison (same stars only)
+        candidates = self._get_comparison_candidates(initial_stars, same_star_books)
         
         # Generate comparison questions
         comparisons = self._generate_comparisons(book_id, candidates)
@@ -26,7 +44,8 @@ class RankingService:
             'book_id': book_id,
             'initial_stars': initial_stars,
             'comparisons': comparisons,
-            'total_ranked': len(ranked_books)
+            'total_ranked': len(ranked_books),
+            'same_star_count': len(same_star_books)
         }
     
     def record_comparison(self, book_a_id, book_b_id, winner_id):
@@ -54,9 +73,19 @@ class RankingService:
         return self.db.execute_query(query, (book_id, book_id))
     
     def finalize_ranking(self, book_id, final_position, initial_stars, comparisons, user_id=None):
-        """Finalize ranking after wizard completes"""
-        # Insert the new ranking
-        self._insert_ranking(book_id, final_position, initial_stars)
+        """
+        Finalize ranking after wizard completes.
+        IMPORTANT: The book must stay within its star rating group.
+        
+        Strategy:
+        1. Record all comparisons for history
+        2. Get all books with same star rating
+        3. Determine valid position range within star group
+        4. Insert at position and shift others in that group down
+        5. DO NOT re-alphabetize - preserve manual rankings
+        """
+        if user_id is None:
+            raise ValueError('user_id is required')
         
         # Record all comparisons made during wizard
         for comp in comparisons:
@@ -66,17 +95,77 @@ class RankingService:
                 comp['winner_id']
             )
         
-        # Adjust positions of books that were shifted
-        self._reorder_rankings(final_position, user_id)
+        # Get the boundaries of this star group
+        # Find the highest-ranked and lowest-ranked book with the same stars
+        query = """
+            SELECT MIN(r.rank_position) as min_pos, MAX(r.rank_position) as max_pos
+            FROM rankings r
+            JOIN books b ON r.book_id = b.id
+            WHERE b.user_id = ? AND r.initial_stars = ? AND r.rank_position > 0
+        """
+        result = self.db.execute_query(query, (user_id, initial_stars))
+        
+        if result and result[0]['min_pos'] is not None:
+            min_pos = result[0]['min_pos']
+            max_pos = result[0]['max_pos']
+            
+            # Constrain position to be within the star group
+            # Can be placed anywhere from min_pos to max_pos + 1
+            constrained_position = max(min_pos, min(final_position, max_pos + 1))
+        else:
+            # First book with this star rating
+            # Find where this star group should start
+            constrained_position = self._find_star_group_start(initial_stars, user_id)
+        
+        # CRITICAL: Shift books at or after this position down by 1 BEFORE inserting
+        # This prevents duplicates
+        self._reorder_rankings(constrained_position, user_id)
+        
+        # Now insert the new ranking at the desired position
+        self._insert_ranking(book_id, constrained_position, initial_stars)
         
         return self.get_ranked_books(user_id)
+    
+    def rerank_all_books_by_stars(self, user_id=None):
+        """
+        Re-rank all books based on star ratings and alphabetical order.
+        5-star books come first (alphabetically), then 4-star, then 3-star, etc.
+        Within each star group, books are sorted alphabetically by title.
+        """
+        if user_id is None:
+            raise ValueError('user_id is required')
+        
+        # Get all ranked books for this user, sorted by stars (desc) then title (asc)
+        query = """
+            SELECT b.id, b.title, r.initial_stars
+            FROM books b
+            JOIN rankings r ON b.id = r.book_id
+            WHERE b.user_id = ?
+            ORDER BY r.initial_stars DESC, b.title ASC
+        """
+        books = self.db.execute_query(query, (user_id,))
+        
+        if not books:
+            return
+        
+        # Assign new rank positions based on the sorted order
+        for index, book in enumerate(books, start=1):
+            update_query = """
+                UPDATE rankings 
+                SET rank_position = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE book_id = ?
+            """
+            self.db.execute_update(update_query, (index, book['id']))
+        
+        return len(books)
     
     def get_ranked_books(self, user_id=None):
         """Get all ranked books in order with tags"""
         query = """
-            SELECT b.*, r.rank_position, r.initial_stars
+            SELECT b.*, r.rank_position, r.initial_stars, rs.state as reading_state
             FROM books b
             JOIN rankings r ON b.id = r.book_id
+            LEFT JOIN reading_states rs ON b.id = rs.book_id
         """
         
         params = []
@@ -209,6 +298,27 @@ class RankingService:
             'position': position,
             'total': total
         }
+    
+    def _find_star_group_start(self, stars, user_id):
+        """
+        Find where a new star group should start.
+        Should be placed after all higher-star books and before all lower-star books.
+        """
+        # Find the last position of books with HIGHER stars
+        query_higher = """
+            SELECT MAX(r.rank_position) as max_pos
+            FROM rankings r
+            JOIN books b ON r.book_id = b.id
+            WHERE b.user_id = ? AND r.initial_stars > ? AND r.rank_position > 0
+        """
+        result_higher = self.db.execute_query(query_higher, (user_id, stars))
+        
+        if result_higher and result_higher[0]['max_pos'] is not None:
+            # Place right after the highest-star group
+            return result_higher[0]['max_pos'] + 1
+        
+        # No higher-star books, so this becomes rank #1
+        return 1
     
     def _insert_ranking(self, book_id, position, initial_stars):
         """Insert a new ranking"""

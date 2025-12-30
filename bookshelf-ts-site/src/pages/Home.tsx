@@ -161,10 +161,37 @@ export const Home: React.FC = () => {
 
       // Fetch all ranked books (read books)
       const rankedResponse = await apiService.getRankings();
-      // Sort by rank position (ascending = highest rank first)
-      const sorted = rankedResponse.sort((a: Book, b: Book) => 
-        (a.rank_position || 999) - (b.rank_position || 999)
-      );
+      // Sort by date_finished (most recent first), then by rank position as secondary sort
+      const sorted = [...rankedResponse].sort((a: Book, b: Book) => {
+        // Parse date_finished - handles YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, and ISO timestamp formats
+        const getDateValue = (dateStr: string | undefined): number => {
+          if (!dateStr) return 0;
+          try {
+            // Try parsing the full string (handles YYYY-MM-DD HH:MM:SS, ISO timestamps, etc.)
+            const date = new Date(dateStr);
+            return date.getTime();
+          } catch {
+            return 0;
+          }
+        };
+        
+        const dateA = getDateValue(a.date_finished);
+        const dateB = getDateValue(b.date_finished);
+        
+        // First, sort by date_finished (most recent first)
+        if (dateA > 0 && dateB > 0) {
+          if (dateB !== dateA) {
+            return dateB - dateA; // Descending order (newest first)
+          }
+        } else if (dateA > 0 && dateB === 0) {
+          return -1; // Books with date_finished come first
+        } else if (dateA === 0 && dateB > 0) {
+          return 1;
+        }
+        // If same date/time or no date, sort by rank position as secondary
+        return (a.rank_position || 999) - (b.rank_position || 999);
+      });
+      console.log('Ranked books sorted by date:', sorted.slice(0, 5).map(b => ({ title: b.title, date: b.date_finished, rank: b.rank_position })));
       setRankedBooks(sorted);
     } catch (error) {
       toast.error('Failed to load books');
@@ -592,14 +619,27 @@ export const Home: React.FC = () => {
     // Sort Read books by date_finished (most recent first)
     if (title === 'Read') {
       sortedBooks.sort((a, b) => {
-        // Books with date_finished come first
-        if (a.date_finished && !b.date_finished) return -1;
-        if (!a.date_finished && b.date_finished) return 1;
+        // Parse date_finished - handles YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, and ISO timestamp formats
+        const getDateValue = (dateStr: string | undefined): number => {
+          if (!dateStr) return 0;
+          try {
+            // Try parsing the full string (handles YYYY-MM-DD HH:MM:SS, ISO timestamps, etc.)
+            const date = new Date(dateStr);
+            return date.getTime();
+          } catch {
+            return 0;
+          }
+        };
         
-        // If both have date_finished, sort by date (most recent first)
-        if (a.date_finished && b.date_finished) {
-          const dateA = new Date(a.date_finished).getTime();
-          const dateB = new Date(b.date_finished).getTime();
+        const dateA = getDateValue(a.date_finished);
+        const dateB = getDateValue(b.date_finished);
+        
+        // Books with date_finished come first
+        if (dateA > 0 && dateB === 0) return -1;
+        if (dateA === 0 && dateB > 0) return 1;
+        
+        // If both have date_finished, sort by date/time (most recent first)
+        if (dateA > 0 && dateB > 0) {
           return dateB - dateA; // Descending order (newest first)
         }
         

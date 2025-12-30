@@ -118,10 +118,39 @@ export const Rankings: React.FC = () => {
 
   if (loading) return <div className="loading-state">Loading rankings...</div>;
 
+  const handleRerankAll = async () => {
+    if (!window.confirm('This will reorganize all your books by star rating (5-star books first, then 4-star, etc.) and alphabetically within each group. Continue?')) {
+      return;
+    }
+    
+    try {
+      toast.info('Reorganizing books...');
+      await apiService.rerankAllBooks();
+      toast.success('Books reorganized successfully!');
+      fetchRankings(); // Reload rankings
+    } catch (error) {
+      toast.error('Failed to reorganize books');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="rankings-container">
-      <h1>My Book Rankings</h1>
-      <p className="subtitle">Your personal ranked list of all read books</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div>
+          <h1>My Book Rankings</h1>
+          <p className="subtitle">Your personal ranked list of all read books</p>
+        </div>
+        {rankedBooks.length > 0 && (
+          <button 
+            onClick={handleRerankAll}
+            className="rpgui-button"
+            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+          >
+            <p>Reorganize by Stars</p>
+          </button>
+        )}
+      </div>
 
       {rankedBooks.length === 0 && !loading ? (
         <div className="empty-state">

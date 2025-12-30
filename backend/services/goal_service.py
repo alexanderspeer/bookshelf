@@ -64,7 +64,8 @@ class GoalService:
         current_date = now.strftime('%Y-%m-%d')
         
         # For SQLite, use date comparison
-        # For PostgreSQL, the _convert_query will handle strftime and DATE() conversion
+        # Handle both ISO timestamp format (2025-12-30T01:31:23.701Z) and date format (2025-12-30)
+        # Extract just the date portion (first 10 characters) for year comparison
         query = """
             SELECT COUNT(*) as count
             FROM books b
@@ -72,8 +73,8 @@ class GoalService:
             WHERE rs.state = 'read'
             AND b.user_id = ?
             AND b.date_finished IS NOT NULL
-            AND strftime('%Y', b.date_finished) = ?
-            AND DATE(b.date_finished) <= DATE(?)
+            AND strftime('%Y', SUBSTR(b.date_finished, 1, 10)) = ?
+            AND SUBSTR(b.date_finished, 1, 10) <= ?
         """
         result = self.db.execute_query(query, (user_id, str(year), current_date))
         completed = result[0]['count'] if result else 0
@@ -211,8 +212,8 @@ class GoalService:
             WHERE rs.state = 'read'
             AND b.user_id = ?
             AND b.date_finished IS NOT NULL
-            AND strftime('%Y', b.date_finished) = ?
-            AND DATE(b.date_finished) <= DATE(?)
+            AND strftime('%Y', SUBSTR(b.date_finished, 1, 10)) = ?
+            AND SUBSTR(b.date_finished, 1, 10) <= ?
             ORDER BY b.date_finished DESC
         """
         books = self.db.execute_query(query, (user_id, str(year), current_date))

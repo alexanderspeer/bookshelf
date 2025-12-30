@@ -146,6 +146,12 @@ class ApiService {
     return this.request('/rankings');
   }
 
+  async rerankAllBooks() {
+    return this.request('/rankings/rerank-all', {
+      method: 'POST',
+    });
+  }
+
   async startRankingWizard(bookId: number, initialStars: number) {
     return this.request('/rankings/wizard/start', {
       method: 'POST',

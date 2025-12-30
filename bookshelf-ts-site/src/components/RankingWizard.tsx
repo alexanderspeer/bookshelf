@@ -114,9 +114,20 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
   const finalizeRanking = async (position: number, results: ComparisonResult[]) => {
     setSubmitting(true);
     try {
-      // First, set the book to "read" state with the current date
+      // First, set the book to "read" state with the current date and time
+      // Use local datetime in YYYY-MM-DD HH:MM:SS format to preserve ordering
+      // This allows books finished on the same day to be sorted by time
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      
       await apiService.setReadingState(book.id!, 'read', {
-        date_finished: new Date().toISOString()
+        date_finished: dateStr
       });
 
       // Update book with notes if provided
