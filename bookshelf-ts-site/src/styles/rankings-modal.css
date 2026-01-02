@@ -45,6 +45,7 @@
   color: #2d3748;
   text-decoration: none;
   transform-origin: center;
+  text-align: center;
 }
 
 .ranking-item:nth-child(odd) {
@@ -90,12 +91,29 @@
   font-weight: 600;
 }
 
+.ranking-item h4 {
+  display: block;
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 600;
+  text-align: center;
+}
+
 .ranking-book-info p,
 .ranking-info p {
   display: inline;
   margin: 0 0 0 0.5rem;
   color: #718096;
   font-size: 0.9rem;
+}
+
+.ranking-item p {
+  display: block;
+  margin: 0.25rem 0;
+  color: #718096;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .ranking-metrics {
