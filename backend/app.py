@@ -885,7 +885,8 @@ def serve_frontend(path):
         file_path = os.path.join(FRONTEND_BUILD_PATH, path)
         # Check if it's a file (not a directory) and exists
         if os.path.isfile(file_path):
-            return send_from_directory(FRONTEND_BUILD_PATH, path)
+            # Use send_file for absolute path to avoid path issues
+            return send_file(file_path)
     
     # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
     return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
