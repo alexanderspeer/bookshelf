@@ -684,8 +684,9 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
       const fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
         b => b.title === clickedBook.book.title && b.author === clickedBook.book.author
       );
-      // Fetch full book data to ensure we have tags
-      if (fullBook?.id) {
+      // In public view, books already have tags from the public shelf API
+      // In private view, fetch full book data to ensure we have tags
+      if (fullBook?.id && !isPublicView) {
         apiService.getBook(fullBook.id).then(bookWithTags => {
           setSelectedBook(bookWithTags);
         }).catch(error => {
@@ -693,6 +694,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
           setSelectedBook(fullBook);
         });
       } else {
+        // For public view, use the book data as-is (it already has tags)
         setSelectedBook(fullBook || null);
       }
     }
