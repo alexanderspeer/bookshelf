@@ -1702,6 +1702,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
         isOpen={showAddBookModal}
         onClose={() => setShowAddBookModal(false)}
         onSuccess={handleBookAdded}
+        onTagCreated={fetchTags}
       />
 
       {/* Goal Modal */}
@@ -1780,6 +1781,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
             }
           }}
           onRerank={handleRerankBook}
+          onTagCreated={fetchTags}
         />
       )}
 

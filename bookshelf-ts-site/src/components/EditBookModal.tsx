@@ -9,9 +9,10 @@ interface EditBookModalProps {
   onClose: () => void;
   onSuccess: () => void;
   onRerank?: (book: Book) => void;
+  onTagCreated?: () => void;
 }
 
-export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onClose, onSuccess, onRerank }) => {
+export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onClose, onSuccess, onRerank, onTagCreated }) => {
   const [formData, setFormData] = useState({
     title: book.title || '',
     author: book.author || '',
@@ -28,8 +29,12 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
   useEffect(() => {
     if (isOpen) {
       fetchTags();
-      // Initialize selected tags from book
-      setSelectedTags(book.tags?.map(tag => tag.id) || []);
+      // Initialize selected tags from book - ensure all IDs are numbers
+      const tagIds = book.tags?.map(tag => {
+        const id = typeof tag.id === 'string' ? parseInt(tag.id, 10) : tag.id;
+        return isNaN(id) ? null : id;
+      }).filter((id): id is number => id !== null) || [];
+      setSelectedTags(tagIds);
     }
   }, [isOpen, book.tags]);
 
@@ -65,14 +70,29 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
 
     try {
       const newTag = await apiService.createTag(newTagName);
+      // Ensure the tag has a valid ID
+      if (!newTag || !newTag.id) {
+        throw new Error('Tag created but no ID returned');
+      }
+      console.log('New tag created:', newTag);
       setAvailableTags([...availableTags, newTag]);
-      setSelectedTags([...selectedTags, newTag.id]);
+      // Ensure tag ID is a number
+      const tagId = typeof newTag.id === 'string' ? parseInt(newTag.id, 10) : newTag.id;
+      if (isNaN(tagId)) {
+        throw new Error('Invalid tag ID returned from server');
+      }
+      setSelectedTags([...selectedTags, tagId]);
       setNewTagName('');
       setShowNewTagInput(false);
       toast.success('Tag created!');
-    } catch (error) {
-      toast.error('Failed to create tag');
-      console.error(error);
+      // Notify parent component to refresh tag list
+      if (onTagCreated) {
+        onTagCreated();
+      }
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Failed to create tag';
+      toast.error(errorMessage);
+      console.error('Error creating tag:', error);
     }
   };
 
@@ -110,26 +130,50 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
       await apiService.updateBook(book.id!, updateData);
       
       // Update tags - remove old tags and add new ones
-      const currentTagIds = book.tags?.map(tag => tag.id) || [];
-      const tagsToRemove = currentTagIds.filter(id => !selectedTags.includes(id));
-      const tagsToAdd = selectedTags.filter(id => !currentTagIds.includes(id));
+      // Ensure all tag IDs are numbers for proper comparison
+      const currentTagIds = (book.tags?.map(tag => {
+        const id = typeof tag.id === 'string' ? parseInt(tag.id, 10) : tag.id;
+        return isNaN(id) ? null : id;
+      }).filter((id): id is number => id !== null) || []).map(id => Number(id));
+      
+      const normalizedSelectedTags = selectedTags.map(id => Number(id));
+      const tagsToRemove = currentTagIds.filter(id => !normalizedSelectedTags.includes(Number(id)));
+      const tagsToAdd = normalizedSelectedTags.filter(id => !currentTagIds.includes(Number(id)));
       
       // Remove tags that were deselected
       for (const tagId of tagsToRemove) {
-        await apiService.removeTagFromBook(book.id!, tagId);
+        try {
+          await apiService.removeTagFromBook(book.id!, tagId);
+        } catch (error) {
+          console.error(`Failed to remove tag ${tagId}:`, error);
+          // Continue with other operations even if one fails
+        }
       }
       
       // Add new tags
       for (const tagId of tagsToAdd) {
-        await apiService.addTagToBook(book.id!, tagId);
+        try {
+          // Ensure tagId is a number
+          const numericTagId = typeof tagId === 'string' ? parseInt(tagId, 10) : tagId;
+          if (isNaN(numericTagId)) {
+            console.error(`Invalid tag ID: ${tagId}`);
+            throw new Error(`Invalid tag ID: ${tagId}`);
+          }
+          await apiService.addTagToBook(book.id!, numericTagId);
+        } catch (error) {
+          console.error(`Failed to add tag ${tagId}:`, error);
+          // Re-throw to show error to user
+          throw new Error(`Failed to add tag. Please try again.`);
+        }
       }
       
       toast.success('Book updated successfully!');
       onSuccess();
       onClose();
-    } catch (error) {
-      toast.error('Failed to update book');
-      console.error(error);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Failed to update book';
+      toast.error(errorMessage);
+      console.error('Error updating book:', error);
     } finally {
       setSubmitting(false);
     }

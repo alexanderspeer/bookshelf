@@ -8,9 +8,10 @@ interface AddBookModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (book: Book) => void;
+  onTagCreated?: () => void;
 }
 
-export const AddBookModal: React.FC<AddBookModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AddBookModal: React.FC<AddBookModalProps> = ({ isOpen, onClose, onSuccess, onTagCreated }) => {
   const [step, setStep] = useState<'search' | 'details'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -103,6 +104,10 @@ export const AddBookModal: React.FC<AddBookModalProps> = ({ isOpen, onClose, onS
       setNewTagName('');
       setShowNewTagInput(false);
       toast.success('Tag created!');
+      // Notify parent component to refresh tag list
+      if (onTagCreated) {
+        onTagCreated();
+      }
     } catch (error) {
       toast.error('Failed to create tag');
       console.error(error);
