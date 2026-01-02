@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    username TEXT UNIQUE,
+    is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -123,6 +125,7 @@ CREATE TABLE IF NOT EXISTS import_history (
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_books_user_id ON books(user_id);
 CREATE INDEX IF NOT EXISTS idx_books_is_public ON books(is_public);
 CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);

@@ -368,6 +368,143 @@ class BookService:
                 book['tags'] = tags_by_book.get(book['id'], [])
         
         return books
+    
+    def get_public_shelf(self, user_id, state=None):
+        """Get public books for a user, optionally filtered by reading state"""
+        query = """
+            SELECT b.id, b.title, b.author, b.isbn, b.isbn13, b.pub_date, b.num_pages,
+                   b.genre, b.cover_image_url, b.series, b.series_position,
+                   rs.state as reading_state, r.rank_position, r.initial_stars,
+                   b.date_finished
+            FROM books b
+            LEFT JOIN reading_states rs ON b.id = rs.book_id
+            LEFT JOIN rankings r ON b.id = r.book_id
+            WHERE b.user_id = ? AND b.is_public = ?
+        """
+        params = [user_id, True]
+        
+        if state:
+            query += " AND rs.state = ?"
+            params.append(state)
+        
+        query += " ORDER BY r.rank_position ASC NULLS LAST, b.date_added DESC"
+        
+        books = self.db.execute_query(query, params)
+        
+        # Fetch tags for all books
+        if books:
+            book_ids = [book['id'] for book in books]
+            placeholders = ','.join(['?'] * len(book_ids))
+            tags_query = f"""
+                SELECT bt.book_id, t.id, t.name, t.color
+                FROM book_tags bt
+                JOIN tags t ON bt.tag_id = t.id
+                WHERE bt.book_id IN ({placeholders})
+            """
+            tags_results = self.db.execute_query(tags_query, book_ids)
+            
+            tags_by_book = {}
+            for tag_row in tags_results:
+                book_id = tag_row['book_id']
+                if book_id not in tags_by_book:
+                    tags_by_book[book_id] = []
+                tags_by_book[book_id].append({
+                    'id': tag_row['id'],
+                    'name': tag_row['name'],
+                    'color': tag_row['color']
+                })
+            
+            for book in books:
+                book['tags'] = tags_by_book.get(book['id'], [])
+        
+        return books
+    
+    def get_public_stats(self, user_id):
+        """Get public statistics for a user"""
+        # Counts by reading state
+        state_query = """
+            SELECT rs.state, COUNT(*) as count
+            FROM books b
+            JOIN reading_states rs ON b.id = rs.book_id
+            WHERE b.user_id = ? AND b.is_public = ?
+            GROUP BY rs.state
+        """
+        state_counts = self.db.execute_query(state_query, (user_id, True))
+        
+        # Average rating (from rankings)
+        rating_query = """
+            SELECT AVG(r.initial_stars) as avg_rating, COUNT(*) as rated_count
+            FROM books b
+            JOIN rankings r ON b.id = r.book_id
+            WHERE b.user_id = ? AND b.is_public = ? AND r.initial_stars IS NOT NULL
+        """
+        rating_result = self.db.execute_query(rating_query, (user_id, True))
+        avg_rating = rating_result[0]['avg_rating'] if rating_result and rating_result[0]['avg_rating'] else None
+        rated_count = rating_result[0]['rated_count'] if rating_result else 0
+        
+        # Top tags
+        tags_query = """
+            SELECT t.id, t.name, t.color, COUNT(bt.book_id) as book_count
+            FROM tags t
+            JOIN book_tags bt ON t.id = bt.tag_id
+            JOIN books b ON bt.book_id = b.id
+            WHERE b.user_id = ? AND b.is_public = ?
+            GROUP BY t.id, t.name, t.color
+            ORDER BY book_count DESC
+            LIMIT 10
+        """
+        top_tags = self.db.execute_query(tags_query, (user_id, True))
+        
+        # Yearly totals (books finished per year)
+        yearly_query = """
+            SELECT EXTRACT(YEAR FROM b.date_finished)::TEXT as year, COUNT(*) as count
+            FROM books b
+            WHERE b.user_id = ? AND b.is_public = ? AND b.date_finished IS NOT NULL
+            GROUP BY EXTRACT(YEAR FROM b.date_finished)
+            ORDER BY year DESC
+        """
+        # Handle SQLite vs PostgreSQL date extraction
+        if self.db.db_type == 'sqlite':
+            yearly_query = """
+                SELECT strftime('%Y', b.date_finished) as year, COUNT(*) as count
+                FROM books b
+                WHERE b.user_id = ? AND b.is_public = ? AND b.date_finished IS NOT NULL
+                GROUP BY strftime('%Y', b.date_finished)
+                ORDER BY year DESC
+            """
+        yearly_totals = self.db.execute_query(yearly_query, (user_id, True))
+        
+        # Convert to dict format
+        state_dict = {}
+        for row in state_counts:
+            state_dict[row['state']] = row['count']
+        
+        return {
+            'counts_by_state': {
+                'want_to_read': state_dict.get('want_to_read', 0),
+                'currently_reading': state_dict.get('currently_reading', 0),
+                'read': state_dict.get('read', 0)
+            },
+            'total_public_books': sum(state_dict.values()),
+            'average_rating': float(avg_rating) if avg_rating else None,
+            'rated_count': rated_count,
+            'top_tags': [
+                {
+                    'id': tag['id'],
+                    'name': tag['name'],
+                    'color': tag['color'],
+                    'book_count': tag['book_count']
+                }
+                for tag in top_tags
+            ],
+            'yearly_totals': [
+                {
+                    'year': row['year'],
+                    'count': row['count']
+                }
+                for row in yearly_totals
+            ]
+        }
 
 # Singleton
 _book_service = None

@@ -76,44 +76,6 @@ def require_auth(f):
 # AUTHENTICATION ENDPOINTS
 # =============================================================================
 
-@app.route('/api/auth/register', methods=['POST'])
-def register():
-    """Register a new user"""
-    data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    
-    if not email or not password:
-        return jsonify({'error': 'Email and password required'}), 400
-    
-    try:
-        user = auth_service.create_user(email, password)
-        # Auto-login after registration
-        login_result = auth_service.login(email, password)
-        
-        # Clear cache on registration to ensure clean state
-        cache.clear()
-        
-        response = jsonify({
-            'user': {
-                'id': user['id'],
-                'email': user['email']
-            }
-        })
-        response.set_cookie(
-            'session_token',
-            login_result['session_token'],
-            httponly=True,
-            secure=bool(os.getenv('DATABASE_URL')),  # Secure in production
-            samesite='Lax',
-            max_age=30*24*60*60  # 30 days
-        )
-        return response, 201
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        print(f"Registration error: {e}")
-        return jsonify({'error': 'Registration failed'}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -137,7 +99,8 @@ def login():
         response = jsonify({
             'user': {
                 'id': result['user_id'],
-                'email': result['email']
+                'email': result['email'],
+                'username': result.get('username')
             }
         })
         response.set_cookie(
@@ -180,8 +143,276 @@ def get_me():
     return jsonify({
         'user': {
             'id': user['id'],
-            'email': user['email']
+            'email': user['email'],
+            'username': user.get('username')
         }
+    })
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """Register a new user"""
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    username = data.get('username')
+    
+    if not email or not password:
+        return jsonify({'error': 'Email and password required'}), 400
+    
+    try:
+        user = auth_service.create_user(email, password, username)
+        # Auto-login after registration
+        login_result = auth_service.login(email, password)
+        
+        # Clear cache on registration to ensure clean state
+        cache.clear()
+        
+        response = jsonify({
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'username': user.get('username')
+            }
+        })
+        response.set_cookie(
+            'session_token',
+            login_result['session_token'],
+            httponly=True,
+            secure=bool(os.getenv('DATABASE_URL')),  # Secure in production
+            samesite='Lax',
+            max_age=30*24*60*60  # 30 days
+        )
+        return response, 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        print(f"Registration error: {e}")
+        return jsonify({'error': 'Registration failed'}), 500
+
+@app.route('/api/auth/username/check', methods=['GET'])
+def check_username():
+    """Check if username is available"""
+    username = request.args.get('username')
+    if not username:
+        return jsonify({'error': 'Username parameter required'}), 400
+    
+    is_valid, error_msg = auth_service.validate_username(username)
+    if not is_valid:
+        return jsonify({'available': False, 'error': error_msg}), 400
+    
+    available = auth_service.is_username_available(username)
+    return jsonify({'available': available})
+
+# =============================================================================
+# PUBLIC USER ENDPOINTS (No auth required)
+# =============================================================================
+
+@app.route('/api/public/users/<username>/profile', methods=['GET'])
+def get_public_profile(username):
+    """Get public user profile by username"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if not user.get('is_public'):
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Return only public-safe fields
+    return jsonify({
+        'username': user['username'],
+        'created_at': user.get('created_at')
+    })
+
+@app.route('/api/public/users/<username>/shelf', methods=['GET'])
+def get_public_shelf(username):
+    """Get public shelf for a user"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if not user.get('is_public'):
+        return jsonify({'error': 'User not found'}), 404
+    
+    state = request.args.get('state')  # Optional filter by reading state
+    books = book_service.get_public_shelf(user['id'], state)
+    
+    # Remove private fields from books
+    public_books = []
+    for book in books:
+        public_book = {
+            'id': book['id'],
+            'title': book['title'],
+            'author': book.get('author'),
+            'isbn': book.get('isbn'),
+            'isbn13': book.get('isbn13'),
+            'pub_date': book.get('pub_date'),
+            'num_pages': book.get('num_pages'),
+            'genre': book.get('genre'),
+            'cover_image_url': book.get('cover_image_url'),
+            'series': book.get('series'),
+            'series_position': book.get('series_position'),
+            'reading_state': book.get('reading_state'),
+            'rank_position': book.get('rank_position'),
+            'initial_stars': book.get('initial_stars'),
+            'tags': book.get('tags', [])
+        }
+        public_books.append(public_book)
+    
+    return jsonify({'books': public_books})
+
+@app.route('/api/public/users/<username>/stats', methods=['GET'])
+def get_public_stats(username):
+    """Get public statistics for a user"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if not user.get('is_public'):
+        return jsonify({'error': 'User not found'}), 404
+    
+    stats = book_service.get_public_stats(user['id'])
+    return jsonify(stats)
+
+# =============================================================================
+# PRIVATE USER ENDPOINTS (Auth required)
+# =============================================================================
+
+@app.route('/api/me/profile', methods=['GET'])
+@require_auth
+def get_my_profile():
+    """Get current user's profile"""
+    user = request.current_user
+    full_user = auth_service.get_user_by_id(user['id'])
+    
+    if not full_user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    return jsonify({
+        'id': full_user['id'],
+        'email': full_user['email'],
+        'username': full_user.get('username'),
+        'is_public': full_user.get('is_public', False),
+        'created_at': full_user.get('created_at')
+    })
+
+@app.route('/api/me/profile', methods=['PATCH'])
+@require_auth
+def update_my_profile():
+    """Update current user's profile"""
+    user = request.current_user
+    data = request.json
+    
+    # For now, only allow updating username (can be extended later)
+    username = data.get('username')
+    if username:
+        is_valid, error_msg = auth_service.validate_username(username)
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
+        
+        if not auth_service.is_username_available(username):
+            # Check if it's the current user's username
+            current_user = auth_service.get_user_by_id(user['id'])
+            if current_user.get('username') != username:
+                return jsonify({'error': 'Username is already taken'}), 400
+        
+        # Update username
+        db = auth_service.db
+        db.execute_update(
+            'UPDATE users SET username = ? WHERE id = ?',
+            (username.lower().strip(), user['id'])
+        )
+    
+    updated_user = auth_service.get_user_by_id(user['id'])
+    return jsonify({
+        'id': updated_user['id'],
+        'email': updated_user['email'],
+        'username': updated_user.get('username'),
+        'is_public': updated_user.get('is_public', False),
+        'created_at': updated_user.get('created_at')
+    })
+
+@app.route('/api/me/settings', methods=['PATCH'])
+@require_auth
+def update_my_settings():
+    """Update current user's settings"""
+    user = request.current_user
+    data = request.json
+    
+    is_public = data.get('is_public')
+    if is_public is None:
+        return jsonify({'error': 'is_public is required'}), 400
+    
+    updated_user = auth_service.update_user_settings(user['id'], is_public=bool(is_public))
+    cache.clear()  # Clear cache when settings change
+    
+    return jsonify({
+        'id': updated_user['id'],
+        'email': updated_user['email'],
+        'username': updated_user.get('username'),
+        'is_public': updated_user.get('is_public', False)
+    })
+
+@app.route('/api/me/shelf', methods=['GET'])
+@require_auth
+def get_my_shelf():
+    """Get current user's shelf (private endpoint)"""
+    user = request.current_user
+    state = request.args.get('state')
+    limit = int(request.args.get('limit', 50))
+    offset = int(request.args.get('offset', 0))
+    
+    books = book_service.get_books_by_state(state, limit, offset, user['id']) if state else book_service.search_books(None, None, None, None, limit, offset, user['id'])
+    total = book_service.get_total_count(state, user['id'])
+    
+    return jsonify({
+        'books': books,
+        'total': total,
+        'limit': limit,
+        'offset': offset
+    })
+
+@app.route('/api/me/stats', methods=['GET'])
+@require_auth
+def get_my_stats():
+    """Get current user's statistics (private, includes all data)"""
+    user = request.current_user
+    
+    # Get all stats (not just public books)
+    state_query = """
+        SELECT rs.state, COUNT(*) as count
+        FROM books b
+        JOIN reading_states rs ON b.id = rs.book_id
+        WHERE b.user_id = ?
+        GROUP BY rs.state
+    """
+    state_counts = book_service.db.execute_query(state_query, (user['id'],))
+    
+    rating_query = """
+        SELECT AVG(r.initial_stars) as avg_rating, COUNT(*) as rated_count
+        FROM books b
+        JOIN rankings r ON b.id = r.book_id
+        WHERE b.user_id = ? AND r.initial_stars IS NOT NULL
+    """
+    rating_result = book_service.db.execute_query(rating_query, (user['id'],))
+    avg_rating = rating_result[0]['avg_rating'] if rating_result and rating_result[0]['avg_rating'] else None
+    rated_count = rating_result[0]['rated_count'] if rating_result else 0
+    
+    state_dict = {}
+    for row in state_counts:
+        state_dict[row['state']] = row['count']
+    
+    return jsonify({
+        'counts_by_state': {
+            'want_to_read': state_dict.get('want_to_read', 0),
+            'currently_reading': state_dict.get('currently_reading', 0),
+            'read': state_dict.get('read', 0)
+        },
+        'total_books': sum(state_dict.values()),
+        'average_rating': float(avg_rating) if avg_rating else None,
+        'rated_count': rated_count
     })
 
 # =============================================================================

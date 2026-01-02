@@ -7,6 +7,7 @@ import './styles/toast.css';
 import { Home } from './pages/Home';
 import { Auth } from './pages/Auth';
 import { PublicBookshelf } from './pages/PublicBookshelf';
+import { PublicUserProfile } from './pages/PublicUserProfile';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { applyRPGUICursorFixes } from './utils/rpguiCursorFix';
@@ -71,7 +72,24 @@ function App() {
     );
   }
 
-  // Public bookshelf route (no auth required)
+  // Parse path for routing
+  const pathParts = currentPath.split('/').filter(Boolean);
+  
+  // Public user profile routes: /u/:username or /u/:username/shelf or /u/:username/stats
+  if (pathParts[0] === 'u' && pathParts[1]) {
+    const username = pathParts[1];
+    const subPath = pathParts[2]; // 'shelf' or 'stats'
+    return (
+      <div className="rpgui-content">
+        <div className="app">
+          <ToastContainer position="top-right" autoClose={1000} closeButton={false} />
+          <PublicUserProfile username={username} subPath={subPath} />
+        </div>
+      </div>
+    );
+  }
+
+  // Public bookshelf route (no auth required) - legacy route
   if (currentPath === '/public') {
     return (
       <div className="rpgui-content">
@@ -93,6 +111,10 @@ function App() {
     );
   }
 
+  // Private routes: /me, /me/shelf, /me/stats, /me/settings
+  // For now, all authenticated routes go to Home
+  // Home component can handle /me routes internally if needed
+  
   return (
     <div className="rpgui-content">
       <div className="app">

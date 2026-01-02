@@ -50,11 +50,15 @@ class ApiService {
   }
 
   // Authentication
-  async register(email: string, password: string) {
+  async register(email: string, password: string, username?: string) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, username }),
     });
+  }
+
+  async checkUsername(username: string) {
+    return this.request(`/auth/username/check?username=${encodeURIComponent(username)}`);
   }
 
   async login(email: string, password: string) {
@@ -292,6 +296,51 @@ class ApiService {
   // Public bookshelf
   async getPublicBooks() {
     return this.request('/public/books');
+  }
+
+  // Public user endpoints
+  async getPublicProfile(username: string) {
+    return this.request(`/public/users/${encodeURIComponent(username)}/profile`);
+  }
+
+  async getPublicShelf(username: string, state?: string) {
+    const params = state ? `?state=${encodeURIComponent(state)}` : '';
+    return this.request(`/public/users/${encodeURIComponent(username)}/shelf${params}`);
+  }
+
+  async getPublicStats(username: string) {
+    return this.request(`/public/users/${encodeURIComponent(username)}/stats`);
+  }
+
+  // Private user endpoints
+  async getMyProfile() {
+    return this.request('/me/profile');
+  }
+
+  async updateMyProfile(data: { username?: string }) {
+    return this.request('/me/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateMySettings(isPublic: boolean) {
+    return this.request('/me/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({ is_public: isPublic }),
+    });
+  }
+
+  async getMyShelf(state?: string, limit = 50, offset = 0) {
+    const params = new URLSearchParams();
+    if (state) params.append('state', state);
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
+    return this.request(`/me/shelf?${params}`);
+  }
+
+  async getMyStats() {
+    return this.request('/me/stats');
   }
 }
 

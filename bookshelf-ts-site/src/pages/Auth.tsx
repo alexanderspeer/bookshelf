@@ -12,10 +12,14 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +34,16 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       return;
     }
 
+    if (!isLogin && !username.trim()) {
+      toast.error('Username is required');
+      return;
+    }
+
+    if (!isLogin && usernameAvailable === false) {
+      toast.error('Username is not available');
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -37,7 +51,7 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         await apiService.login(email, password);
         toast.success('Welcome back!');
       } else {
-        await apiService.register(email, password);
+        await apiService.register(email, password, username.trim());
         toast.success('Account created! Welcome!');
       }
       onAuthSuccess();
@@ -48,6 +62,35 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
       setLoading(false);
     }
   };
+
+  const checkUsernameAvailability = async (value: string) => {
+    if (!value.trim() || value.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    setCheckingUsername(true);
+    try {
+      const result = await apiService.checkUsername(value.trim());
+      setUsernameAvailable(result.available);
+    } catch (error: any) {
+      setUsernameAvailable(false);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Debounce username check
+  React.useEffect(() => {
+    if (!isLogin && username.trim().length >= 3) {
+      const timeoutId = setTimeout(() => {
+        checkUsernameAvailability(username);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else if (!isLogin && username.trim().length < 3 && username.length > 0) {
+      setUsernameAvailable(null);
+    }
+  }, [username, isLogin]);
 
   React.useEffect(() => {
     // Add style for white placeholder text with RPGUI font
@@ -119,6 +162,92 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
         </p>
 
         <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                fontWeight: 500,
+                color: '#E8DCC4',
+                fontSize: '16px',
+                fontFamily: "'Press Start 2P', cursive"
+              }}>
+                Username
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  ref={usernameInputRef}
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    const cursorPosition = input.selectionStart || 0;
+                    setUsername(input.value);
+                    setTimeout(() => {
+                      if (usernameInputRef.current) {
+                        usernameInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                      }
+                    }, 0);
+                  }}
+                  placeholder="username"
+                  className="bs_text_input bs_text_input_dark auth-input"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    paddingRight: usernameAvailable !== null ? '50px' : '12px',
+                    border: '2px solid #5C4033',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    boxSizing: 'border-box',
+                    backgroundColor: '#25262b',
+                    color: '#c1c2c5',
+                    fontFamily: "'Press Start 2P', cursive",
+                    userSelect: 'text',
+                    WebkitUserSelect: 'text',
+                    MozUserSelect: 'text',
+                    msUserSelect: 'text',
+                    pointerEvents: 'auto',
+                    cursor: "url('/rpgui/img/cursor/select.png') 10 0, auto"
+                  }}
+                  disabled={loading}
+                />
+                {usernameAvailable !== null && (
+                  <span style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: '10px',
+                    color: usernameAvailable ? '#4ade80' : '#ef4444',
+                    fontFamily: "'Press Start 2P', cursive"
+                  }}>
+                    {checkingUsername ? '...' : (usernameAvailable ? '✓' : '✗')}
+                  </span>
+                )}
+              </div>
+              {username && username.length > 0 && username.length < 3 && (
+                <p style={{
+                  marginTop: '4px',
+                  fontSize: '8px',
+                  color: '#ef4444',
+                  fontFamily: "'Press Start 2P', cursive"
+                }}>
+                  Username must be at least 3 characters
+                </p>
+              )}
+              {usernameAvailable === false && (
+                <p style={{
+                  marginTop: '4px',
+                  fontSize: '8px',
+                  color: '#ef4444',
+                  fontFamily: "'Press Start 2P', cursive"
+                }}>
+                  Username is not available
+                </p>
+              )}
+            </div>
+          )}
+
           <div style={{ marginBottom: '16px' }}>
             <label style={{
               display: 'block',
