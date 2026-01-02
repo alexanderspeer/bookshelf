@@ -22,9 +22,8 @@ from services.auth_service import get_auth_service
 FRONTEND_BUILD_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bookshelf-ts-site', 'build')
 SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
 
-if SERVE_FRONTEND:
-    app = Flask(__name__, static_folder=FRONTEND_BUILD_PATH, static_url_path='')
-else:
+# Don't use static_folder with empty static_url_path as it interferes with SPA routing
+# We'll handle static files manually in the catch-all route
     app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "supports_credentials": True}})
@@ -859,6 +858,10 @@ def health_check():
 @app.route('/<path:path>')
 def serve_frontend(path):
     """Serve React frontend or API info if frontend not built"""
+    # Don't serve frontend for API routes (should already be handled, but just in case)
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    
     if not SERVE_FRONTEND:
         # Frontend not built, show API info
         return jsonify({
@@ -876,11 +879,15 @@ def serve_frontend(path):
             'note': 'Frontend not built. Run `npm run build` in bookshelf-ts-site/'
         })
     
-    # Try to serve the requested file
-    if path != "" and os.path.exists(os.path.join(FRONTEND_BUILD_PATH, path)):
+    # Try to serve the requested file (for static assets like JS, CSS, images)
+    # Only serve actual files, not routes like /u/username
+    if path != "":
+        file_path = os.path.join(FRONTEND_BUILD_PATH, path)
+        # Check if it's a file (not a directory) and exists
+        if os.path.isfile(file_path):
         return send_from_directory(FRONTEND_BUILD_PATH, path)
-    else:
-        # Serve index.html for React Router (SPA)
+    
+    # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
         return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
