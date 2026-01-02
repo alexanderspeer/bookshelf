@@ -257,10 +257,22 @@ class Database:
         
         # For PostgreSQL INSERT queries, we need to add RETURNING id
         # to get the lastrowid equivalent
+        # BUT: Skip for tables without an id column (like junction tables with composite keys)
         if self.db_type == 'postgres' and 'INSERT INTO' in converted_query.upper():
             if 'RETURNING' not in converted_query.upper():
-                # Add RETURNING id clause
-                converted_query = converted_query.rstrip().rstrip(';') + ' RETURNING id'
+                # Don't add RETURNING id for junction tables or tables with ON CONFLICT
+                # (ON CONFLICT typically indicates a composite key table)
+                query_upper = converted_query.upper()
+                if 'ON CONFLICT' not in query_upper:
+                    # Check if it's a known junction table without id column
+                    is_junction_table = any(table in query_upper for table in [
+                        'INSERT INTO BOOK_TAGS',
+                        'INSERT INTO BOOK_TAG',
+                        'INSERT INTO THOUGHT_CONTINUATIONS'
+                    ])
+                    if not is_junction_table:
+                        # Add RETURNING id clause
+                        converted_query = converted_query.rstrip().rstrip(';') + ' RETURNING id'
         
         with self.get_connection() as conn:
             if self.db_type == 'postgres':
