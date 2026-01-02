@@ -112,6 +112,17 @@ class Database:
         # This works because we don't have ? in string literals in our queries
         converted_query = converted_query.replace('?', '%s')
         
+        # 1a. Handle special case: strftime('%Y', SUBSTR(column, 1, 10)) -> EXTRACT(YEAR FROM column::DATE)::TEXT
+        # This must be done BEFORE converting SUBSTR, to catch the nested pattern
+        while True:
+            match = re.search(r"strftime\s*\(\s*'%Y'\s*,\s*SUBSTR\s*\(\s*([^,]+),\s*1,\s*10\s*\)\s*\)", converted_query, re.IGNORECASE)
+            if match:
+                column_expr = match.group(1).strip()
+                replacement = f"EXTRACT(YEAR FROM {column_expr}::DATE)::TEXT"
+                converted_query = converted_query[:match.start()] + replacement + converted_query[match.end():]
+            else:
+                break
+        
         # 2. Replace INSERT OR IGNORE with INSERT ... ON CONFLICT DO NOTHING
         # Pattern: INSERT OR IGNORE INTO table (...) VALUES (...)
         if re.search(r'\bINSERT\s+OR\s+IGNORE\s+INTO\b', converted_query, re.IGNORECASE):
@@ -174,33 +185,17 @@ class Database:
                 inner_expr = args_str.strip()
             return f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
         
-        # Use a callback-based approach to handle each strftime occurrence
-        # The regex pattern just finds "strftime(", then the callback handles paren balancing
+        # 4b. Handle remaining strftime('%Y', column) patterns -> EXTRACT(YEAR FROM column)::TEXT
         while True:
-            match = re.search(r"strftime\s*\(", converted_query, re.IGNORECASE)
+            match = re.search(r"strftime\s*\(\s*'%Y'\s*,\s*([^)]+)\)", converted_query, re.IGNORECASE)
             if not match:
                 break
-            # Found strftime( - now balance parentheses to find the end
-            start_pos = match.end()  # Position after "strftime("
-            paren_count = 1
-            i = start_pos
-            while i < len(converted_query) and paren_count > 0:
-                if converted_query[i] == '(':
-                    paren_count += 1
-                elif converted_query[i] == ')':
-                    paren_count -= 1
-                i += 1
-            # Extract the arguments
-            args_str = converted_query[start_pos:i-1]
-            # Split on first comma after '%Y'
-            comma_pos = args_str.find(',')
-            if comma_pos > 0:
-                inner_expr = args_str[comma_pos+1:].strip()
-            else:
-                inner_expr = args_str.strip()
-            # Replace this occurrence
+            inner_expr = match.group(1).strip()
+            # Skip if it's already been processed (contains SUBSTRING, which means it was a SUBSTR pattern)
+            if 'SUBSTRING' in inner_expr.upper():
+                break
             replacement = f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
-            converted_query = converted_query[:match.start()] + replacement + converted_query[i:]
+            converted_query = converted_query[:match.start()] + replacement + converted_query[match.end():]
         
         # 5. Replace DATE() function - SQLite DATE() -> PostgreSQL DATE cast
         # DATE(column) -> column::DATE

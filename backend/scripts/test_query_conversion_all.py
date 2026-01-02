@@ -21,6 +21,16 @@ def _convert_query_postgres(query, params):
     # 1. Convert ? to %s for PostgreSQL parameter binding
     converted_query = converted_query.replace('?', '%s')
     
+    # 1a. Handle special case: strftime('%Y', SUBSTR(...)) BEFORE converting SUBSTR
+    while True:
+        match = re.search(r"strftime\s*\(\s*'%Y'\s*,\s*SUBSTR\s*\(\s*([^,]+),\s*1,\s*10\s*\)\s*\)", converted_query, re.IGNORECASE)
+        if match:
+            column_expr = match.group(1).strip()
+            replacement = f"EXTRACT(YEAR FROM {column_expr}::DATE)::TEXT"
+            converted_query = converted_query[:match.start()] + replacement + converted_query[match.end():]
+        else:
+            break
+    
     # 2. Replace INSERT OR IGNORE with INSERT ... ON CONFLICT DO NOTHING
     if re.search(r'\bINSERT\s+OR\s+IGNORE\s+INTO\b', converted_query, re.IGNORECASE):
         converted_query = re.sub(
@@ -70,28 +80,16 @@ def _convert_query_postgres(query, params):
             inner_expr = args_str.strip()
         return f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
     
-    # Use iterative approach for strftime to handle nested parens
+    # Handle remaining strftime('%Y', column) patterns
     while True:
-        match = re.search(r"strftime\s*\(", converted_query, re.IGNORECASE)
+        match = re.search(r"strftime\s*\(\s*'%Y'\s*,\s*([^)]+)\)", converted_query, re.IGNORECASE)
         if not match:
             break
-        start_pos = match.end()
-        paren_count = 1
-        i = start_pos
-        while i < len(converted_query) and paren_count > 0:
-            if converted_query[i] == '(':
-                paren_count += 1
-            elif converted_query[i] == ')':
-                paren_count -= 1
-            i += 1
-        args_str = converted_query[start_pos:i-1]
-        comma_pos = args_str.find(',')
-        if comma_pos > 0:
-            inner_expr = args_str[comma_pos+1:].strip()
-        else:
-            inner_expr = args_str.strip()
+        inner_expr = match.group(1).strip()
+        if 'SUBSTRING' in inner_expr.upper():
+            break
         replacement = f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
-        converted_query = converted_query[:match.start()] + replacement + converted_query[i:]
+        converted_query = converted_query[:match.start()] + replacement + converted_query[match.end():]
     
     # 5. Replace DATE() function
     converted_query = re.sub(
@@ -150,8 +148,8 @@ def test_conversions():
         {
             'name': 'Combined SUBSTR and strftime',
             'input': "SELECT * FROM books WHERE strftime('%Y', SUBSTR(date_finished, 1, 10)) = ?",
-            'expected_contains': ['EXTRACT(YEAR FROM SUBSTRING(date_finished::TEXT FROM 1 FOR 10))::TEXT', '%s'],
-            'expected_not_contains': ['strftime', 'SUBSTR(', '?']
+            'expected_contains': ['EXTRACT(YEAR FROM date_finished::DATE)::TEXT', '%s'],
+            'expected_not_contains': ['strftime', 'SUBSTR(', 'SUBSTRING', '?']
         },
         {
             'name': 'ON CONFLICT DO UPDATE (already Postgres)',
