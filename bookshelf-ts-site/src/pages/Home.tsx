@@ -1184,9 +1184,12 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
           <button 
             className="primary-button"
             onClick={() => {
+              console.log('Add Book button clicked. isPublicView:', isPublicView);
               if (isPublicView) {
+                console.log('Blocking action - public view');
                 handleBlockedAction();
               } else {
+                console.log('Opening Add Book modal');
                 setShowAddBookModal(true);
               }
             }}

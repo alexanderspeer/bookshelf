@@ -143,7 +143,7 @@ function App() {
         >
           Logout
         </span>
-        <Home />
+        <Home isPublicView={false} />
       </div>
     </div>
   );
