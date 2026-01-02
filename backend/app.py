@@ -234,6 +234,12 @@ def get_public_shelf(username):
     state = request.args.get('state')  # Optional filter by reading state
     books = book_service.get_public_shelf(user['id'], state)
     
+    # Debug: Log tags in first book
+    if books and len(books) > 0:
+        print(f"DEBUG: First book tags: {books[0].get('tags', [])}")
+        print(f"DEBUG: Tags type: {type(books[0].get('tags', []))}")
+        print(f"DEBUG: Tags count: {len(books[0].get('tags', []))}")
+    
     # Remove private fields from books
     public_books = []
     for book in books:
@@ -241,6 +247,10 @@ def get_public_shelf(username):
         tags = book.get('tags', [])
         if not isinstance(tags, list):
             tags = []
+        
+        # Debug: Log tags for each book
+        if tags:
+            print(f"DEBUG: Book {book.get('id')} ({book.get('title')}) has {len(tags)} tags: {tags}")
         
         public_book = {
             'id': book['id'],

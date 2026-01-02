@@ -221,10 +221,25 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
         const publicResponse = await apiService.getPublicShelf(publicUsername);
         const allPublicBooks = publicResponse.books || [];
         
+        // Debug: Check if tags are in the response
+        if (allPublicBooks.length > 0) {
+          console.log('Sample public book:', allPublicBooks[0]);
+          console.log('Tags in sample book:', allPublicBooks[0].tags);
+          console.log('Tag count:', allPublicBooks[0].tags?.length || 0);
+        }
+        
         // Separate books by reading state (tags are already included in the response)
         const currentlyReadingBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'currently_reading');
         const wantToReadBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'want_to_read');
         const readBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'read');
+        
+        // Debug: Check tags after filtering
+        if (currentlyReadingBooks.length > 0) {
+          console.log('Currently reading book tags:', currentlyReadingBooks[0].tags);
+        }
+        if (readBooks.length > 0) {
+          console.log('Read book tags:', readBooks[0].tags);
+        }
         
         setCurrentlyReading(currentlyReadingBooks);
         setWantToRead(wantToReadBooks);
@@ -681,24 +696,41 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
     }
 
     if (clickedBook) {
-      const fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
-        b => b.title === clickedBook.book.title && b.author === clickedBook.book.author
-      );
+      // Try to find book by ID first (more reliable), then fall back to title/author
+      const bookId = clickedBook.book.book_id || clickedBook.book.id;
+      let fullBook = bookId 
+        ? [...currentlyReading, ...wantToRead, ...rankedBooks].find(b => b.id === parseInt(bookId))
+        : null;
+      
+      // Fall back to title/author matching if ID not found
+      if (!fullBook) {
+        fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
+          b => b.title === clickedBook.book.title && b.author === clickedBook.book.author
+        );
+      }
       
       if (fullBook) {
+        console.log('Book found:', fullBook.title, 'Tags:', fullBook.tags, 'Tag count:', fullBook.tags?.length || 0);
+        
         // In public view, books already have tags from the public shelf API
         // In private view, fetch full book data to ensure we have tags
         if (!isPublicView && fullBook.id) {
           apiService.getBook(fullBook.id).then(bookWithTags => {
+            console.log('Fetched book with tags:', bookWithTags.tags);
             setSelectedBook(bookWithTags);
           }).catch(error => {
             console.error('Failed to fetch book details:', error);
-            setSelectedBook(fullBook);
+            if (fullBook) {
+              setSelectedBook(fullBook);
+            }
           });
         } else {
           // For public view, use the book data as-is (it already has tags from getPublicShelf)
+          console.log('Setting selected book (public view):', fullBook.tags);
           setSelectedBook(fullBook);
         }
+      } else {
+        console.warn('Book not found in state arrays');
       }
     }
   };
@@ -1545,27 +1577,39 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
                 <p><strong>Rank:</strong> #{selectedBook.rank_position}</p>
               )}
               {selectedBook.notes && <p><strong>Notes:</strong> {selectedBook.notes}</p>}
-              {selectedBook.tags && selectedBook.tags.length > 0 && (
-                <p>
-                  <strong>Tags:</strong>{' '}
-                  {selectedBook.tags.map((tag, index) => (
-                    <span
-                      key={tag.id}
-                      style={{
-                        display: 'inline-block',
-                        padding: '4px 8px',
-                        margin: '2px',
-                        backgroundColor: tag.color || '#3498db',
-                        color: 'white',
-                        borderRadius: '4px',
-                        fontSize: '12px'
-                      }}
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </p>
-              )}
+              {(() => {
+                // Debug: Log tags when rendering
+                console.log('Rendering book modal - selectedBook.tags:', selectedBook.tags);
+                console.log('Tag check:', selectedBook.tags && selectedBook.tags.length > 0);
+                
+                if (selectedBook.tags && selectedBook.tags.length > 0) {
+                  return (
+                    <p>
+                      <strong>Tags:</strong>{' '}
+                      {selectedBook.tags.map((tag, index) => (
+                        <span
+                          key={tag.id || index}
+                          style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            margin: '2px',
+                            backgroundColor: tag.color || '#3498db',
+                            color: 'white',
+                            borderRadius: '4px',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </p>
+                  );
+                } else if (selectedBook.tags && selectedBook.tags.length === 0) {
+                  // Show message if tags array exists but is empty (for debugging)
+                  return <p><strong>Tags:</strong> <em>(No tags)</em></p>;
+                }
+                return null;
+              })()}
             </div>
 
             {/* Book Color Customization */}
