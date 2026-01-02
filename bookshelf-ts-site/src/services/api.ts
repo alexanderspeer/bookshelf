@@ -328,6 +328,10 @@ class ApiService {
     return this.request(`/public/users/${encodeURIComponent(username)}/goal/${year}/books`);
   }
 
+  async getPublicTags(username: string) {
+    return this.request(`/public/users/${encodeURIComponent(username)}/tags`);
+  }
+
   // Private user endpoints
   async getMyProfile() {
     return this.request('/me/profile');

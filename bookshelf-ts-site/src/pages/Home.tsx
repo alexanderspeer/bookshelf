@@ -185,9 +185,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
     fetchUser();
     fetchBooks();
     fetchCurrentGoal();
-    if (!isPublicView) {
-      fetchTags();
-    }
+    fetchTags(); // Fetch tags for both public and private views
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPublicView, publicUsername]);
 
@@ -390,10 +388,17 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
 
   const fetchTags = async () => {
     try {
-      const tags = await apiService.getTags();
+      let tags;
+      if (isPublicView && publicUsername) {
+        // Fetch public user's tags
+        tags = await apiService.getPublicTags(publicUsername);
+      } else {
+        // Fetch current user's tags
+        tags = await apiService.getTags();
+      }
       setAllTags(tags);
     } catch (error) {
-      console.error('Failed to load tags');
+      console.error('Failed to load tags:', error);
     }
   };
 

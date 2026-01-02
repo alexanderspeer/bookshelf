@@ -325,6 +325,18 @@ def get_public_goal_books(username, year):
         'goal': goal
     })
 
+@app.route('/api/public/users/<username>/tags', methods=['GET'])
+def get_public_tags(username):
+    """Get all tags used by a public user's books"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Get tags used by this user's books
+    tags = tag_service.get_all_tags(user['id'])
+    return jsonify(tags)
+
 # =============================================================================
 # PRIVATE USER ENDPOINTS (Auth required)
 # =============================================================================
