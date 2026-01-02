@@ -221,7 +221,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
         const publicResponse = await apiService.getPublicShelf(publicUsername);
         const allPublicBooks = publicResponse.books || [];
         
-        // Separate books by reading state
+        // Separate books by reading state (tags are already included in the response)
         const currentlyReadingBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'currently_reading');
         const wantToReadBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'want_to_read');
         const readBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'read');
@@ -684,18 +684,21 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
       const fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
         b => b.title === clickedBook.book.title && b.author === clickedBook.book.author
       );
-      // In public view, books already have tags from the public shelf API
-      // In private view, fetch full book data to ensure we have tags
-      if (fullBook?.id && !isPublicView) {
-        apiService.getBook(fullBook.id).then(bookWithTags => {
-          setSelectedBook(bookWithTags);
-        }).catch(error => {
-          console.error('Failed to fetch book details:', error);
+      
+      if (fullBook) {
+        // In public view, books already have tags from the public shelf API
+        // In private view, fetch full book data to ensure we have tags
+        if (!isPublicView && fullBook.id) {
+          apiService.getBook(fullBook.id).then(bookWithTags => {
+            setSelectedBook(bookWithTags);
+          }).catch(error => {
+            console.error('Failed to fetch book details:', error);
+            setSelectedBook(fullBook);
+          });
+        } else {
+          // For public view, use the book data as-is (it already has tags from getPublicShelf)
           setSelectedBook(fullBook);
-        });
-      } else {
-        // For public view, use the book data as-is (it already has tags)
-        setSelectedBook(fullBook || null);
+        }
       }
     }
   };

@@ -237,6 +237,11 @@ def get_public_shelf(username):
     # Remove private fields from books
     public_books = []
     for book in books:
+        # Ensure tags are always included and properly formatted
+        tags = book.get('tags', [])
+        if not isinstance(tags, list):
+            tags = []
+        
         public_book = {
             'id': book['id'],
             'title': book['title'],
@@ -252,7 +257,10 @@ def get_public_shelf(username):
             'reading_state': book.get('reading_state'),
             'rank_position': book.get('rank_position'),
             'initial_stars': book.get('initial_stars'),
-            'tags': book.get('tags', [])
+            'tags': tags,
+            'date_finished': book.get('date_finished'),
+            'dimensions': book.get('dimensions'),
+            'dom_color': book.get('dom_color')
         }
         public_books.append(public_book)
     
