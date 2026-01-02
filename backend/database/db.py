@@ -138,11 +138,12 @@ class Database:
                     converted_query = converted_query.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
         
         # 3. Replace SUBSTR() with SUBSTRING()
-        # SUBSTR(column, start, length) -> SUBSTRING(column FROM start FOR length)
-        # Note: SQLite SUBSTR is 1-indexed, PostgreSQL SUBSTRING is also 1-indexed
+        # SUBSTR(column, start, length) -> SUBSTRING(column::TEXT FROM start FOR length)
+        # Note: PostgreSQL SUBSTRING requires text type, so cast to TEXT
+        # SQLite SUBSTR is 1-indexed, PostgreSQL SUBSTRING is also 1-indexed
         converted_query = re.sub(
             r'\bSUBSTR\s*\(\s*([^,]+),\s*(\d+),\s*(\d+)\s*\)',
-            r'SUBSTRING(\1 FROM \2 FOR \3)',
+            r'SUBSTRING(\1::TEXT FROM \2 FOR \3)',
             converted_query,
             flags=re.IGNORECASE
         )

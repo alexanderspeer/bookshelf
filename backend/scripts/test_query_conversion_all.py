@@ -41,10 +41,10 @@ def _convert_query_postgres(query, params):
             else:
                 converted_query = converted_query.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
     
-    # 3. Replace SUBSTR() with SUBSTRING()
+    # 3. Replace SUBSTR() with SUBSTRING() - cast to TEXT for PostgreSQL
     converted_query = re.sub(
         r'\bSUBSTR\s*\(\s*([^,]+),\s*(\d+),\s*(\d+)\s*\)',
-        r'SUBSTRING(\1 FROM \2 FOR \3)',
+        r'SUBSTRING(\1::TEXT FROM \2 FOR \3)',
         converted_query,
         flags=re.IGNORECASE
     )
@@ -132,13 +132,13 @@ def test_conversions():
         {
             'name': 'SUBSTR function',
             'input': "SELECT SUBSTR(date_finished, 1, 10) FROM books",
-            'expected_contains': ['SUBSTRING(date_finished FROM 1 FOR 10)'],
+            'expected_contains': ['SUBSTRING(date_finished::TEXT FROM 1 FOR 10)'],
             'expected_not_contains': ['SUBSTR(']
         },
         {
             'name': 'SUBSTR in WHERE clause',
             'input': "SELECT * FROM books WHERE SUBSTR(b.date_finished, 1, 10) <= ?",
-            'expected_contains': ['SUBSTRING(b.date_finished FROM 1 FOR 10)', '%s'],
+            'expected_contains': ['SUBSTRING(b.date_finished::TEXT FROM 1 FOR 10)', '%s'],
             'expected_not_contains': ['SUBSTR(', '?']
         },
         {
@@ -150,7 +150,7 @@ def test_conversions():
         {
             'name': 'Combined SUBSTR and strftime',
             'input': "SELECT * FROM books WHERE strftime('%Y', SUBSTR(date_finished, 1, 10)) = ?",
-            'expected_contains': ['EXTRACT(YEAR FROM SUBSTRING(date_finished FROM 1 FOR 10))::TEXT', '%s'],
+            'expected_contains': ['EXTRACT(YEAR FROM SUBSTRING(date_finished::TEXT FROM 1 FOR 10))::TEXT', '%s'],
             'expected_not_contains': ['strftime', 'SUBSTR(', '?']
         },
         {
