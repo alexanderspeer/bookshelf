@@ -22,8 +22,8 @@ from services.auth_service import get_auth_service
 FRONTEND_BUILD_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bookshelf-ts-site', 'build')
 SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
 
-# Don't use static_folder with empty static_url_path - it breaks SPA routing
-# We'll handle static files with explicit routes
+# Don't use static_folder - it interferes with SPA routing
+# We'll manually serve static files with explicit routes
 app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "supports_credentials": True}})
@@ -854,39 +854,30 @@ def health_check():
 # FRONTEND SERVING (React App)
 # =============================================================================
 
-# Serve static files explicitly (JS, CSS, images, etc.)
+# Serve static files from /static/ directory - MUST come before catch-all
 @app.route('/static/<path:filename>')
 def serve_static(filename):
-    """Serve static files from the React build"""
+    """Serve static files from React build static directory"""
     if not SERVE_FRONTEND:
         return jsonify({'error': 'Frontend not built'}), 404
-    file_path = os.path.join(FRONTEND_BUILD_PATH, 'static', filename)
+    static_dir = os.path.join(FRONTEND_BUILD_PATH, 'static')
+    file_path = os.path.join(static_dir, filename)
+    # Normalize paths
+    static_dir = os.path.normpath(static_dir)
+    file_path = os.path.normpath(file_path)
+    # Security check
+    if not file_path.startswith(static_dir + os.sep) and file_path != static_dir:
+        return jsonify({'error': 'Invalid path'}), 404
     if os.path.isfile(file_path):
-        return send_file(file_path)
+        # Use send_from_directory for proper MIME type handling
+        return send_from_directory(static_dir, filename)
     return jsonify({'error': 'File not found'}), 404
 
-# Serve other static assets (manifest.json, icons, etc. in root of build)
-@app.route('/<path:filename>')
-def serve_root_static(filename):
-    """Serve files from root of build directory (manifest.json, icons, etc.)"""
-    if not SERVE_FRONTEND:
-        return jsonify({'error': 'Frontend not built'}), 404
-    
-    # Don't serve API routes
-    if filename.startswith('api/'):
-        return jsonify({'error': 'API endpoint not found'}), 404
-    
-    # Check if it's a file in the root of build directory
-    file_path = os.path.join(FRONTEND_BUILD_PATH, filename)
-    if os.path.isfile(file_path):
-        return send_file(file_path)
-    
-    # Not a file, serve index.html for SPA routing
-    return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
-
-@app.route('/')
-def serve_index():
-    """Serve the React app index page"""
+# Catch-all route for SPA - must come AFTER static route
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    """Serve React frontend - handles SPA routing"""
     if not SERVE_FRONTEND:
         return jsonify({
             'message': 'Bookshelf API is running',
@@ -902,7 +893,23 @@ def serve_index():
             'documentation': 'See README.md for full API documentation',
             'note': 'Frontend not built. Run `npm run build` in bookshelf-ts-site/'
         })
-    return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
+    
+    # Don't serve API routes
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    
+    # Don't handle /static/ here - that's handled by serve_static above
+    if path.startswith('static/'):
+        return jsonify({'error': 'Static file not found'}), 404
+    
+    # Check if it's a file in the root of build directory (manifest.json, icons, etc.)
+    if path != "":
+        file_path = os.path.join(FRONTEND_BUILD_PATH, path)
+        if os.path.isfile(file_path):
+            return send_file(file_path)
+    
+    # Serve index.html for SPA routing (routes like /u/username, /me, etc.)
+        return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
     # On Heroku, bind to 0.0.0.0; locally use localhost
