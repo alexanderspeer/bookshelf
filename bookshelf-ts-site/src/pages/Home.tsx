@@ -684,7 +684,17 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
       const fullBook = [...currentlyReading, ...wantToRead, ...rankedBooks].find(
         b => b.title === clickedBook.book.title && b.author === clickedBook.book.author
       );
-      setSelectedBook(fullBook || null);
+      // Fetch full book data to ensure we have tags
+      if (fullBook?.id) {
+        apiService.getBook(fullBook.id).then(bookWithTags => {
+          setSelectedBook(bookWithTags);
+        }).catch(error => {
+          console.error('Failed to fetch book details:', error);
+          setSelectedBook(fullBook);
+        });
+      } else {
+        setSelectedBook(fullBook || null);
+      }
     }
   };
 
@@ -799,6 +809,7 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
   const handleBookAdded = () => {
     setShowAddBookModal(false);
     fetchBooks();
+    fetchTags(); // Refresh tags list to include any newly created tags
   };
 
   const handleDeleteBook = async (bookId: number) => {
@@ -1529,6 +1540,27 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
                 <p><strong>Rank:</strong> #{selectedBook.rank_position}</p>
               )}
               {selectedBook.notes && <p><strong>Notes:</strong> {selectedBook.notes}</p>}
+              {selectedBook.tags && selectedBook.tags.length > 0 && (
+                <p>
+                  <strong>Tags:</strong>{' '}
+                  {selectedBook.tags.map((tag, index) => (
+                    <span
+                      key={tag.id}
+                      style={{
+                        display: 'inline-block',
+                        padding: '4px 8px',
+                        margin: '2px',
+                        backgroundColor: tag.color || '#3498db',
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
 
             {/* Book Color Customization */}
@@ -1762,21 +1794,25 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
           }}
           onSuccess={async () => {
             setShowEditBookModal(false);
-            // Fetch the updated book data to ensure we have the latest notes
+            // Fetch the updated book data to ensure we have the latest tags and notes
             if (selectedBook.id) {
               try {
                 const updatedBook = await apiService.getBook(selectedBook.id);
                 setSelectedBook(updatedBook);
                 // Also refresh all books to update state arrays
                 fetchBooks();
+                // Refresh tags list in case new tags were created
+                fetchTags();
               } catch (error) {
                 console.error('Failed to fetch updated book:', error);
                 // Fallback to refreshing all books
                 fetchBooks();
+                fetchTags();
                 setSelectedBook(null);
               }
             } else {
               fetchBooks();
+              fetchTags();
               setSelectedBook(null);
             }
           }}

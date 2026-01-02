@@ -745,14 +745,25 @@ def merge_tags():
 @require_auth
 def add_tag_to_book(book_id):
     """Add tag to book"""
+    user = request.current_user
     data = request.json
     tag_id = data.get('tag_id')
     
     if not tag_id:
         return jsonify({'error': 'tag_id required'}), 400
     
-    tag_service.add_tag_to_book(book_id, tag_id)
-    return jsonify({'success': True})
+    # Verify book ownership
+    book = book_service.get_book(book_id, user['id'])
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+    
+    try:
+        tag_service.add_tag_to_book(book_id, tag_id)
+        cache.clear()  # Clear cache when tags change
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error adding tag to book: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/books/<int:book_id>/tags/<int:tag_id>', methods=['DELETE'])
 @require_auth
