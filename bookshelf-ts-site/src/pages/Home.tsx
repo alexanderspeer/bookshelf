@@ -58,7 +58,12 @@ const getInitialSavedThemes = (): Theme[] => {
 // DEBUG MODE - set to true to show book position outlines
 // const DEBUG_HOVER = false;
 
-export const Home: React.FC = () => {
+interface HomeProps {
+  isPublicView?: boolean;
+  publicUsername?: string;
+}
+
+export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername }) => {
   const [currentlyReading, setCurrentlyReading] = useState<Book[]>([]);
   const [wantToRead, setWantToRead] = useState<Book[]>([]);
   const [rankedBooks, setRankedBooks] = useState<Book[]>([]);
@@ -143,24 +148,33 @@ export const Home: React.FC = () => {
     // Fetch current user first to get email for user-specific localStorage
     const fetchUser = async () => {
       try {
-        const response = await apiService.getCurrentUser();
-        console.log('getCurrentUser response:', response);
-        // API returns { user: { id, email } }
-        const userEmail = response.user?.email || response.email;
-        if (userEmail) {
-          setCurrentUserEmail(userEmail);
-          // Set bookshelf title with user-specific key
-          const titleStorageKey = `bookshelf_title_${userEmail}`;
-          const savedTitle = localStorage.getItem(titleStorageKey);
-          if (savedTitle && savedTitle.trim()) {
-            setBookshelfTitle(savedTitle.trim());
-          } else {
-            // Clear any old non-user-specific title if it exists
-            const oldTitle = localStorage.getItem('bookshelf_title');
-            if (oldTitle && oldTitle !== 'My Bookshelf') {
-              localStorage.removeItem('bookshelf_title');
+        if (isPublicView && publicUsername) {
+          // Fetch public profile
+          const profile = await apiService.getPublicProfile(publicUsername);
+          if (profile && profile.username) {
+            // Set title to public user's bookshelf
+            setBookshelfTitle(`${profile.username}'s Bookshelf`);
+          }
+        } else {
+          const response = await apiService.getCurrentUser();
+          console.log('getCurrentUser response:', response);
+          // API returns { user: { id, email } }
+          const userEmail = response.user?.email || response.email;
+          if (userEmail) {
+            setCurrentUserEmail(userEmail);
+            // Set bookshelf title with user-specific key
+            const titleStorageKey = `bookshelf_title_${userEmail}`;
+            const savedTitle = localStorage.getItem(titleStorageKey);
+            if (savedTitle && savedTitle.trim()) {
+              setBookshelfTitle(savedTitle.trim());
+            } else {
+              // Clear any old non-user-specific title if it exists
+              const oldTitle = localStorage.getItem('bookshelf_title');
+              if (oldTitle && oldTitle !== 'My Bookshelf') {
+                localStorage.removeItem('bookshelf_title');
+              }
+              setBookshelfTitle('My Bookshelf');
             }
-            setBookshelfTitle('My Bookshelf');
           }
         }
       } catch (error) {
@@ -170,44 +184,12 @@ export const Home: React.FC = () => {
     
     fetchUser();
     fetchBooks();
-    fetchCurrentGoal();
-    fetchTags();
-  }, []);
-
-  useEffect(() => {
-    // Fetch current user first to get email for user-specific localStorage
-    const fetchUser = async () => {
-      try {
-        const response = await apiService.getCurrentUser();
-        console.log('getCurrentUser response:', response);
-        // API returns { user: { id, email } }
-        const userEmail = response.user?.email || response.email;
-        if (userEmail) {
-          setCurrentUserEmail(userEmail);
-          // Set bookshelf title with user-specific key
-          const titleStorageKey = `bookshelf_title_${userEmail}`;
-          const savedTitle = localStorage.getItem(titleStorageKey);
-          if (savedTitle && savedTitle.trim()) {
-            setBookshelfTitle(savedTitle.trim());
-          } else {
-            // Clear any old non-user-specific title if it exists
-            const oldTitle = localStorage.getItem('bookshelf_title');
-            if (oldTitle && oldTitle !== 'My Bookshelf') {
-              localStorage.removeItem('bookshelf_title');
-            }
-            setBookshelfTitle('My Bookshelf');
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch user', error);
-      }
-    };
-    
-    fetchUser();
-    fetchBooks();
-    fetchCurrentGoal();
-    fetchTags();
-  }, []);
+    if (!isPublicView) {
+      fetchCurrentGoal();
+      fetchTags();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPublicView, publicUsername]);
 
   useEffect(() => {
     // Debounce only search query (not shelf/tag filters for instant response)
@@ -224,53 +206,102 @@ export const Home: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentlyReading, wantToRead, rankedBooks, searchQuery, shelfFilter, tagFilter, sortOrder, currentTheme]);
 
+  const handleBlockedAction = () => {
+    toast.error("You can't modify another user's bookshelf", {
+      position: "top-right",
+      autoClose: 2000,
+    });
+  };
+
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      // Fetch currently reading books
-      const readingResponse = await apiService.getShelf('currently_reading', 1000, 0);
-      setCurrentlyReading(readingResponse.books);
-
-      // Fetch want to read books
-      const wantResponse = await apiService.getShelf('want_to_read', 1000, 0);
-      setWantToRead(wantResponse.books);
-
-      // Fetch all ranked books (read books)
-      const rankedResponse = await apiService.getRankings();
-      
-      // Welcome modal check happens in useEffect when user email and books are available
-      // Sort by date_finished (most recent first), then by rank position as secondary sort
-      const sorted = [...rankedResponse].sort((a: Book, b: Book) => {
-        // Parse date_finished - handles YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, and ISO timestamp formats
-        const getDateValue = (dateStr: string | undefined): number => {
-          if (!dateStr) return 0;
-          try {
-            // Try parsing the full string (handles YYYY-MM-DD HH:MM:SS, ISO timestamps, etc.)
-            const date = new Date(dateStr);
-            return date.getTime();
-          } catch {
-            return 0;
-          }
-        };
+      if (isPublicView && publicUsername) {
+        // Fetch public user's books
+        const publicResponse = await apiService.getPublicShelf(publicUsername);
+        const allPublicBooks = publicResponse.books || [];
         
-        const dateA = getDateValue(a.date_finished);
-        const dateB = getDateValue(b.date_finished);
+        // Separate books by reading state
+        const currentlyReadingBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'currently_reading');
+        const wantToReadBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'want_to_read');
+        const readBooks = allPublicBooks.filter((b: Book) => b.reading_state === 'read');
         
-        // First, sort by date_finished (most recent first)
-        if (dateA > 0 && dateB > 0) {
-          if (dateB !== dateA) {
-            return dateB - dateA; // Descending order (newest first)
+        setCurrentlyReading(currentlyReadingBooks);
+        setWantToRead(wantToReadBooks);
+        
+        // Sort read books by date_finished (most recent first), then by rank position as secondary sort
+        const sorted = [...readBooks].sort((a: Book, b: Book) => {
+          const getDateValue = (dateStr: string | undefined): number => {
+            if (!dateStr) return 0;
+            try {
+              const date = new Date(dateStr);
+              return date.getTime();
+            } catch {
+              return 0;
+            }
+          };
+          
+          const dateA = getDateValue(a.date_finished);
+          const dateB = getDateValue(b.date_finished);
+          
+          if (dateA > 0 && dateB > 0) {
+            if (dateB !== dateA) {
+              return dateB - dateA;
+            }
+          } else if (dateA > 0 && dateB === 0) {
+            return -1;
+          } else if (dateA === 0 && dateB > 0) {
+            return 1;
           }
-        } else if (dateA > 0 && dateB === 0) {
-          return -1; // Books with date_finished come first
-        } else if (dateA === 0 && dateB > 0) {
-          return 1;
-        }
-        // If same date/time or no date, sort by rank position as secondary
-        return (a.rank_position || 999) - (b.rank_position || 999);
-      });
-      console.log('Ranked books sorted by date:', sorted.slice(0, 5).map(b => ({ title: b.title, date: b.date_finished, rank: b.rank_position })));
-      setRankedBooks(sorted);
+          return (a.rank_position || 999) - (b.rank_position || 999);
+        });
+        setRankedBooks(sorted);
+      } else {
+        // Fetch currently reading books
+        const readingResponse = await apiService.getShelf('currently_reading', 1000, 0);
+        setCurrentlyReading(readingResponse.books);
+
+        // Fetch want to read books
+        const wantResponse = await apiService.getShelf('want_to_read', 1000, 0);
+        setWantToRead(wantResponse.books);
+
+        // Fetch all ranked books (read books)
+        const rankedResponse = await apiService.getRankings();
+        
+        // Welcome modal check happens in useEffect when user email and books are available
+        // Sort by date_finished (most recent first), then by rank position as secondary sort
+        const sorted = [...rankedResponse].sort((a: Book, b: Book) => {
+          // Parse date_finished - handles YYYY-MM-DD, YYYY-MM-DD HH:MM:SS, and ISO timestamp formats
+          const getDateValue = (dateStr: string | undefined): number => {
+            if (!dateStr) return 0;
+            try {
+              // Try parsing the full string (handles YYYY-MM-DD HH:MM:SS, ISO timestamps, etc.)
+              const date = new Date(dateStr);
+              return date.getTime();
+            } catch {
+              return 0;
+            }
+          };
+          
+          const dateA = getDateValue(a.date_finished);
+          const dateB = getDateValue(b.date_finished);
+          
+          // First, sort by date_finished (most recent first)
+          if (dateA > 0 && dateB > 0) {
+            if (dateB !== dateA) {
+              return dateB - dateA; // Descending order (newest first)
+            }
+          } else if (dateA > 0 && dateB === 0) {
+            return -1; // Books with date_finished come first
+          } else if (dateA === 0 && dateB > 0) {
+            return 1;
+          }
+          // If same date/time or no date, sort by rank position as secondary
+          return (a.rank_position || 999) - (b.rank_position || 999);
+        });
+        console.log('Ranked books sorted by date:', sorted.slice(0, 5).map(b => ({ title: b.title, date: b.date_finished, rank: b.rank_position })));
+        setRankedBooks(sorted);
+      }
     } catch (error) {
       toast.error('Failed to load books');
       console.error(error);
@@ -1124,11 +1155,15 @@ export const Home: React.FC = () => {
           <h1 
             className="home-title"
             onDoubleClick={() => {
-              setTitleInputValue(bookshelfTitle);
-              setIsEditingTitle(true);
+              if (isPublicView) {
+                handleBlockedAction();
+              } else {
+                setTitleInputValue(bookshelfTitle);
+                setIsEditingTitle(true);
+              }
             }}
-            style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
-            title="Double-click to edit"
+            style={{ cursor: isPublicView ? "url('/rpgui/img/cursor/default.png'), auto" : "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
+            title={isPublicView ? undefined : "Double-click to edit"}
           >
             {bookshelfTitle}
           </h1>
@@ -1138,7 +1173,13 @@ export const Home: React.FC = () => {
         <div className="sidebar-section">
           <button 
             className="primary-button"
-            onClick={() => setShowAddBookModal(true)}
+            onClick={() => {
+              if (isPublicView) {
+                handleBlockedAction();
+              } else {
+                setShowAddBookModal(true);
+              }
+            }}
           >
             + Add New Book
           </button>
@@ -1157,7 +1198,13 @@ export const Home: React.FC = () => {
                   </p>
                   <button 
                     className="set-goal-button"
-                    onClick={() => setShowGoalModal(true)}
+                    onClick={() => {
+                      if (isPublicView) {
+                        handleBlockedAction();
+                      } else {
+                        setShowGoalModal(true);
+                      }
+                    }}
                   >
                     Set New Goal
                   </button>
@@ -1173,7 +1220,13 @@ export const Home: React.FC = () => {
                   </p>
                   <button 
                     className="set-goal-button"
-                    onClick={() => setShowGoalModal(true)}
+                    onClick={() => {
+                      if (isPublicView) {
+                        handleBlockedAction();
+                      } else {
+                        setShowGoalModal(true);
+                      }
+                    }}
                   >
                     Set New Goal
                   </button>
@@ -1207,8 +1260,14 @@ export const Home: React.FC = () => {
                 </div>
                 <button 
                   className="goal-menu-button"
-                  onClick={() => setShowGoalModal(true)}
-                  title="Edit goal"
+                  onClick={() => {
+                    if (isPublicView) {
+                      handleBlockedAction();
+                    } else {
+                      setShowGoalModal(true);
+                    }
+                  }}
+                  title={isPublicView ? undefined : "Edit goal"}
                 >
                   ⋮
                 </button>
@@ -1217,7 +1276,13 @@ export const Home: React.FC = () => {
           ) : (
             <button 
               className="set-goal-button"
-              onClick={() => setShowGoalModal(true)}
+              onClick={() => {
+                if (isPublicView) {
+                  handleBlockedAction();
+                } else {
+                  setShowGoalModal(true);
+                }
+              }}
             >
               Set Goal
             </button>
@@ -1271,7 +1336,13 @@ export const Home: React.FC = () => {
         <div className="sidebar-section">
           <button 
             className="secondary-button"
-            onClick={() => setShowImportModal(true)}
+            onClick={() => {
+              if (isPublicView) {
+                handleBlockedAction();
+              } else {
+                setShowImportModal(true);
+              }
+            }}
           >
             Import from Goodreads
           </button>
@@ -1281,7 +1352,13 @@ export const Home: React.FC = () => {
         <div className="sidebar-section">
           <button 
             className="secondary-button"
-            onClick={() => setShowSettingsModal(true)}
+            onClick={() => {
+              if (isPublicView) {
+                handleBlockedAction();
+              } else {
+                setShowSettingsModal(true);
+              }
+            }}
           >
             Settings
           </button>
@@ -1334,8 +1411,14 @@ export const Home: React.FC = () => {
             </select>
             <button 
               className="theme-button"
-              onClick={() => setShowThemeManager(true)}
-              title="Customize bookshelf theme"
+              onClick={() => {
+                if (isPublicView) {
+                  handleBlockedAction();
+                } else {
+                  setShowThemeManager(true);
+                }
+              }}
+              title={isPublicView ? undefined : "Customize bookshelf theme"}
             >
               Colors
             </button>
