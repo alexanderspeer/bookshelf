@@ -22,9 +22,9 @@ from services.auth_service import get_auth_service
 FRONTEND_BUILD_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bookshelf-ts-site', 'build')
 SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
 
-# Don't use static_folder with empty static_url_path as it interferes with SPA routing
-# We'll handle static files manually in the catch-all route
-app = Flask(__name__)
+# Disable Flask's built-in static file serving by setting static_folder=None
+# We'll handle ALL file serving manually in the catch-all route (including /static/*)
+app = Flask(__name__, static_folder=None)
 
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "supports_credentials": True}})
 
