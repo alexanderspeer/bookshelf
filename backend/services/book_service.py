@@ -334,10 +334,10 @@ class BookService:
             FROM books b
             LEFT JOIN reading_states rs ON b.id = rs.book_id
             LEFT JOIN rankings r ON b.id = r.book_id
-            WHERE b.user_id = ? AND b.is_public = ?
+            WHERE b.user_id = ?
             ORDER BY r.rank_position ASC, b.date_added DESC
         """
-        books = self.db.execute_query(query, (owner_user_id, True))
+        books = self.db.execute_query(query, (owner_user_id,))
         
         # Fetch tags for all books in one query (avoid N+1 problem)
         if books:
@@ -375,13 +375,13 @@ class BookService:
             SELECT b.id, b.title, b.author, b.isbn, b.isbn13, b.pub_date, b.num_pages,
                    b.genre, b.cover_image_url, b.series, b.series_position,
                    rs.state as reading_state, r.rank_position, r.initial_stars,
-                   b.date_finished
+                   b.date_finished, b.dimensions, b.dom_color, b.notes
             FROM books b
             LEFT JOIN reading_states rs ON b.id = rs.book_id
             LEFT JOIN rankings r ON b.id = r.book_id
-            WHERE b.user_id = ? AND b.is_public = ?
+            WHERE b.user_id = ?
         """
-        params = [user_id, True]
+        params = [user_id]
         
         if state:
             query += " AND rs.state = ?"
@@ -426,19 +426,19 @@ class BookService:
             SELECT rs.state, COUNT(*) as count
             FROM books b
             JOIN reading_states rs ON b.id = rs.book_id
-            WHERE b.user_id = ? AND b.is_public = ?
+            WHERE b.user_id = ?
             GROUP BY rs.state
         """
-        state_counts = self.db.execute_query(state_query, (user_id, True))
+        state_counts = self.db.execute_query(state_query, (user_id,))
         
         # Average rating (from rankings)
         rating_query = """
             SELECT AVG(r.initial_stars) as avg_rating, COUNT(*) as rated_count
             FROM books b
             JOIN rankings r ON b.id = r.book_id
-            WHERE b.user_id = ? AND b.is_public = ? AND r.initial_stars IS NOT NULL
+            WHERE b.user_id = ? AND r.initial_stars IS NOT NULL
         """
-        rating_result = self.db.execute_query(rating_query, (user_id, True))
+        rating_result = self.db.execute_query(rating_query, (user_id,))
         avg_rating = rating_result[0]['avg_rating'] if rating_result and rating_result[0]['avg_rating'] else None
         rated_count = rating_result[0]['rated_count'] if rating_result else 0
         
@@ -448,18 +448,18 @@ class BookService:
             FROM tags t
             JOIN book_tags bt ON t.id = bt.tag_id
             JOIN books b ON bt.book_id = b.id
-            WHERE b.user_id = ? AND b.is_public = ?
+            WHERE b.user_id = ?
             GROUP BY t.id, t.name, t.color
             ORDER BY book_count DESC
             LIMIT 10
         """
-        top_tags = self.db.execute_query(tags_query, (user_id, True))
+        top_tags = self.db.execute_query(tags_query, (user_id,))
         
         # Yearly totals (books finished per year)
         yearly_query = """
             SELECT EXTRACT(YEAR FROM b.date_finished)::TEXT as year, COUNT(*) as count
             FROM books b
-            WHERE b.user_id = ? AND b.is_public = ? AND b.date_finished IS NOT NULL
+            WHERE b.user_id = ? AND b.date_finished IS NOT NULL
             GROUP BY EXTRACT(YEAR FROM b.date_finished)
             ORDER BY year DESC
         """
@@ -468,11 +468,11 @@ class BookService:
             yearly_query = """
                 SELECT strftime('%Y', b.date_finished) as year, COUNT(*) as count
                 FROM books b
-                WHERE b.user_id = ? AND b.is_public = ? AND b.date_finished IS NOT NULL
+                WHERE b.user_id = ? AND b.date_finished IS NOT NULL
                 GROUP BY strftime('%Y', b.date_finished)
                 ORDER BY year DESC
             """
-        yearly_totals = self.db.execute_query(yearly_query, (user_id, True))
+        yearly_totals = self.db.execute_query(yearly_query, (user_id,))
         
         # Convert to dict format
         state_dict = {}

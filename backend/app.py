@@ -271,6 +271,42 @@ def get_public_stats(username):
     stats = book_service.get_public_stats(user['id'])
     return jsonify(stats)
 
+@app.route('/api/public/users/<username>/goal', methods=['GET'])
+def get_public_goal(username):
+    """Get current reading goal for a public user"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    goal = goal_service.get_current_goal(user['id'])
+    
+    if not goal:
+        return jsonify({'error': 'No goal set'}), 404
+    
+    return jsonify(goal)
+
+@app.route('/api/public/users/<username>/goal/<int:year>/books', methods=['GET'])
+def get_public_goal_books(username, year):
+    """Get books that contributed to a user's goal for a specific year"""
+    user = auth_service.get_user_by_username(username)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Get goal first to verify it exists
+    goal = goal_service.get_goal(year, user['id'])
+    if not goal:
+        return jsonify({'error': 'Goal not found'}), 404
+    
+    # Get books that count towards this goal (finished in the goal year)
+    books = goal_service.get_goal_books(year, user['id'])
+    
+    return jsonify({
+        'books': books,
+        'goal': goal
+    })
+
 # =============================================================================
 # PRIVATE USER ENDPOINTS (Auth required)
 # =============================================================================

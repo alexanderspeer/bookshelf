@@ -312,6 +312,22 @@ class ApiService {
     return this.request(`/public/users/${encodeURIComponent(username)}/stats`);
   }
 
+  async getPublicGoal(username: string) {
+    try {
+      return await this.request(`/public/users/${encodeURIComponent(username)}/goal`);
+    } catch (error: any) {
+      // If no goal exists (404), return null instead of throwing
+      if (error.message && (error.message.includes('404') || error.message.includes('No goal set'))) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  async getPublicGoalBooks(username: string, year: number) {
+    return this.request(`/public/users/${encodeURIComponent(username)}/goal/${year}/books`);
+  }
+
   // Private user endpoints
   async getMyProfile() {
     return this.request('/me/profile');

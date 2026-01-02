@@ -184,8 +184,8 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
     
     fetchUser();
     fetchBooks();
+    fetchCurrentGoal();
     if (!isPublicView) {
-      fetchCurrentGoal();
       fetchTags();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -349,7 +349,12 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
     // Otherwise fetch from API
     try {
       console.log('Fetching current goal from API...');
-      const goal = await apiService.getCurrentGoal();
+      let goal;
+      if (isPublicView && publicUsername) {
+        goal = await apiService.getPublicGoal(publicUsername);
+      } else {
+        goal = await apiService.getCurrentGoal();
+      }
       console.log('API Response - goal:', JSON.stringify(goal, null, 2));
       console.log('Goal type:', typeof goal);
       console.log('Goal is null?', goal === null);
@@ -737,7 +742,12 @@ export const Home: React.FC<HomeProps> = ({ isPublicView = false, publicUsername
     if (!currentGoal) return;
     
     try {
-      const response = await apiService.getGoalBooks(currentGoal.year);
+      let response;
+      if (isPublicView && publicUsername) {
+        response = await apiService.getPublicGoalBooks(publicUsername, currentGoal.year);
+      } else {
+        response = await apiService.getGoalBooks(currentGoal.year);
+      }
       setGoalBooks(response.books || []);
       setShowGoalBooksModal(true);
     } catch (error) {
