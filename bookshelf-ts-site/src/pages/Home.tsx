@@ -1274,6 +1274,19 @@ export const Home: React.FC = () => {
             Import from Goodreads
           </button>
         </div>
+
+        {/* Settings Section */}
+        <div className="sidebar-section">
+          <button 
+            className="secondary-button"
+            onClick={() => {
+              window.history.pushState({}, '', '/me/settings');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+          >
+            Settings
+          </button>
+        </div>
       </div>
 
       <div className="home-main">

@@ -8,6 +8,7 @@ import { Home } from './pages/Home';
 import { Auth } from './pages/Auth';
 import { PublicBookshelf } from './pages/PublicBookshelf';
 import { PublicUserProfile } from './pages/PublicUserProfile';
+import { Settings } from './pages/Settings';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { applyRPGUICursorFixes } from './utils/rpguiCursorFix';
@@ -112,8 +113,50 @@ function App() {
   }
 
   // Private routes: /me, /me/shelf, /me/stats, /me/settings
-  // For now, all authenticated routes go to Home
-  // Home component can handle /me routes internally if needed
+  if (pathParts[0] === 'me') {
+    if (pathParts[1] === 'settings') {
+      return (
+        <div className="rpgui-content">
+          <div className="app">
+            <ToastContainer position="top-right" autoClose={1000} closeButton={false} />
+            <span
+              onClick={handleLogout}
+              className="logout-link"
+              style={{
+                position: 'fixed',
+                top: '4px',
+                right: '16px',
+                zIndex: 10000,
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontFamily: "'Press Start 2P', cursive",
+                userSelect: 'none',
+                background: 'none',
+                border: 'none',
+                padding: '0',
+                margin: '0',
+                display: 'inline-block'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.8';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              Logout
+            </span>
+            <Settings onBack={() => {
+              window.history.pushState({}, '', '/');
+              setCurrentPath('/');
+            }} />
+          </div>
+        </div>
+      );
+    }
+    // Other /me routes can be added here later
+  }
   
   return (
     <div className="rpgui-content">
