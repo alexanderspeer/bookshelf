@@ -22,8 +22,8 @@ from services.auth_service import get_auth_service
 FRONTEND_BUILD_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bookshelf-ts-site', 'build')
 SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
 
-# Don't use static_folder - it interferes with SPA routing
-# We'll manually serve static files with explicit routes
+# Don't use static_folder with empty static_url_path as it interferes with SPA routing
+# We'll handle static files manually in the catch-all route
 app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "supports_credentials": True}})
@@ -854,31 +854,16 @@ def health_check():
 # FRONTEND SERVING (React App)
 # =============================================================================
 
-# Serve static files from /static/ directory - MUST come before catch-all
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """Serve static files from React build static directory"""
-    if not SERVE_FRONTEND:
-        return jsonify({'error': 'Frontend not built'}), 404
-    static_dir = os.path.join(FRONTEND_BUILD_PATH, 'static')
-    file_path = os.path.join(static_dir, filename)
-    # Normalize paths
-    static_dir = os.path.normpath(static_dir)
-    file_path = os.path.normpath(file_path)
-    # Security check
-    if not file_path.startswith(static_dir + os.sep) and file_path != static_dir:
-        return jsonify({'error': 'Invalid path'}), 404
-    if os.path.isfile(file_path):
-        # Use send_from_directory for proper MIME type handling
-        return send_from_directory(static_dir, filename)
-    return jsonify({'error': 'File not found'}), 404
-
-# Catch-all route for SPA - must come AFTER static route
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_frontend(path):
-    """Serve React frontend - handles SPA routing"""
+    """Serve React frontend or API info if frontend not built"""
+    # Don't serve frontend for API routes (should already be handled, but just in case)
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    
     if not SERVE_FRONTEND:
+        # Frontend not built, show API info
         return jsonify({
             'message': 'Bookshelf API is running',
             'version': '1.0.0',
@@ -894,22 +879,16 @@ def serve_frontend(path):
             'note': 'Frontend not built. Run `npm run build` in bookshelf-ts-site/'
         })
     
-    # Don't serve API routes
-    if path.startswith('api/'):
-        return jsonify({'error': 'API endpoint not found'}), 404
-    
-    # Don't handle /static/ here - that's handled by serve_static above
-    if path.startswith('static/'):
-        return jsonify({'error': 'Static file not found'}), 404
-    
-    # Check if it's a file in the root of build directory (manifest.json, icons, etc.)
+    # Try to serve the requested file (for static assets like JS, CSS, images)
+    # Only serve actual files, not routes like /u/username
     if path != "":
         file_path = os.path.join(FRONTEND_BUILD_PATH, path)
+        # Check if it's a file (not a directory) and exists
         if os.path.isfile(file_path):
-            return send_file(file_path)
+            return send_from_directory(FRONTEND_BUILD_PATH, path)
     
-    # Serve index.html for SPA routing (routes like /u/username, /me, etc.)
-        return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
+    # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
+    return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
     # On Heroku, bind to 0.0.0.0; locally use localhost
