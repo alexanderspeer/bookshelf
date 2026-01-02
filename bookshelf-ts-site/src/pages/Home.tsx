@@ -11,6 +11,7 @@ import { GoodreadsImport } from './GoodreadsImport';
 import { ThemeManager } from '../components/ThemeManager';
 import { RankingsModal } from '../components/RankingsModal';
 import { WelcomeModal } from '../components/WelcomeModal';
+import { Settings } from './Settings';
 import '../styles/home.css';
 
 const DEFAULT_THEME: Theme = {
@@ -92,6 +93,7 @@ export const Home: React.FC = () => {
   const [bookshelfTitle, setBookshelfTitle] = useState<string>('My Bookshelf');
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
   const [titleInputValue, setTitleInputValue] = useState<string>('');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const hoverCanvasRef = React.useRef<HTMLCanvasElement>(null); // Separate overlay for hover
   const renderingRef = React.useRef<boolean>(false);
@@ -1079,7 +1081,7 @@ export const Home: React.FC = () => {
 
   return (
     <div className="home-container">
-      <div className="home-sidebar">
+      <div className="home-sidebar" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
         {isEditingTitle ? (
           <div 
             className="title-edit-container"
@@ -1279,10 +1281,7 @@ export const Home: React.FC = () => {
         <div className="sidebar-section">
           <button 
             className="secondary-button"
-            onClick={() => {
-              window.history.pushState({}, '', '/me/settings');
-              window.dispatchEvent(new PopStateEvent('popstate'));
-            }}
+            onClick={() => setShowSettingsModal(true)}
           >
             Settings
           </button>
@@ -1708,6 +1707,12 @@ export const Home: React.FC = () => {
         isOpen={showRankingsModal}
         onClose={() => setShowRankingsModal(false)}
         onBookClick={(book) => setSelectedBook(book)}
+      />
+
+      {/* Settings Modal */}
+      <Settings
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
       />
 
       {/* Shelf Books Modal */}

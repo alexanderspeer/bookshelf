@@ -215,9 +215,7 @@ def get_public_profile(username):
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
-    if not user.get('is_public'):
-        return jsonify({'error': 'User not found'}), 404
-    
+    # All profiles are public now, no need to check is_public
     # Return only public-safe fields
     return jsonify({
         'username': user['username'],
@@ -232,8 +230,7 @@ def get_public_shelf(username):
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
-    if not user.get('is_public'):
-        return jsonify({'error': 'User not found'}), 404
+    # All profiles are public now, no need to check is_public
     
     state = request.args.get('state')  # Optional filter by reading state
     books = book_service.get_public_shelf(user['id'], state)
@@ -270,8 +267,7 @@ def get_public_stats(username):
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
-    if not user.get('is_public'):
-        return jsonify({'error': 'User not found'}), 404
+    # All profiles are public now, no need to check is_public
     
     stats = book_service.get_public_stats(user['id'])
     return jsonify(stats)

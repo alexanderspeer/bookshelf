@@ -95,7 +95,7 @@ class AuthService:
         password_hash = self.hash_password(password)
         user_id = self.db.execute_update(
             'INSERT INTO users (email, password_hash, username, is_public) VALUES (?, ?, ?, ?)',
-            (email, password_hash, username, False)
+            (email, password_hash, username, True)
         )
         
         return {
