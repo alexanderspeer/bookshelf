@@ -148,11 +148,18 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
         await apiService.updateBook(book.id!, { notes: bookNotes });
       }
 
-      // Then finalize the ranking
-      await apiService.finalizeRanking(book.id!, position, stars, results);
+      // Then finalize the ranking - the API returns all ranked books
+      const rankedBooks = await apiService.finalizeRanking(book.id!, position, stars, results);
+      
+      // Find the actual rank position from the API response
+      const rankedBook = rankedBooks.find((b: Book) => b.id === book.id);
+      const actualRankPosition = rankedBook?.rank_position || position;
+      
+      // Update the final position with the actual rank from the API
+      setFinalPosition(actualRankPosition);
       
       setStep('complete');
-      toast.success(`${book.title} ranked at position #${position}!`);
+      toast.success(`${book.title} ranked at position #${actualRankPosition}!`);
     } catch (error) {
       toast.error('Failed to save ranking');
       console.error(error);
