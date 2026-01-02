@@ -89,7 +89,8 @@ class TagService:
     
     def add_tag_to_book(self, book_id, tag_id):
         """Add tag to book"""
-        query = "INSERT OR IGNORE INTO book_tags (book_id, tag_id) VALUES (?, ?)"
+        # PostgreSQL syntax - ON CONFLICT handles duplicate entries
+        query = "INSERT INTO book_tags (book_id, tag_id) VALUES (?, ?) ON CONFLICT (book_id, tag_id) DO NOTHING"
         self.db.execute_update(query, (book_id, tag_id))
         return True
     
