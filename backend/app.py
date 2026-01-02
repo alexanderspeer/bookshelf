@@ -316,26 +316,6 @@ def set_reading_state(book_id):
     cache.clear()  # Clear cache when reading states change
     return jsonify({'success': True})
 
-@app.route('/api/books/<int:book_id>/spine', methods=['POST'])
-@require_auth
-def upload_spine(book_id):
-    """Upload spine image"""
-    user = request.current_user
-    
-    # Verify book ownership
-    book = book_service.get_book(book_id, user['id'])
-    if not book:
-        return jsonify({'error': 'Book not found'}), 404
-    
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file provided'}), 400
-    
-    file = request.files['file']
-    filename = book_service.save_spine_image(book_id, file)
-    
-    return jsonify({'filename': filename})
-
-# Spine image serving moved to end of file
 
 # =============================================================================
 # PUBLIC ENDPOINTS (No auth required)
@@ -643,19 +623,6 @@ def get_book_chain(book_id):
 def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'ok'})
-
-# =============================================================================
-# STATIC FILE SERVING
-# =============================================================================
-
-@app.route('/spine_images/<path:filename>')
-def serve_spine_image(filename):
-    """Serve spine images with CORS headers"""
-    spine_images_path = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
-    response = send_from_directory(spine_images_path, filename)
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
-    return response
 
 # =============================================================================
 # FRONTEND SERVING (React App)

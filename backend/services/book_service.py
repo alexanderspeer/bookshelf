@@ -2,13 +2,10 @@ from database.db import get_db
 from datetime import datetime
 import os
 import shutil
-from services.cover_service import fetch_and_save_cover
 
 class BookService:
     def __init__(self):
         self.db = get_db()
-        self.spine_images_path = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
-        os.makedirs(self.spine_images_path, exist_ok=True)
     
     def create_book(self, book_data, initial_state='want_to_read', user_id=None):
         """Create a new book entry"""
@@ -18,9 +15,9 @@ class BookService:
         query = """
             INSERT INTO books (
                 user_id, title, author, isbn, isbn13, pub_date, num_pages, genre,
-                cover_image_url, spine_image_path, dimensions, series, series_position,
+                cover_image_url, dimensions, series, series_position,
                 notes, why_reading, is_public, date_finished
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         
         params = (
@@ -33,7 +30,6 @@ class BookService:
             book_data.get('num_pages'),
             book_data.get('genre'),
             book_data.get('cover_image_url'),
-            book_data.get('spine_image_path'),
             book_data.get('dimensions'),
             book_data.get('series'),
             book_data.get('series_position'),
@@ -44,10 +40,6 @@ class BookService:
         )
         
         book_id = self.db.execute_update(query, params)
-        
-        # Note: spine_image_path is for actual spine photos (edge of book), not covers
-        # Real spine images must be uploaded by users or generated as fakes
-        # Covers are full front images and look bad when used as spines
         
         # Set initial reading state
         self.set_reading_state(book_id, initial_state)
@@ -110,7 +102,7 @@ class BookService:
         
         updateable_fields = [
             'title', 'author', 'isbn', 'isbn13', 'pub_date', 'num_pages', 
-            'genre', 'cover_image_url', 'spine_image_path', 'dimensions',
+            'genre', 'cover_image_url', 'dimensions',
             'series', 'series_position', 'notes', 'why_reading', 'is_public'
         ]
         
@@ -139,13 +131,6 @@ class BookService:
     
     def delete_book(self, book_id, user_id=None):
         """Delete a book"""
-        # Get book to check for spine image
-        book = self.get_book(book_id, user_id)
-        if book and book.get('spine_image_path'):
-            spine_path = os.path.join(self.spine_images_path, book['spine_image_path'])
-            if os.path.exists(spine_path):
-                os.remove(spine_path)
-        
         query = "DELETE FROM books WHERE id = ?"
         params = [book_id]
         
@@ -313,25 +298,6 @@ class BookService:
             self.db.execute_update(book_query, params)
         
         return True
-    
-    def save_spine_image(self, book_id, image_file):
-        """Save a spine image file"""
-        # Generate filename
-        book = self.get_book(book_id)
-        if not book:
-            return None
-        
-        ext = os.path.splitext(image_file.filename)[1]
-        filename = f"{book_id}_{book['title'][:30].replace(' ', '_')}{ext}"
-        filepath = os.path.join(self.spine_images_path, filename)
-        
-        # Save file
-        image_file.save(filepath)
-        
-        # Update book record
-        self.update_book(book_id, {'spine_image_path': filename})
-        
-        return filename
     
     def get_total_count(self, state=None, user_id=None):
         """Get total count of books"""

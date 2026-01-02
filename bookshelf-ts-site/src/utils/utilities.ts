@@ -135,15 +135,10 @@ export const split_dimensions_str_into_h_w_l = (dimensions : string) => {
 };
 
 export const download_imgs_in_zip = async (books: foundBook[]) => {
-  const zip = new JSZip();
-  for (const book of books) {
-    const response = await fetch(IMG_URL_PREFIX + book.fileName);
-    const bookData = await response.blob();
-    zip.file(book.fileName, bookData);
-  }
-
-  const content = await zip.generateAsync({type:"blob"});
-  saveAs(content, 'yourBookSpines.zip');
+  // Spine storage has been removed - spines are now generated on the fly
+  // This function is no longer functional as there are no stored spine images to download
+  console.warn('download_imgs_in_zip is no longer supported - spines are generated on the fly');
+  throw new Error('Spine image download is no longer supported');
 }
 
 export const convert_cm_to_in = (cmValue: number): number => {

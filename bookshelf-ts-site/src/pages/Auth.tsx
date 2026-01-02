@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
 import '../styles/home.css';
@@ -12,7 +12,10 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,9 +131,65 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
               Email
             </label>
             <input
+              ref={emailInputRef}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const input = e.target as HTMLInputElement;
+                // Preserve cursor position
+                const cursorPosition = input.selectionStart || 0;
+                setEmail(input.value);
+                // Restore cursor position after state update
+                setTimeout(() => {
+                  if (emailInputRef.current) {
+                    emailInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                }, 0);
+              }}
+              onMouseDown={(e) => {
+                const input = e.target as HTMLInputElement;
+                if (!input) return;
+                
+                // Calculate cursor position from click coordinates
+                const rect = input.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                
+                // Account for padding
+                const paddingLeft = parseInt(window.getComputedStyle(input).paddingLeft) || 12;
+                const adjustedX = clickX - paddingLeft;
+                
+                // Create a temporary span to measure text width
+                const style = window.getComputedStyle(input);
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                if (!context) return;
+                
+                context.font = style.font || '12px "Press Start 2P"';
+                
+                // Find the character position closest to the click
+                let position = 0;
+                let minDistance = Infinity;
+                const text = input.value;
+                
+                for (let i = 0; i <= text.length; i++) {
+                  const textBefore = text.substring(0, i);
+                  const textWidth = context.measureText(textBefore).width;
+                  const distance = Math.abs(textWidth - adjustedX);
+                  
+                  if (distance < minDistance) {
+                    minDistance = distance;
+                    position = i;
+                  }
+                }
+                
+                // Set cursor position after a brief delay to ensure it works
+                setTimeout(() => {
+                  if (emailInputRef.current) {
+                    emailInputRef.current.focus();
+                    emailInputRef.current.setSelectionRange(position, position);
+                  }
+                }, 0);
+              }}
               placeholder="your@email.com"
               className="bs_text_input bs_text_input_dark auth-input"
               style={{
@@ -142,7 +201,13 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
                 boxSizing: 'border-box',
                 backgroundColor: '#25262b',
                 color: '#c1c2c5',
-                fontFamily: "'Press Start 2P', cursive"
+                fontFamily: "'Press Start 2P', cursive",
+                userSelect: 'text',
+                WebkitUserSelect: 'text',
+                MozUserSelect: 'text',
+                msUserSelect: 'text',
+                pointerEvents: 'auto',
+                cursor: "url('/rpgui/img/cursor/select.png') 10 0, auto"
               }}
               disabled={loading}
             />
@@ -159,25 +224,109 @@ export const Auth: React.FC<AuthProps> = ({ onAuthSuccess }) => {
             }}>
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={isLogin ? 'Enter password' : 'At least 8 characters'}
-              className="bs_text_input bs_text_input_dark auth-input"
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #5C4033',
-                borderRadius: '6px',
-                fontSize: '12px',
-                boxSizing: 'border-box',
-                backgroundColor: '#25262b',
-                color: '#c1c2c5',
-                fontFamily: "'Press Start 2P', cursive"
-              }}
-              disabled={loading}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                ref={passwordInputRef}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  // Preserve cursor position
+                  const cursorPosition = input.selectionStart || 0;
+                  setPassword(input.value);
+                  // Restore cursor position after state update
+                  setTimeout(() => {
+                    if (passwordInputRef.current) {
+                      passwordInputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                  }, 0);
+                }}
+                onMouseDown={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  if (!input) return;
+                  
+                  // Calculate cursor position from click coordinates
+                  const rect = input.getBoundingClientRect();
+                  const clickX = e.clientX - rect.left;
+                  
+                  // Account for padding and eye icon space
+                  const paddingLeft = parseInt(window.getComputedStyle(input).paddingLeft) || 12;
+                  const paddingRight = parseInt(window.getComputedStyle(input).paddingRight) || 12;
+                  const iconWidth = 40; // Space for the eye icon
+                  const adjustedX = Math.min(clickX - paddingLeft, rect.width - paddingRight - iconWidth - paddingLeft);
+                  
+                  // Create a temporary span to measure text width
+                  const style = window.getComputedStyle(input);
+                  const canvas = document.createElement('canvas');
+                  const context = canvas.getContext('2d');
+                  if (!context) return;
+                  
+                  context.font = style.font || '12px "Press Start 2P"';
+                  
+                  // Find the character position closest to the click
+                  let position = 0;
+                  let minDistance = Infinity;
+                  const text = input.value;
+                  
+                  for (let i = 0; i <= text.length; i++) {
+                    const textBefore = text.substring(0, i);
+                    const textWidth = context.measureText(textBefore).width;
+                    const distance = Math.abs(textWidth - adjustedX);
+                    
+                    if (distance < minDistance) {
+                      minDistance = distance;
+                      position = i;
+                    }
+                  }
+                  
+                  // Set cursor position after a brief delay to ensure it works
+                  setTimeout(() => {
+                    if (passwordInputRef.current) {
+                      passwordInputRef.current.focus();
+                      passwordInputRef.current.setSelectionRange(position, position);
+                    }
+                  }, 0);
+                }}
+                placeholder={isLogin ? 'Enter password' : 'At least 8 characters'}
+                className="bs_text_input bs_text_input_dark auth-input"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  paddingRight: '50px', // Make room for the eye icon
+                  border: '2px solid #5C4033',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#25262b',
+                  color: '#c1c2c5',
+                  fontFamily: "'Press Start 2P', cursive",
+                  userSelect: 'text',
+                  WebkitUserSelect: 'text',
+                  MozUserSelect: 'text',
+                  msUserSelect: 'text',
+                  pointerEvents: 'auto',
+                  cursor: "url('/rpgui/img/cursor/select.png') 10 0, auto"
+                }}
+                disabled={loading}
+              />
+              <img
+                src={showPassword ? '/rpgui/img/radio-golden-on.png' : '/rpgui/img/radio-golden-off.png'}
+                alt={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => !loading && setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: loading ? 'not-allowed' : "url('/rpgui/img/cursor/point.png') 10 0, pointer",
+                  width: '24px',
+                  height: '24px',
+                  opacity: loading ? 0.5 : 1,
+                  pointerEvents: loading ? 'none' : 'auto'
+                }}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              />
+            </div>
           </div>
 
           <button

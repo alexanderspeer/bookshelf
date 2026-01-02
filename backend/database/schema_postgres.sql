@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS books (
     num_pages INTEGER,
     genre TEXT,
     cover_image_url TEXT,
-    spine_image_path TEXT,
     dimensions TEXT,
     dom_color TEXT,
     series TEXT,

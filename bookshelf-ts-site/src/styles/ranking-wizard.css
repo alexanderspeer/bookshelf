@@ -43,6 +43,12 @@
   object-fit: contain;
   filter: grayscale(100%) opacity(0.4);
   transition: all 0.2s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .star-rating .star-potion:hover .potion-icon {
@@ -186,6 +192,12 @@
   margin-top: 5px;
   margin-bottom: 1rem;
   position: relative;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .comparisons-step .rpgui-progress-left-edge {
@@ -195,6 +207,12 @@
   left: 0px;
   background-size: 100% 100%;
   z-index: 2;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .comparisons-step .rpgui-progress-right-edge {
@@ -204,6 +222,12 @@
   right: 0px;
   background-size: 100% 100%;
   z-index: 2;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .comparisons-step .rpgui-progress-track {
@@ -214,6 +238,12 @@
   background-repeat: repeat-x;
   background-size: 36px 100%;
   z-index: 1;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .comparisons-step .rpgui-progress-fill {
@@ -225,6 +255,12 @@
   background-size: 36px 100%;
   transition: width 0.3s ease;
   z-index: 3;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .progress-text {
@@ -378,6 +414,12 @@
   }
 
   .star-rating .star-potion .potion-icon {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
     width: 60px;
     height: 60px;
   }

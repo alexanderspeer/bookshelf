@@ -20,7 +20,6 @@ export interface foundBook extends book {
   upload_id : string,
   dimensions : string,
   domColor ?: string,
-  fileName : string,
   submitter : string,
   spineFont ?: string
 }

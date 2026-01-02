@@ -131,16 +131,6 @@ class ApiService {
     });
   }
 
-  async uploadSpineImage(bookId: number, file: File) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return fetch(`${this.baseUrl}/books/${bookId}/spine`, {
-      method: 'POST',
-      body: formData,
-    }).then(res => res.json());
-  }
-
   // Rankings
   async getRankings() {
     return this.request('/rankings');

@@ -180,11 +180,14 @@
   font-size: 1.5rem;
   color: #2e7d32;
   cursor: pointer;
-  padding: 0.2rem 0.5rem;
+  padding: 0;
   border-radius: 4px;
   transition: all 0.2s ease;
   line-height: 1;
   transform-origin: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .goal-menu-button:hover {

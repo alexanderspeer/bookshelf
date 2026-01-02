@@ -30,6 +30,21 @@ export const AddBookModal: React.FC<AddBookModalProps> = ({ isOpen, onClose, onS
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
+
   const fetchTags = async () => {
     try {
       const tags = await apiService.getTags();

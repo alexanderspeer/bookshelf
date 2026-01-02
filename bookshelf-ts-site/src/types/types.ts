@@ -8,7 +8,6 @@ export interface Book {
   num_pages?: number;
   genre?: string;
   cover_image_url?: string;
-  spine_image_path?: string;
   dimensions?: string;
   dom_color?: string;
   series?: string;

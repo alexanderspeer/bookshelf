@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Book } from '../types/types';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
@@ -36,6 +36,19 @@ export const RankingWizard: React.FC<RankingWizardProps> = ({ book, onComplete, 
   const [totalRanked, setTotalRanked] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [bookNotes, setBookNotes] = useState<string>('');
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [onCancel]);
 
   const startComparisons = async () => {
     try {

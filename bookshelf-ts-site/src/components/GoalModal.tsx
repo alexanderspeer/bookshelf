@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import apiService from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -61,6 +61,21 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSuccess
       setDeleting(false);
     }
   };
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

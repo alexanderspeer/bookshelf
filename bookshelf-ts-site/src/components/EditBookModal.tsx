@@ -33,6 +33,21 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
     }
   }, [isOpen, book.tags]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
+
   const fetchTags = async () => {
     try {
       const tags = await apiService.getTags();
@@ -92,7 +107,7 @@ export const EditBookModal: React.FC<EditBookModalProps> = ({ book, isOpen, onCl
       }
       
       // Update the book
-      const updatedBook = await apiService.updateBook(book.id!, updateData);
+      await apiService.updateBook(book.id!, updateData);
       
       // Update tags - remove old tags and add new ones
       const currentTagIds = book.tags?.map(tag => tag.id) || [];

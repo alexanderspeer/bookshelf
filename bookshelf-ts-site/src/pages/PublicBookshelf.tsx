@@ -13,6 +13,21 @@ export const PublicBookshelf: React.FC = () => {
     fetchPublicBooks();
   }, []);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedBook) {
+        setSelectedBook(null);
+      }
+    };
+
+    if (selectedBook) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [selectedBook]);
+
   const fetchPublicBooks = async () => {
     setLoading(true);
     try {
@@ -188,7 +203,7 @@ export const PublicBookshelf: React.FC = () => {
             </button>
             
             <h2 style={{ marginBottom: '8px' }}>{selectedBook.title}</h2>
-            <h3 style={{ color: '#666', marginBottom: '24px' }}>by {selectedBook.author}</h3>
+            <h3 style={{ color: '#666', marginBottom: '24px', textAlign: 'center' }}>by {selectedBook.author}</h3>
             
             {selectedBook.cover_image_url && (
               <img 

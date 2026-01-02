@@ -30,7 +30,6 @@ interface YearRanking {
 export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, onBookClick }) => {
   const [activeTab, setActiveTab] = useState<'books' | 'authors' | 'years'>('books');
   const [rankedBooks, setRankedBooks] = useState<Book[]>([]);
-  const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,12 +41,8 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ranked, all] = await Promise.all([
-        apiService.getRankings(),
-        apiService.listBooks({ limit: 10000 }) // Get all books
-      ]);
+      const ranked = await apiService.getRankings();
       setRankedBooks(ranked);
-      setAllBooks(all.books || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -76,7 +71,6 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
       // Only count books that have been rated (stars > 0) for the main metrics
       const ratedBooks = books.filter(b => b.initial_stars && b.initial_stars > 0);
       const bookCount = ratedBooks.length; // Only count rated books
-      const totalBooks = books.length; // Keep total for display if needed
       
       const ranks = books.map(b => b.rank_position || 999).filter(r => r !== 999);
       const stars = books.map(b => b.initial_stars || 0).filter(s => s > 0);
@@ -207,6 +201,21 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
     });
   }, [rankedBooks]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -283,7 +292,8 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
                           }}
                           style={{ 
                             cursor: onBookClick ? "url('/rpgui/img/cursor/point.png') 10 0, pointer" : "url('/rpgui/img/cursor/point.png') 10 0, pointer",
-                            textDecoration: onBookClick ? 'underline' : 'none'
+                            textDecoration: onBookClick ? 'underline' : 'none',
+                            textAlign: 'center'
                           }}
                         >
                           {book.title}
@@ -312,7 +322,7 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
                         style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                       >
                         <span className="rank-number">Rank: {index + 1}</span>
-                        <h4>{authorRank.author}</h4>
+                        <h4 style={{ textAlign: 'center' }}>{authorRank.author}</h4>
                         <div className="ranking-metrics">
                           <span>{authorRank.bookCount} book{authorRank.bookCount !== 1 ? 's' : ''}</span>
                           {authorRank.averageRank < 999 && (
@@ -340,7 +350,7 @@ export const RankingsModal: React.FC<RankingsModalProps> = ({ isOpen, onClose, o
                         style={{ cursor: "url('/rpgui/img/cursor/point.png') 10 0, pointer" }}
                       >
                         <span className="rank-number">Rank: {index + 1}</span>
-                        <h4>{yearRank.year}</h4>
+                        <h4 style={{ textAlign: 'center' }}>{yearRank.year}</h4>
                         <div className="ranking-metrics">
                           <span>{yearRank.bookCount} book{yearRank.bookCount !== 1 ? 's' : ''}</span>
                           {yearRank.averageRank < 999 && (

@@ -71,15 +71,15 @@ for book in books:
     query = """
         INSERT INTO books (
             title, author, isbn, isbn13, pub_date, num_pages, genre,
-            cover_image_url, spine_image_path, dimensions, dom_color,
+            cover_image_url, dimensions, dom_color,
             series, series_position, notes, why_reading,
             date_added, date_started, date_finished, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
     new_id = postgres_db.execute_update(query, (
         book.get('title'), book.get('author'), book.get('isbn'), book.get('isbn13'),
         book.get('pub_date'), book.get('num_pages'), book.get('genre'),
-        book.get('cover_image_url'), book.get('spine_image_path'),
+        book.get('cover_image_url'),
         book.get('dimensions'), book.get('dom_color'), book.get('series'),
         book.get('series_position'), book.get('notes'), book.get('why_reading'),
         book.get('date_added'), book.get('date_started'), book.get('date_finished'),

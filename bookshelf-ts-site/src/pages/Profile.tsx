@@ -72,7 +72,7 @@ export function Profile({widgetCallback} : defaultProps){
         <div key={b.upload_id} style={{userSelect: "none", cursor: "pointer"}}>
           <span
             className={"a_".concat(colorScheme)}
-            key={b.upload_id.concat(b.fileName)} 
+            key={b.upload_id} 
             onClick={() => {
               scrollPosition = window.pageYOffset;
               setViewSelected(

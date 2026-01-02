@@ -54,25 +54,8 @@ const getInitialSavedThemes = (): Theme[] => {
   return [DEFAULT_THEME];
 };
 
-// Initialize bookshelf title from localStorage
-const getInitialBookshelfTitle = (userEmail?: string): string => {
-  try {
-    // Use user-specific key if email is provided
-    const storageKey = userEmail ? `bookshelf_title_${userEmail}` : 'bookshelf_title';
-    const savedTitle = localStorage.getItem(storageKey);
-    // Only return saved title if it exists and is not empty
-    if (savedTitle && savedTitle.trim()) {
-      return savedTitle.trim();
-    }
-  } catch (e) {
-    console.error('Failed to load bookshelf title', e);
-  }
-  // Default title for new users
-  return 'My Bookshelf';
-};
-
 // DEBUG MODE - set to true to show book position outlines
-const DEBUG_HOVER = false;
+// const DEBUG_HOVER = false;
 
 export const Home: React.FC = () => {
   const [currentlyReading, setCurrentlyReading] = useState<Book[]>([]);
@@ -423,7 +406,15 @@ export const Home: React.FC = () => {
         // Show all shelves with search and tag filters
         const filteredCurrentlyReading = applySearchAndTagFilters(currentlyReading);
         const filteredWantToRead = applySearchAndTagFilters(wantToRead);
-        const filteredRanked = applySearchAndTagFilters(rankedBooks);
+        let filteredRanked = applySearchAndTagFilters(rankedBooks);
+        
+        // Sort ranked books by rank_position (ascending) so highest ranked books (1, 2, 3...) appear first
+        // Only sort if no custom sortOrder is applied (custom sort will override this)
+        if (sortOrder === 'none') {
+          filteredRanked = [...filteredRanked].sort((a: Book, b: Book) => {
+            return (a.rank_position || 999) - (b.rank_position || 999);
+          });
+        }
         
         topShelfBooks = [...filteredCurrentlyReading, ...filteredWantToRead];
         
@@ -448,6 +439,12 @@ export const Home: React.FC = () => {
           filtered = applySearchAndTagFilters(wantToRead);
         } else if (shelfFilter === 'read') {
           filtered = applySearchAndTagFilters(rankedBooks);
+          // Sort ranked books by rank_position (ascending) so highest ranked books appear first
+          if (sortOrder === 'none') {
+            filtered = [...filtered].sort((a: Book, b: Book) => {
+              return (a.rank_position || 999) - (b.rank_position || 999);
+            });
+          }
         } else if (shelfFilter === 'recently_read') {
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -459,6 +456,12 @@ export const Home: React.FC = () => {
             const finishedDate = new Date(book.date_finished);
             return finishedDate >= thirtyDaysAgo;
           });
+          // Sort ranked books by rank_position (ascending) so highest ranked books appear first
+          if (sortOrder === 'none') {
+            filtered = [...filtered].sort((a: Book, b: Book) => {
+              return (a.rank_position || 999) - (b.rank_position || 999);
+            });
+          }
         } else {
           filtered = [];
         }
@@ -471,7 +474,6 @@ export const Home: React.FC = () => {
       if (sortOrder !== 'none') {
         // Separate bookend from other books
         const bookendIndex = allBooks.findIndex(b => b.title === '__BOOKEND__' && b.author === '__BOOKEND__');
-        let booksToSort: Book[];
         let bookend: Book | null = null;
         
         if (bookendIndex !== -1) {
@@ -505,7 +507,6 @@ export const Home: React.FC = () => {
         const customFont = getBookFont(book.id);
         return {
           ...book,
-          fileName: book.spine_image_path || null,
           dimensions: book.dimensions || '6x1x9',
           domColor: customColor || book.dom_color || '#888888',
           spineFont: customFont, // Individual book font override
@@ -516,7 +517,6 @@ export const Home: React.FC = () => {
       });
 
       // Calculate which shelf labels to show based on book count and filter
-      const topShelfCount = topShelfBooks.length;
       let labels: string[];
       
       if (shelfFilter === 'all') {
@@ -1007,7 +1007,29 @@ export const Home: React.FC = () => {
       hoveredBook.width,
       hoveredBook.height
     );
-  }, [hoveredBook, bookPositions]);
+  }, [hoveredBook]);
+
+  // Handle ESC key to close modals
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectedBook) {
+          setSelectedBook(null);
+        } else if (showImportModal) {
+          setShowImportModal(false);
+        } else if (showShelfModal) {
+          setShowShelfModal(false);
+        } else if (showGoalBooksModal) {
+          setShowGoalBooksModal(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [selectedBook, showImportModal, showShelfModal, showGoalBooksModal]);
 
   // Trigger hover effect redraw when hoveredBook changes or canvas updates
   React.useEffect(() => {
@@ -1112,7 +1134,6 @@ export const Home: React.FC = () => {
         
         {/* Add Book Section */}
         <div className="sidebar-section">
-          <h2></h2>
           <button 
             className="primary-button"
             onClick={() => setShowAddBookModal(true)}
@@ -1123,7 +1144,6 @@ export const Home: React.FC = () => {
 
         {/* Reading Goal Section */}
         <div className="sidebar-section">
-          <h2></h2>
           {currentGoal ? (
             isGoalCompleted(currentGoal) ? (
               <div className="goal-completed-container">
@@ -1204,7 +1224,6 @@ export const Home: React.FC = () => {
 
         {/* Stats Section */}
         <div className="sidebar-section">
-          <h2></h2>
           <div className="stats-column">
             <div 
               className="stat-item stat-item-clickable"
@@ -1238,7 +1257,6 @@ export const Home: React.FC = () => {
 
         {/* Rankings Section */}
         <div className="sidebar-section">
-          <h2></h2>
           <button 
             className="primary-button"
             onClick={() => setShowRankingsModal(true)}
@@ -1249,7 +1267,6 @@ export const Home: React.FC = () => {
 
         {/* Import Section */}
         <div className="sidebar-section">
-          <h2></h2>
           <button 
             className="secondary-button"
             onClick={() => setShowImportModal(true)}
@@ -1360,7 +1377,7 @@ export const Home: React.FC = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setSelectedBook(null)}>×</button>
             <h2>{selectedBook.title}</h2>
-            <h3>by {selectedBook.author}</h3>
+            <h3 style={{ textAlign: 'center' }}>by {selectedBook.author}</h3>
             {selectedBook.cover_image_url && (
               <img src={selectedBook.cover_image_url} alt={selectedBook.title} className="modal-book-cover" />
             )}

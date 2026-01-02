@@ -6,7 +6,8 @@
   font-size: 1.1rem;
   margin-bottom: 1.5rem;
   text-align: center;
-  color: #D4AF37;
+  color: #2c3e50;
+  text-shadow: none !important;
 }
 
 .import-instructions {
@@ -14,36 +15,44 @@
 }
 
 .import-instructions h3 {
-  color: #D4AF37;
+  color: #2c3e50;
   margin-bottom: 1rem;
   font-size: 1.2rem;
+  text-shadow: none !important;
 }
 
 .import-instructions ol {
   margin-left: 1.5rem;
   margin-bottom: 1rem;
   line-height: 1.8;
+  color: #2c3e50;
 }
 
 .import-instructions li {
   margin-bottom: 0.5rem;
-  color: #E8E8E8;
+  color: #2c3e50;
+  text-shadow: none !important;
 }
 
 .import-instructions strong {
   color: #D4AF37;
+  font-weight: bold;
+  text-shadow: none !important;
 }
 
 .import-note {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(255, 243, 224, 0.3);
   border: 1px solid rgba(212, 175, 55, 0.3);
   padding: 1rem;
   border-radius: 4px;
   margin-top: 1rem;
+  color: #2c3e50;
+  text-shadow: none !important;
 }
 
 .import-note strong {
   color: #D4AF37;
+  text-shadow: none !important;
 }
 
 .welcome-actions {

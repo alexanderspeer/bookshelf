@@ -59,10 +59,9 @@ export const VisualizeShelf: React.FC = () => {
     setRendering(true);
     try {
       // Convert books to format expected by BookshelfRenderer
-      // Books without spine_image_path will get fake spines generated automatically
+      // All books will get fake spines generated automatically
       const rendererBooks = books.map(book => ({
         ...book,
-        fileName: book.spine_image_path || null, // null triggers fake spine generation
         dimensions: book.dimensions || '6x1x9', // Default dimensions
         domColor: book.dom_color || '#888888',
         book_id: String(book.id || ''),
@@ -296,7 +295,7 @@ export const VisualizeShelf: React.FC = () => {
           <div className="book-detail-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setSelectedBook(null)}>×</button>
             <h2>{selectedBook.title}</h2>
-            <h3>by {selectedBook.author}</h3>
+            <h3 style={{ textAlign: 'center' }}>by {selectedBook.author}</h3>
             {selectedBook.cover_image_url && (
               <img src={selectedBook.cover_image_url} alt={selectedBook.title} className="book-cover" />
             )}

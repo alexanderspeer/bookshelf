@@ -51,25 +51,7 @@ def fetch_and_save_cover(book_id, title, isbn=None, isbn13=None, cover_url=None)
     if not image_bytes:
         return None
     
-    # Create spine_images directory if it doesn't exist
-    spine_dir = os.getenv('SPINE_IMAGES_PATH', 'data/spine_images')
-    os.makedirs(spine_dir, exist_ok=True)
-    
-    # Create a safe filename
-    safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).strip()
-    safe_title = safe_title.replace(' ', '_')[:50]
-    filename = f"book_{book_id}_{safe_title}.jpg"
-    filepath = os.path.join(spine_dir, filename)
-    
-    # Save the image
-    try:
-        image = Image.open(BytesIO(image_bytes))
-        # Convert to RGB if necessary
-        if image.mode in ('RGBA', 'P'):
-            image = image.convert('RGB')
-        image.save(filepath, 'JPEG', quality=85)
-        return filename
-    except Exception as e:
-        print(f"Error saving cover image: {e}")
-        return None
+    # Spine storage has been removed - cover images are stored via cover_image_url in database only
+    # This function now just validates that a cover can be fetched, but doesn't save it locally
+    return "cover_available"  # Return a placeholder to indicate cover was found
 

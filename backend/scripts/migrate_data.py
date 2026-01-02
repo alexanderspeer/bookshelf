@@ -93,10 +93,10 @@ def import_to_postgres(database_url, data):
             query = """
                 INSERT INTO books (
                     title, author, isbn, isbn13, pub_date, num_pages, genre,
-                    cover_image_url, spine_image_path, dimensions, dom_color,
+                    cover_image_url, dimensions, dom_color,
                     series, series_position, notes, why_reading,
                     date_added, date_started, date_finished, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             new_id = db.execute_update(query, (
                 book_data.get('title'),
@@ -107,7 +107,6 @@ def import_to_postgres(database_url, data):
                 book_data.get('num_pages'),
                 book_data.get('genre'),
                 book_data.get('cover_image_url'),
-                book_data.get('spine_image_path'),
                 book_data.get('dimensions'),
                 book_data.get('dom_color'),
                 book_data.get('series'),

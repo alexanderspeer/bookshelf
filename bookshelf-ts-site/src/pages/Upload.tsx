@@ -71,8 +71,8 @@ export function Upload({widgetCallback, prefill, originCallback, foundBook} : up
   }
 
   const [formState, setFormState] = React.useState<uploadForm>(defaultFormState);
-  const [b64Image, setB64Image] = React.useState<string>(foundBook ? IMG_URL_PREFIX + foundBook.fileName : "");
-  const [display_uploaded, set_display_uploaded] = React.useState<boolean>(foundBook ? true : false);
+  const [b64Image, setB64Image] = React.useState<string>("");
+  const [display_uploaded, set_display_uploaded] = React.useState<boolean>(false);
   const encodeImageFileAsURL = (event:React.ChangeEvent<HTMLInputElement>)=>{
     if(!event.target.files || event.target.files.length === 0) return;
     const file : File = event.target.files[0];
@@ -169,7 +169,7 @@ export function Upload({widgetCallback, prefill, originCallback, foundBook} : up
           originCallback(true);
           return;
         }
-        if(typeof parsed_res.body === 'object' && parsed_res.body.already_uploaded && parsed_res.body.fileName && parsed_res.body.upload_id) {
+        if(typeof parsed_res.body === 'object' && parsed_res.body.already_uploaded && parsed_res.body.upload_id) {
           const upload_id : string = parsed_res.body.upload_id;
           const replace_upload = () => {
             data.replace_img = true;
@@ -180,8 +180,7 @@ export function Upload({widgetCallback, prefill, originCallback, foundBook} : up
           widgetCallback(
           <div>
             <Title title="Already Uploaded" backArrowOnClick={()=>{originCallback()}}/>
-            {SHOW_PREVIOUSLY_UPLOAD_IMAGE && 
-            <img src={IMG_URL_PREFIX.concat(parsed_res.body.fileName)} alt="uploaded_img" className="uploaded_img" id="uploaded_img" /> }
+            {/* Spine storage has been removed - images are no longer available */}
             <span>You've already uploaded a spine for this book. Would you like to replace the spine you previously uploaded?</span>
             <div className="bs_gr_id_row" style={{marginTop:"15px"}}>
               <button onClick={return_to_prev_page} className="bs_button bs_enter_button bs_gr_id_button" style={{background:"red"}}>No</button>
@@ -196,11 +195,7 @@ export function Upload({widgetCallback, prefill, originCallback, foundBook} : up
 
 
 
-    //if b64image is a the foundBook URL, that means we've previously uploaded a spine and we're keeping the previous upload. Inform the backend so it keeps the same file and domColor
-    if(foundBook && b64Image === IMG_URL_PREFIX + foundBook.fileName) {
-      sendSpinePost(genSpinePostRequest("", true));
-      return;
-    }
+    // Spine storage has been removed - all spines are now generated on the fly
     let tempImage = new Image();
     tempImage.src = b64Image;
     tempImage.onload = () => {

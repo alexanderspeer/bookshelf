@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 # Try to import both database drivers
 try:
-    import psycopg2
-    import psycopg2.extras
+    from psycopg import connect
+    from psycopg.rows import dict_row
     POSTGRES_AVAILABLE = True
 except ImportError:
     POSTGRES_AVAILABLE = False
@@ -26,9 +26,13 @@ class Database:
         # Determine which database to use
         if self.database_url:
             if not POSTGRES_AVAILABLE:
-                raise RuntimeError("DATABASE_URL is set but psycopg2 is not installed")
+                raise RuntimeError(
+                    "DATABASE_URL is set but psycopg is not installed. "
+                    "Install with: pip install 'psycopg[binary]>=3.1.0'"
+                )
             self.db_type = 'postgres'
             print(f"Using PostgreSQL database")
+            self._validate_postgres_schema()
         else:
             if not SQLITE_AVAILABLE:
                 raise RuntimeError("SQLite is not available")
@@ -56,37 +60,154 @@ class Database:
         else:
             print(f"Warning: Schema file not found at {schema_path}")
     
+    def _validate_postgres_schema(self):
+        """Validate that PostgreSQL schema exists - fail fast if missing"""
+        if self.db_type != 'postgres':
+            return
+        
+        try:
+            # Check if critical tables exist
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_schema = 'public' 
+                        AND table_name = 'users'
+                    ) as exists
+                """)
+                result = cursor.fetchone()
+                schema_exists = result[0] if result else False
+                
+                if not schema_exists:
+                    raise RuntimeError(
+                        "PostgreSQL schema not initialized! "
+                        "Run 'python backend/scripts/init_postgres_schema.py' "
+                        "or apply schema manually with: "
+                        "psql $DATABASE_URL < backend/database/schema_postgres.sql"
+                    )
+                
+                print("✓ PostgreSQL schema validated")
+        except Exception as e:
+            if "schema not initialized" in str(e):
+                raise
+            # Other errors (connection issues, etc.) are logged but don't fail fast
+            print(f"Warning: Could not validate schema: {e}")
+    
     def _convert_query(self, query, params):
         """
-        Convert SQLite-style ? placeholders to PostgreSQL-style %s placeholders
-        Also handles SQLite-specific functions like strftime
+        Convert SQLite-style queries to PostgreSQL-compatible syntax.
+        Handles:
+        - Placeholder conversion: ? -> %s
+        - Date functions: strftime, DATE
+        - String functions: SUBSTR
+        - Upsert syntax: INSERT OR IGNORE, ON CONFLICT
         """
         if self.db_type == 'sqlite':
             return query, params
         
-        # Convert ? to %s for PostgreSQL
-        # We need to be careful not to replace ? inside strings
         converted_query = query
         
-        # Replace ? with %s (simple approach for now)
+        # 1. Convert ? to %s for PostgreSQL parameter binding
         # This works because we don't have ? in string literals in our queries
         converted_query = converted_query.replace('?', '%s')
         
-        # Replace SQLite-specific date functions with PostgreSQL equivalents
-        # strftime('%Y', column) -> EXTRACT(YEAR FROM column)::TEXT
+        # 2. Replace INSERT OR IGNORE with INSERT ... ON CONFLICT DO NOTHING
+        # Pattern: INSERT OR IGNORE INTO table (...) VALUES (...)
+        if re.search(r'\bINSERT\s+OR\s+IGNORE\s+INTO\b', converted_query, re.IGNORECASE):
+            # Remove OR IGNORE
+            converted_query = re.sub(
+                r'\bINSERT\s+OR\s+IGNORE\s+INTO\b',
+                'INSERT INTO',
+                converted_query,
+                flags=re.IGNORECASE
+            )
+            
+            # Add ON CONFLICT DO NOTHING if not already present
+            if 'ON CONFLICT' not in converted_query.upper():
+                # Insert before RETURNING clause or at end
+                if 'RETURNING' in converted_query.upper():
+                    converted_query = re.sub(
+                        r'\s+RETURNING\b',
+                        ' ON CONFLICT DO NOTHING RETURNING',
+                        converted_query,
+                        flags=re.IGNORECASE
+                    )
+                else:
+                    # Add at end of statement (before semicolon if present)
+                    converted_query = converted_query.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
+        
+        # 3. Replace SUBSTR() with SUBSTRING()
+        # SUBSTR(column, start, length) -> SUBSTRING(column FROM start FOR length)
+        # Note: SQLite SUBSTR is 1-indexed, PostgreSQL SUBSTRING is also 1-indexed
         converted_query = re.sub(
-            r"strftime\('%Y',\s*([^)]+)\)",
-            r"EXTRACT(YEAR FROM \1)::TEXT",
-            converted_query
+            r'\bSUBSTR\s*\(\s*([^,]+),\s*(\d+),\s*(\d+)\s*\)',
+            r'SUBSTRING(\1 FROM \2 FOR \3)',
+            converted_query,
+            flags=re.IGNORECASE
         )
         
-        # Replace DATE() function - SQLite DATE() -> PostgreSQL DATE cast
+        # 4. Replace SQLite date functions with PostgreSQL equivalents
+        # strftime('%Y', column) -> EXTRACT(YEAR FROM column)::TEXT
+        # Handle nested parentheses properly
+        def replace_strftime(match):
+            content = match.group(0)
+            # Find content after 'strftime('
+            start = content.lower().find('strftime(') + 9
+            # Balance parentheses to find the arguments
+            paren_count = 1
+            i = start
+            while i < len(content) and paren_count > 0:
+                if content[i] == '(':
+                    paren_count += 1
+                elif content[i] == ')':
+                    paren_count -= 1
+                i += 1
+            # Extract arguments: '%Y', expression
+            args_str = content[start:i-1]
+            # Find the comma after '%Y'
+            comma_pos = args_str.find(',')
+            if comma_pos > 0:
+                inner_expr = args_str[comma_pos+1:].strip()
+            else:
+                inner_expr = args_str.strip()
+            return f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
+        
+        # Use a callback-based approach to handle each strftime occurrence
+        # The regex pattern just finds "strftime(", then the callback handles paren balancing
+        while True:
+            match = re.search(r"strftime\s*\(", converted_query, re.IGNORECASE)
+            if not match:
+                break
+            # Found strftime( - now balance parentheses to find the end
+            start_pos = match.end()  # Position after "strftime("
+            paren_count = 1
+            i = start_pos
+            while i < len(converted_query) and paren_count > 0:
+                if converted_query[i] == '(':
+                    paren_count += 1
+                elif converted_query[i] == ')':
+                    paren_count -= 1
+                i += 1
+            # Extract the arguments
+            args_str = converted_query[start_pos:i-1]
+            # Split on first comma after '%Y'
+            comma_pos = args_str.find(',')
+            if comma_pos > 0:
+                inner_expr = args_str[comma_pos+1:].strip()
+            else:
+                inner_expr = args_str.strip()
+            # Replace this occurrence
+            replacement = f"EXTRACT(YEAR FROM {inner_expr})::TEXT"
+            converted_query = converted_query[:match.start()] + replacement + converted_query[i:]
+        
+        # 5. Replace DATE() function - SQLite DATE() -> PostgreSQL DATE cast
         # DATE(column) -> column::DATE
-        # DATE(?) -> ?::DATE (parameter binding)
         converted_query = re.sub(
-            r"DATE\(([^)]+)\)",
+            r"DATE\s*\(([^)]+)\)",
             r"\1::DATE",
-            converted_query
+            converted_query,
+            flags=re.IGNORECASE
         )
         
         return converted_query, params
@@ -95,9 +216,7 @@ class Database:
     def get_connection(self):
         """Context manager for database connections"""
         if self.db_type == 'postgres':
-            conn = psycopg2.connect(self.database_url)
-            # Return dict-like rows
-            conn.cursor_factory = psycopg2.extras.RealDictCursor
+            conn = connect(self.database_url)
         else:
             conn = sqlite3.connect(self.db_path)
             conn.row_factory = sqlite3.Row  # Return rows as dicts
@@ -116,7 +235,12 @@ class Database:
         converted_query, converted_params = self._convert_query(query, params)
         
         with self.get_connection() as conn:
-            cursor = conn.cursor()
+            if self.db_type == 'postgres':
+                # Use dict_row factory for PostgreSQL
+                cursor = conn.cursor(row_factory=dict_row)
+            else:
+                cursor = conn.cursor()
+            
             if converted_params:
                 cursor.execute(converted_query, converted_params)
             else:
@@ -125,8 +249,8 @@ class Database:
             
             # Convert rows to list of dicts
             if self.db_type == 'postgres':
-                # RealDictCursor already returns dict-like objects
-                return [dict(row) for row in rows]
+                # dict_row already returns dict-like objects
+                return list(rows)
             else:
                 # sqlite3.Row needs conversion
                 return [dict(row) for row in rows]
@@ -143,7 +267,12 @@ class Database:
                 converted_query = converted_query.rstrip().rstrip(';') + ' RETURNING id'
         
         with self.get_connection() as conn:
-            cursor = conn.cursor()
+            if self.db_type == 'postgres':
+                # Use dict_row factory for PostgreSQL
+                cursor = conn.cursor(row_factory=dict_row)
+            else:
+                cursor = conn.cursor()
+            
             if converted_params:
                 cursor.execute(converted_query, converted_params)
             else:

@@ -125,7 +125,16 @@ button:disabled,
 }
 
 /* Small buttons */
-.goal-menu-button,
+.goal-menu-button {
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  font-size: 16px !important; /* 1em of 16px */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 .modal-close {
   min-width: 40px !important;
   min-height: 40px !important;
@@ -663,6 +672,20 @@ button:disabled,
   color: white !important;
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black !important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Crisp rendering for all progress bars */
+.rpgui-progress,
+.rpgui-progress-left-edge,
+.rpgui-progress-right-edge,
+.rpgui-progress-track,
+.rpgui-progress-fill {
+  image-rendering: -webkit-optimize-contrast !important;
+  image-rendering: -webkit-crisp-edges !important;
+  image-rendering: -moz-crisp-edges !important;
+  image-rendering: -o-crisp-edges !important;
+  image-rendering: pixelated !important;
+  image-rendering: crisp-edges !important;
 }
 
 .Toastify__progress-bar {
