@@ -883,21 +883,11 @@ def serve_frontend(path):
     # Only serve actual files, not routes like /u/username
     if path != "":
         file_path = os.path.join(FRONTEND_BUILD_PATH, path)
-        # Debug logging
-        print(f"[DEBUG] Requested path: {path}", flush=True)
-        print(f"[DEBUG] FRONTEND_BUILD_PATH: {FRONTEND_BUILD_PATH}", flush=True)
-        print(f"[DEBUG] Full file_path: {file_path}", flush=True)
-        print(f"[DEBUG] File exists: {os.path.isfile(file_path)}", flush=True)
-        print(f"[DEBUG] File list in static: {os.listdir(os.path.join(FRONTEND_BUILD_PATH, 'static')) if os.path.exists(os.path.join(FRONTEND_BUILD_PATH, 'static')) else 'NO STATIC DIR'}", flush=True)
         # Check if it's a file (not a directory) and exists
         if os.path.isfile(file_path):
-            print(f"[DEBUG] Serving file: {file_path}", flush=True)
             return send_from_directory(FRONTEND_BUILD_PATH, path)
-        else:
-            print(f"[DEBUG] File not found,falling through to index.html", flush=True)
     
     # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
-    print(f"[DEBUG] Serving index.html for path: {path}", flush=True)
     return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
