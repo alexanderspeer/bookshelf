@@ -24,7 +24,7 @@ SERVE_FRONTEND = os.path.exists(FRONTEND_BUILD_PATH)
 
 # Don't use static_folder with empty static_url_path as it interferes with SPA routing
 # We'll handle static files manually in the catch-all route
-    app = Flask(__name__)
+app = Flask(__name__)
 
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "supports_credentials": True}})
 
@@ -885,10 +885,10 @@ def serve_frontend(path):
         file_path = os.path.join(FRONTEND_BUILD_PATH, path)
         # Check if it's a file (not a directory) and exists
         if os.path.isfile(file_path):
-        return send_from_directory(FRONTEND_BUILD_PATH, path)
+            return send_from_directory(FRONTEND_BUILD_PATH, path)
     
     # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
-        return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
+    return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
     # On Heroku, bind to 0.0.0.0; locally use localhost
