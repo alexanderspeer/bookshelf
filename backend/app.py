@@ -882,35 +882,13 @@ def serve_frontend(path):
     # Try to serve the requested file (for static assets like JS, CSS, images)
     # Only serve actual files, not routes like /u/username
     if path != "":
-        # Normalize the path to handle any path separator issues
-        normalized_path = os.path.normpath(path).lstrip('/')
-        file_path = os.path.join(FRONTEND_BUILD_PATH, normalized_path)
-        # Normalize the full path
-        file_path = os.path.normpath(file_path)
-        
-        # Security check: ensure the file is within the build directory
-        try:
-            build_dir = os.path.normpath(os.path.abspath(FRONTEND_BUILD_PATH))
-            abs_file_path = os.path.normpath(os.path.abspath(file_path))
-            if abs_file_path.startswith(build_dir + os.sep) or abs_file_path == build_dir:
-                if os.path.isfile(file_path):
-                    # Use send_from_directory for better path handling
-                    dir_path = os.path.dirname(normalized_path) if os.path.dirname(normalized_path) else ''
-                    filename = os.path.basename(normalized_path)
-                    if dir_path:
-                        return send_from_directory(
-                            os.path.join(FRONTEND_BUILD_PATH, dir_path),
-                            filename
-                        )
-                    else:
-                        return send_from_directory(FRONTEND_BUILD_PATH, filename)
-        except (ValueError, OSError):
-            # Path traversal or other error, fall through to serve index.html
-            pass
+        file_path = os.path.join(FRONTEND_BUILD_PATH, path)
+        # Check if it's a file (not a directory) and exists
+        if os.path.isfile(file_path):
+        return send_from_directory(FRONTEND_BUILD_PATH, path)
     
     # Serve index.html for React Router (SPA) - handles all routes like /u/username, /me, etc.
-    index_path = os.path.join(FRONTEND_BUILD_PATH, 'index.html')
-    return send_file(index_path)
+        return send_file(os.path.join(FRONTEND_BUILD_PATH, 'index.html'))
 
 if __name__ == '__main__':
     # On Heroku, bind to 0.0.0.0; locally use localhost
