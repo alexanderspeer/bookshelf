@@ -8,13 +8,31 @@ class RankingService:
         self.db = get_db()
     
     def start_ranking_wizard(self, book_id, initial_stars, user_id=None):
-        """Start the ranking wizard for a newly finished book"""
+        """Start the ranking wizard for a newly finished book (or reranking an existing book)"""
         # Get all ranked books for this user
         ranked_books = self.get_ranked_books(user_id)
         
+        # Check if this book is already ranked (reranking scenario)
+        existing_rank = self.get_book_rank(book_id, user_id)
+        is_reranking = existing_rank is not None
+        
+        # Exclude the current book from ranked_books if reranking
+        if is_reranking:
+            ranked_books = [b for b in ranked_books if b.get('id') != book_id]
+        
         if not ranked_books:
-            # First book - just insert at rank 1
-            return self._insert_ranking(book_id, 1, initial_stars)
+            # First book (or only book after excluding current one) - just insert at rank 1
+            if not is_reranking:
+                return self._insert_ranking(book_id, 1, initial_stars)
+            else:
+                # Reranking the only book - just update it
+                return {
+                    'book_id': book_id,
+                    'initial_stars': initial_stars,
+                    'comparisons': [],
+                    'total_ranked': 0,
+                    'message': 'Only book in rankings'
+                }
         
         # CRITICAL: Only compare against books with THE SAME star rating
         # A 5-star book should NEVER be ranked below a 4-star book
@@ -22,10 +40,11 @@ class RankingService:
         
         if not same_star_books:
             # No books with same star rating - will be placed automatically by rerank_all_books_by_stars
-            # Just insert with temporary position 0
-            self._insert_ranking(book_id, 0, initial_stars)
-            # Re-rank to place it correctly within star groups
-            self.rerank_all_books_by_stars(user_id)
+            if not is_reranking:
+                # Just insert with temporary position 0
+                self._insert_ranking(book_id, 0, initial_stars)
+                # Re-rank to place it correctly within star groups
+                self.rerank_all_books_by_stars(user_id)
             return {
                 'book_id': book_id,
                 'initial_stars': initial_stars,
@@ -81,8 +100,9 @@ class RankingService:
         1. Record all comparisons for history
         2. Get all books with same star rating
         3. Determine valid position range within star group
-        4. Insert at position and shift others in that group down
-        5. DO NOT re-alphabetize - preserve manual rankings
+        4. Handle reranking: if book already ranked, remove old position first
+        5. Insert/update at position and shift others appropriately
+        6. DO NOT re-alphabetize - preserve manual rankings
         """
         if user_id is None:
             raise ValueError('user_id is required')
@@ -95,15 +115,25 @@ class RankingService:
                 comp['winner_id']
             )
         
+        # Check if book already has a ranking (for reranking scenario)
+        existing_rank = self.get_book_rank(book_id, user_id)
+        old_position = existing_rank['rank_position'] if existing_rank else None
+        
         # Get the boundaries of this star group
         # Find the highest-ranked and lowest-ranked book with the same stars
+        # Exclude the current book if it's being reranked
         query = """
             SELECT MIN(r.rank_position) as min_pos, MAX(r.rank_position) as max_pos
             FROM rankings r
             JOIN books b ON r.book_id = b.id
             WHERE b.user_id = ? AND r.initial_stars = ? AND r.rank_position > 0
         """
-        result = self.db.execute_query(query, (user_id, initial_stars))
+        if old_position is not None:
+            # Exclude the current book from min/max calculation
+            query += " AND r.book_id != ?"
+            result = self.db.execute_query(query, (user_id, initial_stars, book_id))
+        else:
+            result = self.db.execute_query(query, (user_id, initial_stars))
         
         if result and result[0]['min_pos'] is not None:
             min_pos = result[0]['min_pos']
@@ -117,12 +147,22 @@ class RankingService:
             # Find where this star group should start
             constrained_position = self._find_star_group_start(initial_stars, user_id)
         
-        # CRITICAL: Shift books at or after this position down by 1 BEFORE inserting
-        # This prevents duplicates
+        # If reranking (book already has a ranking), handle position shift differently
+        if old_position is not None:
+            # Remove the old ranking position first (shift books up to fill the gap)
+            self._remove_ranking_position(old_position, user_id)
+            
+            # Adjust constrained_position if moving within the list
+            if constrained_position > old_position:
+                # Moving down - the position numbers have shifted up by 1
+                constrained_position -= 1
+        
+        # Shift books at or after the new position down by 1 BEFORE inserting/updating
+        # This makes room for the new ranking
         self._reorder_rankings(constrained_position, user_id)
         
-        # Now insert the new ranking at the desired position
-        self._insert_ranking(book_id, constrained_position, initial_stars)
+        # Now insert or update the ranking at the desired position
+        self._upsert_ranking(book_id, constrained_position, initial_stars)
         
         return self.get_ranked_books(user_id)
     
@@ -327,6 +367,41 @@ class RankingService:
             VALUES (?, ?, ?)
         """
         return self.db.execute_update(query, (book_id, position, initial_stars))
+    
+    def _upsert_ranking(self, book_id, position, initial_stars):
+        """Insert or update a ranking (handles both new rankings and reranking)"""
+        # Check if ranking exists
+        check_query = "SELECT id FROM rankings WHERE book_id = ?"
+        existing = self.db.execute_query(check_query, (book_id,))
+        
+        if existing:
+            # Update existing ranking
+            update_query = """
+                UPDATE rankings 
+                SET rank_position = ?, initial_stars = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE book_id = ?
+            """
+            return self.db.execute_update(update_query, (position, initial_stars, book_id))
+        else:
+            # Insert new ranking
+            return self._insert_ranking(book_id, position, initial_stars)
+    
+    def _remove_ranking_position(self, position, user_id=None):
+        """Remove a ranking position by shifting all books after it up by 1"""
+        user_filter = ""
+        params = [datetime.now().isoformat(), position]
+        
+        if user_id is not None:
+            user_filter = " AND book_id IN (SELECT id FROM books WHERE user_id = ?)"
+            params.append(user_id)
+        
+        query = f"""
+            UPDATE rankings 
+            SET rank_position = rank_position - 1,
+                updated_at = ?
+            WHERE rank_position > ?{user_filter}
+        """
+        self.db.execute_update(query, tuple(params))
     
     def _reorder_rankings(self, from_position, user_id=None):
         """Shift rankings after inserting a new book"""
